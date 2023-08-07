@@ -57,6 +57,10 @@ export class WhatsappController {
           );
           return;
         }
+        if (value.statuses) {
+          console.error('status message arrived. not processed');
+          continue;
+        }
         if (value.contacts === undefined || value.contacts.length !== 1) {
           console.error('contacts.length is not 1: ' + value.contacts.length);
           return;
@@ -75,7 +79,7 @@ export class WhatsappController {
 
             console.log(sent_text_message.rawResponse());
           } catch (e) {
-            console.log(JSON.stringify(e));
+            console.log(JSON.stringify(e.message));
             return;
           }
         }
