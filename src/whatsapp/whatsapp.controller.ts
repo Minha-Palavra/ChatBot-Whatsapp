@@ -1,4 +1,4 @@
-import { Controller, Get, Query, RawBodyRequest, Req } from '@nestjs/common';
+import {Controller, Get, Query, RawBodyRequest, Req, UnauthorizedException} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 @Controller('whatsapp')
@@ -14,7 +14,7 @@ export class WhatsappController {
     ) {
       return query['hub.challenge'];
     } else {
-      throw new Error('Token mismatch');
+      throw new UnauthorizedException('Token mismatch');
     }
   }
 }
