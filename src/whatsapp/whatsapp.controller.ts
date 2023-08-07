@@ -1,4 +1,4 @@
-import {Controller, Get, Query, RawBodyRequest, Req, UnauthorizedException} from '@nestjs/common';
+import {Body, Controller, Get, Post, Query, RawBodyRequest, Req, UnauthorizedException} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 @Controller('whatsapp')
@@ -16,5 +16,14 @@ export class WhatsappController {
     } else {
       throw new UnauthorizedException('Token mismatch');
     }
+  }
+
+  @Post('webhook')
+  webhook(@Req() req: RawBodyRequest<Request>, @Query() query, @Body() body): string {
+    console.log(JSON.stringify(req.body));
+    console.log(JSON.stringify(query));
+    console.log(JSON.stringify(body));
+
+    return 'ok';
   }
 }
