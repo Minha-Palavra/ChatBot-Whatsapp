@@ -1,13 +1,20 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Query, RawBodyRequest, Req } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 @Controller('whatsapp')
 export class WhatsappController {
   constructor(private configService: ConfigService) {}
-  @Get('tokenCheck')
-  tokenCheck(): string {
-    return process.env.FB_TOKEN_VERIFY
-      ? process.env.FB_TOKEN_VERIFY
-      : 'Hello FB!';
+  @Get('webhook')
+  tokenCheck(@Req() req: RawBodyRequest<Request>, @Query() query): string {
+    console.log(JSON.stringify(req.body));
+    console.log(JSON.stringify(query));
+    if (
+      query['hub.mode'] == 'subscribe' &&
+      query['hub.verify_token'] === this.configService.get('FB_TOKEN_VERIFY')
+    ) {
+      return query['hub.challenge'];
+    } else {
+      throw new Error('Token mismatch');
+    }
   }
 }
