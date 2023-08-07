@@ -72,12 +72,13 @@ export class WhatsappController {
             return;
           }
           try {
-            const sent_text_message = await this.wa.messages.text(
+            // const sent_text_message =
+            await this.wa.messages.text(
               { body: message.text.body },
               message.from,
             );
 
-            console.log(await sent_text_message.responseBodyToJSON());
+            // console.log(await sent_text_message.responseBodyToJSON());
           } catch (e) {
             console.log(JSON.stringify(e.message));
             return;
