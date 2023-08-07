@@ -77,7 +77,7 @@ export class WhatsappController {
               message.from,
             );
 
-            console.log(sent_text_message.rawResponse());
+            console.log(await sent_text_message.responseBodyToJSON());
           } catch (e) {
             console.log(JSON.stringify(e.message));
             return;
