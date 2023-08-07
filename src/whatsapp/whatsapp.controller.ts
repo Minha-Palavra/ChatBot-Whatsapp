@@ -41,7 +41,7 @@ export class WhatsappController {
       return;
     }
 
-    for (const entry of body.entries) {
+    for (const entry of body.entry) {
       for (const change of entry.changes) {
         if (change.field !== 'messages') {
           console.error('field is not messages: ' + change.field);
