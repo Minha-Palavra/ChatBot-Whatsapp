@@ -9,6 +9,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { WebhookObject } from 'whatsapp/build/types/webhooks';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const WhatsApp = require('whatsapp');
 
@@ -33,8 +34,10 @@ export class WhatsappController {
   }
 
   @Post('webhook')
-  async webhook(@Body() body) {
-    console.log('body: ' + JSON.stringify(body));
+  async webhook(@Body() bodyRaw) {
+    console.log('body: ' + JSON.stringify(bodyRaw));
+
+    const body: WebhookObject = bodyRaw;
 
     if (body.object !== 'whatsapp_business_account') {
       console.error('object is not whatsapp_business_account: ' + body.object);
