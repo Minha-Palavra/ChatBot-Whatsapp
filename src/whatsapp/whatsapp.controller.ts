@@ -9,7 +9,8 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import WhatsApp from 'whatsapp';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const WhatsApp = require('whatsapp');
 
 @Controller('whatsapp')
 export class WhatsappController {
