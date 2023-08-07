@@ -54,7 +54,7 @@ export class WhatsappController {
           );
           return;
         }
-        if (value.contacts.length !== 1) {
+        if (value.contacts === undefined || value.contacts.length !== 1) {
           console.error('contacts.length is not 1: ' + value.contacts.length);
           return;
         }
