@@ -400,3 +400,5 @@ dist
 .webpack
 .serverless/**/*.zip
 
+
+package-lock.json
