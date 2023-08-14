@@ -59,8 +59,8 @@ export class ApiConfigService {
 
   get postgresConfig(): TypeOrmModuleOptions {
     const entities = [
-      path.join(__dirname, '/../modules/**/*.entity{.ts,.js}'),
-      path.join(__dirname, '/../modules/**/*.view-entity{.ts,.js}'),
+      path.join(__dirname, '/../**/*.entity{.ts,.js}'),
+      path.join(__dirname, '/../**/*.view-entity{.ts,.js}'),
     ];
     const migrations = [path.join(__dirname, '/../migrations/*{.ts,.js}')];
 
