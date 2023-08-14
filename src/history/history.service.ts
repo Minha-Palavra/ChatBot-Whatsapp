@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { CreateHistoryDto } from './dto/create-history.dto';
 import { UpdateHistoryDto } from './dto/update-history.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { HistoryEntity } from './entities/history.entity';
+import { HistoryEntity, MessageDirection } from './entities/history.entity';
 import { WebhookObject } from 'whatsapp/build/types/webhooks';
 import { Repository } from 'typeorm';
 
@@ -13,9 +12,10 @@ export class HistoryService {
     private readonly repository: Repository<HistoryEntity>,
   ) {}
 
-  create(data: Partial<WebhookObject>) {
+  create(data: Partial<WebhookObject>, direction: MessageDirection) {
     return this.repository.save({
       message: data,
+      direction: direction,
     });
   }
 

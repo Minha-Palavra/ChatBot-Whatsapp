@@ -1,7 +1,8 @@
 import {
   Body,
   Controller,
-  Get, Logger,
+  Get,
+  Logger,
   Post,
   Query,
   RawBodyRequest,
@@ -11,7 +12,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { WebhookObject } from 'whatsapp/build/types/webhooks';
 import { WhatsappService } from './whatsapp.service';
-import { LoggerService } from '@nestjs/common';
+import { MessageDirection } from '../history/entities/history.entity';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const WhatsApp = require('whatsapp');
@@ -44,7 +45,7 @@ export class WhatsappController {
   async webhook(@Body() bodyRaw) {
     const body: WebhookObject = bodyRaw;
 
-    await this.service.historyService.create(body);
+    await this.service.historyService.create(body, MessageDirection.INCOMING);
 
     if (body.object !== 'whatsapp_business_account') {
       console.error('object is not whatsapp_business_account: ' + body.object);
