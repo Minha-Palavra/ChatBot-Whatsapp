@@ -402,3 +402,7 @@ dist
 
 
 package-lock.json
+
+ormconfig.js.map
+
+*.tsbuildinfo

@@ -1,25 +1,22 @@
-import './src/boilerplate.polyfill';
-
-import dotenv from 'dotenv';
+import * as dotenv from 'dotenv';
 import { DataSource } from 'typeorm';
 
-import { UserSubscriber } from './src/entity-subscribers/user-subscriber';
 import { SnakeNamingStrategy } from './src/snake-naming.strategy';
+import * as path from 'path';
 
 dotenv.config();
-
-export const dataSource = new DataSource({
-    type: 'postgres',
-    host: process.env.DB_HOST,
-    port: Number(process.env.DB_PORT),
-    username: process.env.DB_USERNAME,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_DATABASE,
-    namingStrategy: new SnakeNamingStrategy(),
-    subscribers: [UserSubscriber],
-    entities: [
-        'src/modules/**/*.entity{.ts,.js}',
-        'src/modules/**/*.view-entity{.ts,.js}',
-    ],
-    migrations: ['src/database/migrations/*{.ts,.js}'],
+export const dataSource: DataSource = new DataSource({
+  type: 'postgres',
+  host: process.env.DB_HOST || 'postgres',
+  port: Number(process.env.DB_PORT) || 5432,
+  username: process.env.DB_USERNAME || 'postgres',
+  password: process.env.DB_PASSWORD || 'postgres',
+  database: process.env.DB_DATABASE || 'postgres',
+  namingStrategy: new SnakeNamingStrategy(),
+  subscribers: [path.join(__dirname, '/src/**/*.subscriber{.ts,.js}')],
+  entities: [
+    path.join(__dirname, 'src/**/*.entity{.ts,.js}'),
+    path.join(__dirname, 'src/**/*.view-entity{.ts,.js}'),
+  ],
+  migrations: [path.join(__dirname, 'src/migrations/*{.ts,.js}')],
 });
