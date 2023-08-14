@@ -35,7 +35,7 @@ export class WhatsappController {
 
   @Post('webhook')
   async webhook(@Body() bodyRaw) {
-    console.log('body: ' + JSON.stringify(bodyRaw));
+    // console.log('body: ' + JSON.stringify(bodyRaw));
 
     const body: WebhookObject = bodyRaw;
 
