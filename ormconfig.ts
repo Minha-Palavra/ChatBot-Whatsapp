@@ -4,7 +4,8 @@ import { DataSource } from 'typeorm';
 import { SnakeNamingStrategy } from './src/snake-naming.strategy';
 import * as path from 'path';
 
-dotenv.config();
+dotenv.config({ path: __dirname + '/.env' });
+
 export const dataSource: DataSource = new DataSource({
   type: 'postgres',
   host: process.env.DB_HOST || 'postgres',
