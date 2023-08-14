@@ -3,6 +3,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Column, Entity } from 'typeorm';
 import { WebhookObject } from 'whatsapp/build/types/webhooks';
 
+// message direction relative to the bot
 export enum MessageDirection {
   INCOMING = 'INCOMING',
   OUTGOING = 'OUTGOING',

@@ -1,7 +1,11 @@
 import { Injectable } from '@nestjs/common';
+import {HistoryService} from "../history/history.service";
 
 @Injectable()
 export class WhatsappService {
+
+    constructor(public historyService: HistoryService) {}
+
     // Nome
     // Versão do teste
     // Versão da assinatura

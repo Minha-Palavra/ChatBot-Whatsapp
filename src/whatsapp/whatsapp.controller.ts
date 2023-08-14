@@ -1,7 +1,7 @@
 import {
   Body,
   Controller,
-  Get,
+  Get, Logger,
   Post,
   Query,
   RawBodyRequest,
@@ -10,14 +10,21 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { WebhookObject } from 'whatsapp/build/types/webhooks';
+import { WhatsappService } from './whatsapp.service';
+import { LoggerService } from '@nestjs/common';
+
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const WhatsApp = require('whatsapp');
 
 @Controller('whatsapp')
 export class WhatsappController {
   wa = new WhatsApp(this.configService.get('WA_PHONE_NUMBER_ID'));
+  private readonly logger = new Logger(WhatsappController.name);
 
-  constructor(private configService: ConfigService) {}
+  constructor(
+    private configService: ConfigService,
+    private service: WhatsappService,
+  ) {}
   @Get('webhook')
   tokenCheck(@Req() req: RawBodyRequest<Request>, @Query() query): string {
     console.log(JSON.stringify(req.body));
@@ -35,15 +42,16 @@ export class WhatsappController {
 
   @Post('webhook')
   async webhook(@Body() bodyRaw) {
-    // console.log('body: ' + JSON.stringify(bodyRaw));
-
     const body: WebhookObject = bodyRaw;
+
+    await this.service.historyService.create(body);
 
     if (body.object !== 'whatsapp_business_account') {
       console.error('object is not whatsapp_business_account: ' + body.object);
       return;
     }
 
+    let isMessage = false;
     for (const entry of body.entry) {
       for (const change of entry.changes) {
         if (change.field !== 'messages') {
@@ -67,6 +75,7 @@ export class WhatsappController {
         }
         const contact = value.contacts[0];
         for (const message of value.messages) {
+          isMessage = true;
           if (message.type !== 'text') {
             console.error('message.type is not text: ' + message.type);
             return;
@@ -87,6 +96,9 @@ export class WhatsappController {
       }
     }
 
+    if (isMessage) {
+      this.logger.log(body);
+    }
     return 'ok';
   }
 }
