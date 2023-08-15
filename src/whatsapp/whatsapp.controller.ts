@@ -95,7 +95,7 @@ export class WhatsappController {
             );
 
             this.logger.log(
-              'message sent: ' + (await sent_text_message.responseBodyToJSON()),
+              'message sent: ' + JSON.stringify(await sent_text_message.responseBodyToJSON()),
             );
           } catch (e) {
             this.logger.error(JSON.stringify(e.message));
