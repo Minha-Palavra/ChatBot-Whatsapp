@@ -12,20 +12,14 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { WebhookObject } from 'whatsapp/build/types/webhooks';
 import { WhatsappService } from './whatsapp.service';
-import { MessageDirection } from '../history/entities/history.entity';
+import { MessageDirection } from '../history/history.entity';
 import { ApiBody, ApiOperation, ApiParam } from '@nestjs/swagger';
-
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const WhatsApp = require('whatsapp');
 
 @Controller('whatsapp')
 export class WhatsappController {
-  wa = new WhatsApp(this.configService.get('WA_PHONE_NUMBER_ID'));
-  private readonly logger = new Logger(WhatsappController.name);
-
   constructor(
-    private configService: ConfigService,
     private service: WhatsappService,
+    private configService: ConfigService,
   ) {}
   @Get('webhook')
   tokenCheck(@Req() req: RawBodyRequest<Request>, @Query() query): string {
@@ -44,64 +38,7 @@ export class WhatsappController {
 
   @Post('webhook')
   @ApiBody({ schema: { type: 'object' } })
-  async webhook(@Body() body: Partial<WebhookObject>) {
-    if (body.object !== 'whatsapp_business_account') {
-      console.error('object is not whatsapp_business_account: ' + body.object);
-      return;
-    }
-
-    const histlog = await this.service.historyService.create(
-      body,
-      MessageDirection.INCOMING,
-    );
-
-    let isMessage = false;
-    for (const entry of body.entry) {
-      for (const change of entry.changes) {
-        if (change.field !== 'messages') {
-          this.logger.error('field is not messages: ' + change.field);
-          continue;
-        }
-        const value = change.value;
-        if (value.messaging_product !== 'whatsapp') {
-          this.logger.error(
-            'messaging_product is not whatsapp: ' + value.messaging_product,
-          );
-          continue;
-        }
-        if (value.statuses) {
-          this.logger.error('status message arrived. not processed');
-          continue;
-        }
-        if (value.contacts === undefined || value.contacts.length !== 1) {
-          this.logger.error(
-            'contacts.length is not 1: ' + value.contacts.length,
-          );
-          continue;
-        }
-        const contact = value.contacts[0];
-        for (const message of value.messages) {
-          isMessage = true;
-          if (message.type !== 'text') {
-            this.logger.error('message.type is not text: ' + message.type);
-            continue;
-          }
-          try {
-            const sent_text_message = await this.wa.messages.text(
-              { body: message.text.body },
-              message.from,
-            );
-          } catch (e) {
-            this.logger.error(JSON.stringify(e.message));
-            return;
-          }
-        }
-      }
-    }
-
-    if (isMessage) {
-      this.logger.log(JSON.stringify(body));
-    }
-    return 'ok';
+  async webhook(@Body() body: WebhookObject): Promise<string> {
+    return await this.service.handleWebhook(body);
   }
 }

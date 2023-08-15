@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { UpdateHistoryDto } from './dto/update-history.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { HistoryEntity, MessageDirection } from './entities/history.entity';
+import { HistoryEntity, MessageDirection } from './history.entity';
 import { WebhookObject } from 'whatsapp/build/types/webhooks';
 import { Repository } from 'typeorm';
 
@@ -17,21 +16,5 @@ export class HistoryService {
       message: data,
       direction: direction,
     });
-  }
-
-  findAll() {
-    return `This action returns all history`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} history`;
-  }
-
-  update(id: number, updateHistoryDto: UpdateHistoryDto) {
-    return `This action updates a #${id} history`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} history`;
   }
 }

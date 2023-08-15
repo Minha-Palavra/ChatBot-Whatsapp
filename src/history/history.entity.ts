@@ -1,4 +1,4 @@
-import { AbstractEntity } from '../../shared/abstract.entity';
+import { AbstractEntity } from '../shared/abstract.entity';
 import { ApiProperty } from '@nestjs/swagger';
 import { Column, Entity } from 'typeorm';
 import { WebhookObject } from 'whatsapp/build/types/webhooks';
@@ -15,7 +15,7 @@ export class HistoryEntity extends AbstractEntity {
   @Column({ type: 'json' })
   message: WebhookObject;
 
-  @ApiProperty({ enum: MessageDirection})
+  @ApiProperty({ enum: MessageDirection })
   @Column({ type: 'enum', enum: MessageDirection })
   direction: MessageDirection;
 }

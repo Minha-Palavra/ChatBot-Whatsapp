@@ -9,6 +9,7 @@ import { SharedModule } from './shared/shared.module';
 import { ApiConfigService } from './shared/config.service';
 import { addTransactionalDataSource } from 'typeorm-transactional';
 import { DataSource } from 'typeorm';
+import { DecisionModule } from './decision/decision.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { DataSource } from 'typeorm';
     }),
     WhatsappModule,
     HistoryModule,
+    DecisionModule,
   ],
   controllers: [AppController],
   providers: [AppService],
