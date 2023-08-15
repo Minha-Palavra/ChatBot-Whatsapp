@@ -1,6 +1,7 @@
 import { AbstractEntity } from '../shared/abstract.entity';
 import { ApiProperty } from '@nestjs/swagger';
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, OneToMany } from 'typeorm';
+import { TicketEntity } from '../ticket/ticket.entity';
 
 @Entity({ name: 'user' })
 export class UserEntity extends AbstractEntity {
@@ -10,5 +11,9 @@ export class UserEntity extends AbstractEntity {
 
   @ApiProperty()
   @Column({ unique: true })
-  number: string;
+  phonenumber: string;
+
+  @ApiProperty()
+  @OneToMany(() => TicketEntity, (ticket) => ticket.user)
+  tickets: TicketEntity[];
 }
