@@ -13,6 +13,7 @@ import { ConfigService } from '@nestjs/config';
 import { WebhookObject } from 'whatsapp/build/types/webhooks';
 import { WhatsappService } from './whatsapp.service';
 import { MessageDirection } from '../history/entities/history.entity';
+import { ApiBody, ApiOperation, ApiParam } from '@nestjs/swagger';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const WhatsApp = require('whatsapp');
@@ -42,20 +43,17 @@ export class WhatsappController {
   }
 
   @Post('webhook')
-  async webhook(@Body() bodyRaw) {
-    this.logger.log('webhook called');
-    const body: WebhookObject = bodyRaw;
+  @ApiBody({ schema: { type: 'object' } })
+  async webhook(@Body() body: Partial<WebhookObject>) {
+    if (body.object !== 'whatsapp_business_account') {
+      console.error('object is not whatsapp_business_account: ' + body.object);
+      return;
+    }
 
     const histlog = await this.service.historyService.create(
       body,
       MessageDirection.INCOMING,
     );
-    this.logger.log('history log created: ' + histlog.id);
-
-    if (body.object !== 'whatsapp_business_account') {
-      console.error('object is not whatsapp_business_account: ' + body.object);
-      return;
-    }
 
     let isMessage = false;
     for (const entry of body.entry) {
@@ -92,10 +90,6 @@ export class WhatsappController {
             const sent_text_message = await this.wa.messages.text(
               { body: message.text.body },
               message.from,
-            );
-
-            this.logger.log(
-              'message sent: ' + JSON.stringify(await sent_text_message.responseBodyToJSON()),
             );
           } catch (e) {
             this.logger.error(JSON.stringify(e.message));
