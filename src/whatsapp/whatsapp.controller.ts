@@ -43,9 +43,14 @@ export class WhatsappController {
 
   @Post('webhook')
   async webhook(@Body() bodyRaw) {
+    this.logger.log('webhook called');
     const body: WebhookObject = bodyRaw;
 
-    await this.service.historyService.create(body, MessageDirection.INCOMING);
+    const histlog = await this.service.historyService.create(
+      body,
+      MessageDirection.INCOMING,
+    );
+    this.logger.log('history log created: ' + histlog.id);
 
     if (body.object !== 'whatsapp_business_account') {
       console.error('object is not whatsapp_business_account: ' + body.object);
@@ -56,41 +61,44 @@ export class WhatsappController {
     for (const entry of body.entry) {
       for (const change of entry.changes) {
         if (change.field !== 'messages') {
-          console.error('field is not messages: ' + change.field);
-          return;
+          this.logger.error('field is not messages: ' + change.field);
+          continue;
         }
         const value = change.value;
         if (value.messaging_product !== 'whatsapp') {
-          console.error(
+          this.logger.error(
             'messaging_product is not whatsapp: ' + value.messaging_product,
           );
-          return;
+          continue;
         }
         if (value.statuses) {
-          console.error('status message arrived. not processed');
+          this.logger.error('status message arrived. not processed');
           continue;
         }
         if (value.contacts === undefined || value.contacts.length !== 1) {
-          console.error('contacts.length is not 1: ' + value.contacts.length);
-          return;
+          this.logger.error(
+            'contacts.length is not 1: ' + value.contacts.length,
+          );
+          continue;
         }
         const contact = value.contacts[0];
         for (const message of value.messages) {
           isMessage = true;
           if (message.type !== 'text') {
-            console.error('message.type is not text: ' + message.type);
-            return;
+            this.logger.error('message.type is not text: ' + message.type);
+            continue;
           }
           try {
-            // const sent_text_message =
-            await this.wa.messages.text(
+            const sent_text_message = await this.wa.messages.text(
               { body: message.text.body },
               message.from,
             );
 
-            // console.log(await sent_text_message.responseBodyToJSON());
+            this.logger.log(
+              'message sent: ' + (await sent_text_message.responseBodyToJSON()),
+            );
           } catch (e) {
-            console.log(JSON.stringify(e.message));
+            this.logger.error(JSON.stringify(e.message));
             return;
           }
         }
@@ -98,7 +106,7 @@ export class WhatsappController {
     }
 
     if (isMessage) {
-      this.logger.log(body);
+      this.logger.log(JSON.stringify(body));
     }
     return 'ok';
   }
