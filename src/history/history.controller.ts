@@ -5,5 +5,5 @@ import { HistoryService } from './history.service';
 
 @Controller('history')
 export class HistoryController {
-  constructor(private readonly historyService: HistoryService) {}
+  constructor(private readonly service: HistoryService) {}
 }

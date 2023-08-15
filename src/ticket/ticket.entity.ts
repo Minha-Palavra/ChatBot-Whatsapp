@@ -1,6 +1,6 @@
 import { AbstractEntity } from '../shared/abstract.entity';
 import { ApiProperty } from '@nestjs/swagger';
-import {Column, Entity, JoinTable, ManyToMany, ManyToOne, OneToMany} from 'typeorm';
+import { Entity, ManyToOne } from 'typeorm';
 import { UserEntity } from '../user/user.entity';
 import { DecisionEntity } from '../decision/decision.entity';
 
