@@ -75,13 +75,9 @@ export class WhatsappService {
           );
           continue;
         }
-        if (value.messages && value.messages.length !== 1) {
+        if (value.messages && value.messages.length !== 0) {
           isMessage = true;
-          try {
-            await this.processMessages(value);
-          } catch (e) {
-            this.logger.error(e);
-          }
+          await this.processMessages(value);
         }
       }
     }
@@ -155,7 +151,7 @@ export class WhatsappService {
         name: username,
       });
 
-      // ensure ticket exists
+      // TODO: ensure ticket exists
       // find the newest ticket
       const ticket = await this.ticketService.findOne({
         where: { user: user },
@@ -165,15 +161,57 @@ export class WhatsappService {
 
       // todo: create ticket if not exists
 
-      if (ticket === undefined || ticket.state === TicketState.NONE) {
+      if (ticket === null || ticket.state === TicketState.NONE) {
         // todo: send greetings
         const interactive = await this.genarateInteractiveObjectFromDecision({
           slug: 'bem-vindo',
         });
 
         const sent_text_message = await this.wa.messages.interactive(
-          interactive,
+          {
+            type: 'list',
+            header: {
+              type: 'text',
+              text: 'header',
+            },
+            body: {
+              text: 'body',
+            },
+            footer: {
+              text: 'footer',
+            },
+            action: {
+              button: 'button',
+              sections: [
+                {
+                  title: 'sec1',
+                  rows: [
+                    {
+                      id: 'r1',
+                      title: 'c1',
+                      description: 'd1',
+                    },
+                  ],
+                },
+                {
+                  title: 's2',
+                  rows: [
+                    {
+                      id: 'id2',
+                      title: 'r2',
+                      description: 'd2',
+                    },
+                  ],
+                },
+              ],
+            },
+          },
           phonenumber,
+        );
+        this.logger.log(
+          sent_text_message.statusCode() +
+            ' ' +
+            JSON.stringify(sent_text_message.responseBodyToJSON()),
         );
       }
     }
