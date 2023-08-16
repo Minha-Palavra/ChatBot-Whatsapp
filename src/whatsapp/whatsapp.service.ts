@@ -13,7 +13,7 @@ import { TicketState } from '../ticket/ticket.entity';
 import { InteractiveObject } from 'whatsapp/src/types/messages';
 import { DecisionService } from '../decision/decision.service';
 import { DecisionEntity } from '../decision/decision.entity';
-import {InteractiveTypesEnum} from "whatsapp/src/types/enums";
+import { InteractiveTypesEnum } from 'whatsapp/src/types/enums';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const WhatsApp = require('whatsapp');
@@ -79,7 +79,9 @@ export class WhatsappService {
           isMessage = true;
           try {
             await this.processMessages(value);
-          } catch (e) {}
+          } catch (e) {
+            this.logger.error(e);
+          }
         }
       }
     }
