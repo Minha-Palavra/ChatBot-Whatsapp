@@ -4,9 +4,16 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { HistoryService } from '../history/history.service';
-import { WebhookObject } from 'whatsapp/build/types/webhooks';
+import { ValueObject, WebhookObject } from 'whatsapp/build/types/webhooks';
 import { ConfigService } from '@nestjs/config';
 import { MessageDirection } from '../history/history.entity';
+import { UserService } from '../user/user.service';
+import { TicketService } from '../ticket/ticket.service';
+import { TicketState } from '../ticket/ticket.entity';
+import { InteractiveObject } from 'whatsapp/src/types/messages';
+import { DecisionService } from '../decision/decision.service';
+import { DecisionEntity } from '../decision/decision.entity';
+import {InteractiveTypesEnum} from "whatsapp/src/types/enums";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const WhatsApp = require('whatsapp');
@@ -19,6 +26,9 @@ export class WhatsappService {
   constructor(
     public historyService: HistoryService,
     private configService: ConfigService,
+    private userService: UserService,
+    private ticketService: TicketService,
+    private decisionService: DecisionService,
   ) {}
 
   async checkWebhookMinimumRequirements(body: WebhookObject) {
@@ -65,137 +75,105 @@ export class WhatsappService {
           );
           continue;
         }
-        const contact = value.contacts[0];
-        for (const message of value.messages) {
+        if (value.messages && value.messages.length !== 1) {
           isMessage = true;
-          if (message.type !== 'text') {
-            this.logger.error('message.type is not text: ' + message.type);
-            continue;
-          }
           try {
-            const sent_text_message = await this.wa.messages.text(
-              { body: message.text.body },
-              message.from,
-            );
-          } catch (e) {
-            this.logger.error(JSON.stringify(e.message));
-            return;
-          }
+            await this.processMessages(value);
+          } catch (e) {}
         }
       }
     }
 
-    if (isMessage) {
-      this.logger.log(JSON.stringify(body));
-    }
+    if (isMessage) this.logger.log(JSON.stringify(body));
+
     return 'ok';
   }
 
-  // Nome
-  // Versão do teste
-  // Versão da assinatura
-  // Assinar
-  // account_alerts
-  // Seletor da versão de teste para o campo de webhook account_alerts. Definido na versão v17.0.
-  // v17.0
-  // ​
-  // Seletor da versão de assinatura para o campo de webhook account_alerts. Definido na versão v17.0.
-  // v17.0
-  // ​
-  //
-  // account_review_update
-  // Seletor da versão de teste para o campo de webhook account_review_update. Definido na versão v17.0.
-  // v17.0
-  // ​
-  // Seletor da versão de assinatura para o campo de webhook account_review_update. Definido na versão v17.0.
-  // v17.0
-  // ​
-  //
-  // account_update
-  // Seletor da versão de teste para o campo de webhook account_update. Definido na versão v17.0.
-  // v17.0
-  // ​
-  // Seletor da versão de assinatura para o campo de webhook account_update. Definido na versão v17.0.
-  // v17.0
-  // ​
-  //
-  // business_capability_update
-  // Seletor da versão de teste para o campo de webhook business_capability_update. Definido na versão v17.0.
-  // v17.0
-  // ​
-  // Seletor da versão de assinatura para o campo de webhook business_capability_update. Definido na versão v17.0.
-  // v17.0
-  // ​
-  //
-  // business_status_update
-  // Seletor da versão de teste para o campo de webhook business_status_update. Definido na versão v17.0.
-  // v17.0
-  // ​
-  // Seletor da versão de assinatura para o campo de webhook business_status_update. Definido na versão v17.0.
-  // v17.0
-  // ​
-  //
-  // campaign_status_update
-  // Seletor da versão de teste para o campo de webhook campaign_status_update. Definido na versão v17.0.
-  // v17.0
-  // ​
-  // Seletor da versão de assinatura para o campo de webhook campaign_status_update. Definido na versão v17.0.
-  // v17.0
-  // ​
-  //
-  // message_template_quality_update
-  // Seletor da versão de teste para o campo de webhook message_template_quality_update. Definido na versão v17.0.
-  // v17.0
-  // ​
-  // Seletor da versão de assinatura para o campo de webhook message_template_quality_update. Definido na versão v17.0.
-  // v17.0
-  // ​
-  //
-  // message_template_status_update
-  // Seletor da versão de teste para o campo de webhook message_template_status_update. Definido na versão v17.0.
-  // v17.0
-  // ​
-  // Seletor da versão de assinatura para o campo de webhook message_template_status_update. Definido na versão v17.0.
-  // v17.0
-  // ​
-  //
-  // messages
-  // Seletor da versão de teste para o campo de webhook messages. Definido na versão v17.0.
-  // v17.0
-  // ​
-  // Seletor da versão de assinatura para o campo de webhook messages. Definido na versão v17.0.
-  // v17.0
-  // ​
-  //
-  // phone_number_name_update
-  // Seletor da versão de teste para o campo de webhook phone_number_name_update. Definido na versão v17.0.
-  // v17.0
-  // ​
-  // Seletor da versão de assinatura para o campo de webhook phone_number_name_update. Definido na versão v17.0.
-  // v17.0
-  // ​
-  //
-  // phone_number_quality_update
-  // Seletor da versão de teste para o campo de webhook phone_number_quality_update. Definido na versão v17.0.
-  // v17.0
-  // ​
-  // Seletor da versão de assinatura para o campo de webhook phone_number_quality_update. Definido na versão v17.0.
-  // v17.0
-  // ​
-  //
-  // security
-  // Seletor da versão de teste para o campo de webhook security. Definido na versão v17.0.
-  // v17.0
-  // ​
-  // Seletor da versão de assinatura para o campo de webhook security. Definido na versão v17.0.
-  // v17.0
-  // ​
-  //
-  // template_category_update
-  // Seletor da versão de teste para o campo de webhook template_category_update. Definido na versão v17.0.
-  // v17.0
-  // ​
-  // Seletor da versão de assinatura para o campo de webhook template_category_update. Definido na versão v17.0.
-  // v17.0
-  // ​
+  async genarateInteractiveObjectFromDecision(
+    root: Partial<DecisionEntity>,
+  ): Promise<InteractiveObject> {
+    const decision = await this.decisionService.findOne({
+      where: [{ slug: root.slug }, { id: root.id }],
+    });
+    // todo: check corner cases
+    const descendent = await this.decisionService.findDescendants(decision);
+    const interactive: InteractiveObject = {
+      action: {
+        buttons: [],
+      },
+      type: InteractiveTypesEnum.List,
+      body: {
+        text: decision.description,
+      },
+      header: {
+        type: 'text',
+        text: decision.title,
+      },
+      footer: {
+        text: 'Escolha uma opção',
+      },
+    };
+    if (descendent.length > 0) {
+      for (const child of descendent) {
+        interactive.action.buttons.push({
+          type: 'reply',
+          reply: {
+            title: child.title,
+            id: child.slug,
+          },
+        });
+      }
+    }
+    return interactive;
+  }
+  async processMessages(value: ValueObject) {
+    const messages = value.messages;
+    if (
+      value.contacts === undefined ||
+      value.contacts === null ||
+      value.contacts.length !== 1
+    ) {
+      this.logger.error('value doenst have contact');
+      return;
+    }
+    const contact = value.contacts[0];
+    for (const msg of messages) {
+      if (msg.type !== 'text') {
+        this.logger.error('message.type is not text: ' + msg.type);
+        continue;
+      }
+
+      const phonenumber = msg.from;
+      const username = contact.profile.name;
+      const body = msg.text.body;
+
+      // ensure user exists
+      const user = await this.userService.createOrFindOneByNumber({
+        phonenumber: phonenumber,
+        name: username,
+      });
+
+      // ensure ticket exists
+      // find the newest ticket
+      const ticket = await this.ticketService.findOne({
+        where: { user: user },
+        order: { updatedAt: 'DESC' },
+        relations: { decision: true },
+      });
+
+      // todo: create ticket if not exists
+
+      if (ticket === undefined || ticket.state === TicketState.NONE) {
+        // todo: send greetings
+        const interactive = await this.genarateInteractiveObjectFromDecision({
+          slug: 'bem-vindo',
+        });
+
+        const sent_text_message = await this.wa.messages.interactive(
+          interactive,
+          phonenumber,
+        );
+      }
+    }
+  }
 }

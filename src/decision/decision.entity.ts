@@ -1,6 +1,6 @@
 import {
   Column,
-  Entity,
+  Entity, Index,
   OneToMany,
   Tree,
   TreeChildren,
@@ -18,6 +18,7 @@ export class DecisionEntity extends AbstractEntity {
   title: string;
 
   @ApiProperty()
+  @Index({ unique: false })
   @Column() // todo: make unique. ex "assistencia-tecnica/venda-de-aparelhos-quebrados" is duplicated
   slug: string;
 

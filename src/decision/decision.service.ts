@@ -7,6 +7,8 @@ import {
   MinhaPalavraSeedType,
 } from './minhapalavra.seed';
 import slugify from 'slugify';
+import { FindOneOptions } from 'typeorm/find-options/FindOneOptions';
+import { FindTreeOptions } from 'typeorm/find-options/FindTreeOptions';
 
 @Injectable()
 export class DecisionService {
@@ -48,10 +50,23 @@ export class DecisionService {
     }
   }
 
-  // create(data: Partial<WebhookObject>, direction: MessageDirection) {
-  //     return this.repository.save({
-  //         message: data,
-  //         direction: direction,
-  //     });
-  // }
+  async findOne(
+    options: FindOneOptions<DecisionEntity>,
+  ): Promise<DecisionEntity> {
+    return this.repository.findOne(options);
+  }
+
+  async findDescendants(
+    decision: Partial<DecisionEntity>,
+    options?: FindTreeOptions,
+  ): Promise<DecisionEntity[]> {
+    let decisionEntity: DecisionEntity;
+    if (decision.id === undefined)
+      decisionEntity = await this.repository.findOne({
+        where: [{ id: decision.id }, { slug: decision.slug }],
+      });
+    else decisionEntity = decision as DecisionEntity;
+
+    return this.repository.findDescendants(decisionEntity, options);
+  }
 }
