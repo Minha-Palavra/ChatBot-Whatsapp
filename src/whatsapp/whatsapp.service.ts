@@ -87,6 +87,11 @@ export class WhatsappService {
     return 'ok';
   }
 
+  clampString(str: string, max: number): string {
+    if (!str) return '.';
+    return str.length > max ? str.substr(0, max - 4) + '...' : str;
+  }
+
   async genarateInteractiveObjectFromDecision(
     root: Partial<DecisionEntity>,
   ): Promise<InteractiveObject> {
@@ -94,31 +99,34 @@ export class WhatsappService {
       where: [{ slug: root.slug }, { id: root.id }],
     });
     // todo: check corner cases
-    const descendent = await this.decisionService.findDescendants(decision);
+    const descendent = await this.decisionService.findImmediateDescendants(
+      decision,
+    );
     const interactive: InteractiveObject = {
       action: {
-        buttons: [],
+        button: 'Escolha',
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        sections: [{ rows: [] }],
       },
       type: InteractiveTypesEnum.List,
       body: {
-        text: decision.description,
+        text: this.clampString(decision.description, 1024),
       },
       header: {
         type: 'text',
-        text: decision.title,
+        text: this.clampString(decision.title, 60),
       },
       footer: {
-        text: 'Escolha uma opção',
+        text: this.clampString('Escolha uma opção', 60),
       },
     };
     if (descendent.length > 0) {
       for (const child of descendent) {
-        interactive.action.buttons.push({
-          type: 'reply',
-          reply: {
-            title: child.title,
-            id: child.slug,
-          },
+        interactive.action.sections[0].rows.push({
+          title: this.clampString(child.title, 24),
+          id: this.clampString(child.slug, 200),
+          description: this.clampString(child.description, 72),
         });
       }
     }
@@ -167,45 +175,10 @@ export class WhatsappService {
           slug: 'bem-vindo',
         });
 
+        this.logger.warn(interactive);
+
         const sent_text_message = await this.wa.messages.interactive(
-          {
-            type: 'list',
-            header: {
-              type: 'text',
-              text: 'header',
-            },
-            body: {
-              text: 'body',
-            },
-            footer: {
-              text: 'footer',
-            },
-            action: {
-              button: 'button',
-              sections: [
-                {
-                  title: 'sec1',
-                  rows: [
-                    {
-                      id: 'r1',
-                      title: 'c1',
-                      description: 'd1',
-                    },
-                  ],
-                },
-                {
-                  title: 's2',
-                  rows: [
-                    {
-                      id: 'id2',
-                      title: 'r2',
-                      description: 'd2',
-                    },
-                  ],
-                },
-              ],
-            },
-          },
+          interactive,
           phonenumber,
         );
         this.logger.log(

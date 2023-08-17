@@ -36,18 +36,20 @@ export class DecisionService {
   async seedRecursive(
     seed: Partial<MinhaPalavraSeedType>,
     parent: DecisionEntity,
-  ) {
+  ): Promise<DecisionEntity> {
     if (!seed.slug) seed.slug = slugify(seed.title, { lower: true });
     const entity = await this.repository.save({
       title: seed.title,
       slug: seed.slug,
       parent: parent,
     });
+    entity.children = [];
     if (seed.children) {
       for (const child of seed.children) {
-        await this.seedRecursive(child, entity);
+        entity.children.push(await this.seedRecursive(child, entity));
       }
     }
+    return entity;
   }
 
   async findOne(
@@ -56,17 +58,22 @@ export class DecisionService {
     return this.repository.findOne(options);
   }
 
-  async findDescendants(
+  async findImmediateDescendants(
     decision: Partial<DecisionEntity>,
-    options?: FindTreeOptions,
   ): Promise<DecisionEntity[]> {
     let decisionEntity: DecisionEntity;
-    if (decision.id === undefined)
+    if (decision.slug && (decision.id === undefined || decision.id === null))
       decisionEntity = await this.repository.findOne({
-        where: [{ id: decision.id }, { slug: decision.slug }],
+        where: [{ slug: decision.slug }],
       });
     else decisionEntity = decision as DecisionEntity;
 
-    return this.repository.findDescendants(decisionEntity, options);
+    return this.repository.find({
+      where: {
+        parent: {
+          id: decisionEntity.id,
+        },
+      },
+    });
   }
 }
