@@ -58,9 +58,9 @@ export class DecisionService {
     return this.repository.findOne(options);
   }
 
-  async findImmediateDescendants(
+  async fillChildrenDepth1(
     decision: Partial<DecisionEntity>,
-  ): Promise<DecisionEntity[]> {
+  ): Promise<DecisionEntity> {
     let decisionEntity: DecisionEntity;
     if (decision.slug && (decision.id === undefined || decision.id === null))
       decisionEntity = await this.repository.findOne({
@@ -68,12 +68,13 @@ export class DecisionService {
       });
     else decisionEntity = decision as DecisionEntity;
 
-    return this.repository.find({
+    decisionEntity.children = await this.repository.find({
       where: {
         parent: {
           id: decisionEntity.id,
         },
       },
     });
+    return decisionEntity;
   }
 }

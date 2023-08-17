@@ -13,10 +13,7 @@ export class TicketService extends TypeOrmCrudService<TicketEntity> {
     super(repository);
   }
 
-  // create(data: Partial<WebhookObject>) {
-  //   return this.repository.save({
-  //     message: data,
-  //     direction: direction,
-  //   });
-  // }
+  create(data: Partial<TicketEntity>) {
+    return this.repository.save(data);
+  }
 }

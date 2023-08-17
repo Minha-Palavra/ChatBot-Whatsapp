@@ -7,6 +7,7 @@ import { DecisionEntity } from '../decision/decision.entity';
 export enum TicketState {
   NONE = 'NONE',
   InProgress = 'INPROGRESS',
+  Chosing = 'CHOSING',
   Finished = 'FINISHED',
 }
 
@@ -17,7 +18,7 @@ export class TicketEntity extends AbstractEntity {
   user: UserEntity;
 
   @ApiProperty({ enum: TicketState })
-  @Column({ enum: TicketState, default: TicketState.NONE })
+  @Column({ type: 'enum', enum: TicketState, default: TicketState.NONE })
   state: TicketState;
 
   @ApiProperty()

@@ -95,13 +95,14 @@ export class WhatsappService {
   async genarateInteractiveObjectFromDecision(
     root: Partial<DecisionEntity>,
   ): Promise<InteractiveObject> {
-    const decision = await this.decisionService.findOne({
+    let decision = await this.decisionService.findOne({
       where: [{ slug: root.slug }, { id: root.id }],
     });
-    // todo: check corner cases
-    const descendent = await this.decisionService.findImmediateDescendants(
-      decision,
-    );
+
+    decision = await this.decisionService.fillChildrenDepth1(decision);
+
+    if (!decision.children || decision.children.length === 0) return null;
+
     const interactive: InteractiveObject = {
       action: {
         button: 'Escolha',
@@ -121,8 +122,8 @@ export class WhatsappService {
         text: this.clampString('Escolha uma opção', 60),
       },
     };
-    if (descendent.length > 0) {
-      for (const child of descendent) {
+    if (decision.children.length > 0) {
+      for (const child of decision.children) {
         interactive.action.sections[0].rows.push({
           title: this.clampString(child.title, 24),
           id: this.clampString(child.slug, 200),
@@ -161,31 +162,47 @@ export class WhatsappService {
 
       // TODO: ensure ticket exists
       // find the newest ticket
-      const ticket = await this.ticketService.findOne({
+      let ticket = await this.ticketService.findOne({
         where: { user: user },
         order: { updatedAt: 'DESC' },
         relations: { decision: true },
       });
-
-      // todo: create ticket if not exists
-
-      if (ticket === null || ticket.state === TicketState.NONE) {
-        // todo: send greetings
-        const interactive = await this.genarateInteractiveObjectFromDecision({
-          slug: 'bem-vindo',
+      if (!ticket) {
+        ticket = await this.ticketService.create({
+          user: user,
+          decision: await this.decisionService.findOne({
+            where: { slug: 'bem-vindo' },
+          }),
+          state: TicketState.Chosing,
         });
+      }
 
-        this.logger.warn(interactive);
+      if (ticket.state === TicketState.Chosing) {
+        const interactive = await this.genarateInteractiveObjectFromDecision(
+          ticket.decision,
+        );
 
-        const sent_text_message = await this.wa.messages.interactive(
-          interactive,
-          phonenumber,
-        );
-        this.logger.log(
-          sent_text_message.statusCode() +
-            ' ' +
-            JSON.stringify(sent_text_message.responseBodyToJSON()),
-        );
+        if (!interactive) {
+          const sent_text_message = await this.wa.messages.interactive(
+            interactive,
+            phonenumber,
+          );
+          this.logger.log(
+            sent_text_message.statusCode() +
+              ' ' +
+              JSON.stringify(sent_text_message.responseBodyToJSON()),
+          );
+        } else {
+          const sent_text_message = await this.wa.messages.text(
+            { body: 'nao ha mais opcoes' },
+            phonenumber,
+          );
+          this.logger.log(
+            sent_text_message.statusCode() +
+              ' ' +
+              JSON.stringify(sent_text_message.responseBodyToJSON()),
+          );
+        }
       }
     }
   }
