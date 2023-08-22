@@ -23,8 +23,8 @@ export class WhatsappController {
   ) {}
   @Get('webhook')
   tokenCheck(@Req() req: RawBodyRequest<Request>, @Query() query): string {
-    console.log(JSON.stringify(req.body));
-    console.log(JSON.stringify(query));
+    console.log("body:"+JSON.stringify(req.body));
+    console.log("query:"+JSON.stringify(query));
     if (
       query['hub.mode'] == 'subscribe' &&
       query['hub.verify_token'] ===
