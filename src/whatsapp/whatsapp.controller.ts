@@ -38,7 +38,8 @@ export class WhatsappController {
 
   @Post('webhook')
   @ApiBody({ schema: { type: 'object' } })
-  async webhook(@Body() body: WebhookObject): Promise<string> {
+  async webhook(@Body() body: any): Promise<string> {
+    console.log(JSON.stringify(body));
     return await this.service.handleWebhook(body);
   }
 }
