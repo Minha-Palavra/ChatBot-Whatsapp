@@ -48,6 +48,9 @@ export class WhatsappService {
   }
 
   async handleWebhook(body: WebhookObject) {
+
+    this.logger.log("Message Arrived: " + JSON.stringify(body));
+
     await this.checkWebhookMinimumRequirements(body);
     await this.saveMessage(body);
 
