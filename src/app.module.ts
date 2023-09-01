@@ -11,6 +11,7 @@ import { addTransactionalDataSource } from 'typeorm-transactional';
 import { DataSource } from 'typeorm';
 import { DecisionModule } from './decision/decision.module';
 import { TicketModule } from './ticket/ticket.module';
+import { ProposalModule } from './proposal/proposal.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { TicketModule } from './ticket/ticket.module';
     HistoryModule,
     DecisionModule,
     TicketModule,
+    ProposalModule,
   ],
   controllers: [AppController],
   providers: [AppService],

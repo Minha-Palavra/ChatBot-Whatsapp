@@ -8,7 +8,6 @@ import {
 } from './minhapalavra.seed';
 import slugify from 'slugify';
 import { FindOneOptions } from 'typeorm/find-options/FindOneOptions';
-import { FindTreeOptions } from 'typeorm/find-options/FindTreeOptions';
 
 @Injectable()
 export class DecisionService {
@@ -58,7 +57,7 @@ export class DecisionService {
     return this.repository.findOne(options);
   }
 
-  async fillChildrenDepth1(
+  async fillChildren(
     decision: Partial<DecisionEntity>,
   ): Promise<DecisionEntity> {
     let decisionEntity: DecisionEntity;

@@ -23,8 +23,8 @@ export class WhatsappController {
   ) {}
   @Get('webhook')
   tokenCheck(@Req() req: RawBodyRequest<Request>, @Query() query): string {
-    console.log("body:"+JSON.stringify(req.body));
-    console.log("query:"+JSON.stringify(query));
+    console.log('body:' + JSON.stringify(req.body));
+    console.log('query:' + JSON.stringify(query));
     if (
       query['hub.mode'] == 'subscribe' &&
       query['hub.verify_token'] ===
@@ -39,7 +39,7 @@ export class WhatsappController {
   @Post('webhook')
   @ApiBody({ schema: { type: 'object' } })
   async webhook(@Body() body: any): Promise<string> {
-    console.log(JSON.stringify(body));
+    // console.log(JSON.stringify(body));
     return await this.service.handleWebhook(body);
   }
 }

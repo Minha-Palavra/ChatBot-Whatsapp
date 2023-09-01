@@ -78,11 +78,16 @@ export class ApiConfigService {
       database: this.getString('DB_DATABASE') || 'postgres',
       // subscribers: [UserSubscriber],
       migrationsRun: true,
-      logging: this.getBoolean('ENABLE_ORM_LOGS', false),
+      logging: this.getBoolean('ENABLE_ORM_LOGS', true),
       namingStrategy: new SnakeNamingStrategy(),
     };
   }
 
+  get chatGPTConfig() {
+    return {
+      apiKey: this.getString('OPENAI_API_KEY'),
+    };
+  }
   // get awsS3Config() {
   //     return {
   //         bucketRegion: this.getString('AWS_S3_BUCKET_REGION'),

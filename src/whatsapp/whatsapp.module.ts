@@ -6,6 +6,7 @@ import { HistoryModule } from '../history/history.module';
 import { UserModule } from '../user/user.module';
 import { DecisionModule } from '../decision/decision.module';
 import { TicketModule } from '../ticket/ticket.module';
+import { ProposalModule } from 'src/proposal/proposal.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { TicketModule } from '../ticket/ticket.module';
     UserModule,
     DecisionModule,
     TicketModule,
+    ProposalModule,
   ],
   providers: [WhatsappService],
   controllers: [WhatsappController],

@@ -1,7 +1,6 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserEntity } from './user.entity';
-import { WebhookObject } from 'whatsapp/build/types/webhooks';
 import { FindOptionsRelations, Repository } from 'typeorm';
 import { TypeOrmCrudService } from '@dataui/crud-typeorm';
 
@@ -32,10 +31,7 @@ export class UserService extends TypeOrmCrudService<UserEntity> {
     return await this.repository.save(userPartial);
   }
 
-  // create(data: Partial<WebhookObject>) {
-  //   return this.repository.save({
-  //     message: data,
-  //     direction: direction,
-  //   });
-  // }
+  async save(data: Partial<UserEntity>) {
+    return this.repository.save(data);
+  }
 }
