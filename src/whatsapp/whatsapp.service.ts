@@ -907,7 +907,6 @@ export class WhatsappService {
     contact: any,
     message: any,
   ): Promise<UserEntity> {
-    const displayName = contact.profile.name;
     const phoneNumber = message.from;
 
     return await this.userService.createOrFindOneByNumber({
@@ -1234,33 +1233,23 @@ export class WhatsappService {
     return true;
   }
 
-  // private formatPhoneNumber(phoneNumber: string): string | null {
-  //   const intDDI = phone(phoneNumber);
-  //   const comDDI = phone(phoneNumber, { country: 'BR' });
-  //   if (intDDI.isValid) return intDDI.phoneNumber.replace(/\D/g, '');
-  //   if (comDDI.isValid) return comDDI.phoneNumber.replace(/\D/g, '');
-  //   return null;
-  // }
   private formatPhoneNumber(phoneNumber: string): string | null {
-    const intDDI = phone(phoneNumber);
-    const comDDI = phone(phoneNumber, { country: 'BR' });
-
-    const addNinthDigit = (num: string): string => {
-      const cleanNum = num.replace(/\D/g, '');
-
-      if (cleanNum.length === 10) {
-        return cleanNum.slice(0, 2) + '9' + cleanNum.slice(2);
-      }
-      return cleanNum;
+    const options = {
+      country: 'BR',
+      validateMobilePrefix: true,
     };
 
-    if (intDDI.isValid) {
-      return intDDI.phoneNumber.replace(/\D/g, '');
+    let number = phone(phoneNumber, options);
+
+    if (number.phoneNumber.length === 13) {
+      number = phone(
+        number.phoneNumber.slice(0, 5) + '9' + number.phoneNumber.slice(5),
+        options,
+      );
     }
 
-    if (comDDI.isValid) {
-      const formattedNumber = addNinthDigit(comDDI.phoneNumber);
-      return formattedNumber.replace(/\D/g, '');
+    if (number.isValid) {
+      return number.phoneNumber.replace(/\D/g, '');
     }
 
     return null;
