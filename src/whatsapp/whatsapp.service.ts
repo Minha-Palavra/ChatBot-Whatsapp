@@ -912,7 +912,6 @@ export class WhatsappService {
 
     return await this.userService.createOrFindOneByNumber({
       phonenumber: phoneNumber,
-      name: displayName,
     });
   }
 
