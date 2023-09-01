@@ -1234,11 +1234,35 @@ export class WhatsappService {
     return true;
   }
 
+  // private formatPhoneNumber(phoneNumber: string): string | null {
+  //   const intDDI = phone(phoneNumber);
+  //   const comDDI = phone(phoneNumber, { country: 'BR' });
+  //   if (intDDI.isValid) return intDDI.phoneNumber.replace(/\D/g, '');
+  //   if (comDDI.isValid) return comDDI.phoneNumber.replace(/\D/g, '');
+  //   return null;
+  // }
   private formatPhoneNumber(phoneNumber: string): string | null {
     const intDDI = phone(phoneNumber);
     const comDDI = phone(phoneNumber, { country: 'BR' });
-    if (intDDI.isValid) return intDDI.phoneNumber.replace(/\D/g, '');
-    if (comDDI.isValid) return comDDI.phoneNumber.replace(/\D/g, '');
+
+    const addNinthDigit = (num: string): string => {
+      const cleanNum = num.replace(/\D/g, '');
+
+      if (cleanNum.length === 10) {
+        return cleanNum.slice(0, 2) + '9' + cleanNum.slice(2);
+      }
+      return cleanNum;
+    };
+
+    if (intDDI.isValid) {
+      return intDDI.phoneNumber.replace(/\D/g, '');
+    }
+
+    if (comDDI.isValid) {
+      const formattedNumber = addNinthDigit(comDDI.phoneNumber);
+      return formattedNumber.replace(/\D/g, '');
+    }
+
     return null;
   }
 
