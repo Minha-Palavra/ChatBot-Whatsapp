@@ -538,7 +538,7 @@ export class WhatsappService {
           const optionsPrefix = 'customer-phone-number';
 
           if (message.type === 'text') {
-            const customerPhoneNumber = message.text.body.replace(/\D/g, '');
+            let customerPhoneNumber = message.text.body.replace(/\D/g, '');
 
             if (!this.isValidPhoneNumber(customerPhoneNumber)) {
               await this.sendMessage(
@@ -548,7 +548,7 @@ export class WhatsappService {
               await this.requestCustomerPhoneNumber(phoneNumber, ticket);
               continue;
             }
-
+            customerPhoneNumber = this.formatPhoneNumber(customerPhoneNumber);
             const client = await this.userService.createOrFindOneByNumber({
               phonenumber: customerPhoneNumber,
             });
@@ -1233,6 +1233,14 @@ export class WhatsappService {
     }
 
     return true;
+  }
+
+  private formatPhoneNumber(phoneNumber: string): string | null {
+    const intDDI = phone(phoneNumber);
+    const comDDI = phone(phoneNumber, { country: 'BR' });
+    if (intDDI.isValid) return intDDI.phoneNumber.replace(/\D/g, '');
+    if (comDDI.isValid) return comDDI.phoneNumber.replace(/\D/g, '');
+    return null;
   }
 
   private isValidEmail(email: string): boolean {
