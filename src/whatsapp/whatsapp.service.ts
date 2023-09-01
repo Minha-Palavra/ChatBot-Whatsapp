@@ -908,10 +908,11 @@ export class WhatsappService {
     message: any,
   ): Promise<UserEntity> {
     const phoneNumber = this.formatPhoneNumber(message.from);
-
-    return await this.userService.createOrFindOneByNumber({
-      phonenumber: phoneNumber,
-    });
+    if (!phoneNumber) {
+      return await this.userService.createOrFindOneByNumber({
+        phonenumber: phoneNumber,
+      });
+    } else return null;
   }
 
   private async getServiceProviderFromTicket(
@@ -1241,17 +1242,22 @@ export class WhatsappService {
 
     let number = phone(phoneNumber, options);
 
-    if (number.phoneNumber.length === 13) {
-      number = phone(
-        number.phoneNumber.slice(0, 5) + '9' + number.phoneNumber.slice(5),
-        options,
-      );
-    }
-
     if (number.isValid) {
+      if (number.isValid && number.phoneNumber.length === 13) {
+        number = phone(
+          number.phoneNumber.slice(0, 5) + '9' + number.phoneNumber.slice(5),
+          options,
+        );
+      }
       return number.phoneNumber.replace(/\D/g, '');
     }
 
+    if (!number.isValid) {
+      number = phone(phoneNumber); // try without country code
+      if (number.isValid) {
+        return number.phoneNumber.replace(/\D/g, '');
+      }
+    }
     return null;
   }
 
