@@ -156,7 +156,7 @@ export class WhatsappService {
       }
 
       const user = await this.getUserFromMessage(contact, message);
-      const phoneNumber = message.from;
+      const phoneNumber = this.formatPhoneNumber(message.from);
 
       if (!user) {
         this.logger.error('Failed to get or create user from the message.');
