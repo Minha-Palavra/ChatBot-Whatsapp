@@ -908,10 +908,11 @@ export class WhatsappService {
     message: any,
   ): Promise<UserEntity> {
     const phoneNumber = this.formatPhoneNumber(message.from);
-
-    return await this.userService.createOrFindOneByNumber({
-      phonenumber: phoneNumber,
-    });
+    if (!phoneNumber) {
+      return await this.userService.createOrFindOneByNumber({
+        phonenumber: phoneNumber,
+      });
+    } else return null;
   }
 
   private async getServiceProviderFromTicket(
