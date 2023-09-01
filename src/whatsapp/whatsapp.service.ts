@@ -907,7 +907,7 @@ export class WhatsappService {
     contact: any,
     message: any,
   ): Promise<UserEntity> {
-    const phoneNumber = message.from;
+    const phoneNumber = this.formatPhoneNumber(message.from);
 
     return await this.userService.createOrFindOneByNumber({
       phonenumber: phoneNumber,
