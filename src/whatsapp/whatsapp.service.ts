@@ -863,6 +863,7 @@ export class WhatsappService {
 
         continue;
       }
+
       // If the user has no ticket or the newest ticket is finished, then create one.
       ticket = await this.createTicketForUser(user);
       // Send the category options.
@@ -990,6 +991,14 @@ export class WhatsappService {
       reply: {
         id: `${optionsPrefix}-no`,
         title: 'Não',
+      },
+    });
+
+    interactive.action.buttons.push({
+      type: 'reply',
+      reply: {
+        id: `${optionsPrefix}-cancel`,
+        title: 'cancel',
       },
     });
 
