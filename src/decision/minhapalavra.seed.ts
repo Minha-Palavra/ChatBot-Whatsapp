@@ -9,7 +9,7 @@ export const MinhaPalavraSeedData: MinhaPalavraSeedType = {
   title: 'Bem-vindo ao MinhaPalavra!',
   slug: 'bem-vindo',
   description:
-    'Navegue por nossas categorias e escolha aquela que melhor representa o serviço que você deseja prestar. Cada categoria foi cuidadosamente elaborada para abranger uma ampla gama de serviços, garantindo que sua especialidade seja reconhecida e solicitada por aqueles que necessitam de seu expertise. Seja qual for sua habilidade ou paixão, temos o lugar certo para você se destacar e crescer profissionalmente.',
+    'Navegue por nossas categorias e escolha aquela que melhor representa o serviço que você deseja prestar.',
   children: [
     {
       title: 'Assistência técnica',
