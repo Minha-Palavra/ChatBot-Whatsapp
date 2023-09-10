@@ -40,6 +40,7 @@ export class DecisionService {
     const entity = await this.repository.save({
       title: seed.title,
       slug: seed.slug,
+      description: seed.description,
       parent: parent,
     });
     entity.children = [];
@@ -47,6 +48,7 @@ export class DecisionService {
       for (const child of seed.children) {
         entity.children.push(await this.seedRecursive(child, entity));
       }
+      //await this.repository.save(entity);
     }
     return entity;
   }

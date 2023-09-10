@@ -756,7 +756,7 @@ export const MinhaPalavraSeedData: MinhaPalavraSeedType = {
           children: [
             {
               title: 'Apps para smartphone',
-              slug: '/design-e-tecnologia/aplicativos-para-celular-e-redes-sociais',
+              slug: 'design-e-tecnologia/aplicativos-para-celular-e-redes-sociais',
               description:
                 'Aplicativos móveis personalizados para todas as plataformas.',
             },

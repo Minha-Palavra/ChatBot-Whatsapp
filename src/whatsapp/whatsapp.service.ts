@@ -910,7 +910,7 @@ export class WhatsappService {
   ): Promise<UserEntity> {
     if (message && message.from) {
       const phoneNumber = this.formatPhoneNumber(message.from);
-      if (!phoneNumber) {
+      if (phoneNumber) {
         return await this.userService.createOrFindOneByNumber({
           phonenumber: phoneNumber,
         });
