@@ -139,6 +139,7 @@ export class WhatsappService {
 
   private async cancelTicket(ticket: TicketEntity) {
     //
+    ticket = await this.ticketService.findOne({ where: { id: ticket.id } });
     ticket.state = TicketState.Finished;
 
     await this.ticketService.save(ticket);
