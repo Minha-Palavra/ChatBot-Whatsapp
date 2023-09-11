@@ -289,6 +289,11 @@ export class WhatsappService {
           }
 
           if (selectedOption === 'previous-category') {
+            ticket.decision = await this.decisionService.findOne({
+              where: { id: ticket.id },
+              relations: ['parent'],
+            });
+
             if (!ticket.decision.parent.id) {
               this.logger.error(
                 `${ticket.decision.slug} has no parent category.`,
@@ -300,9 +305,8 @@ export class WhatsappService {
               await this.sendCategoryOptions(phoneNumber, ticket.decision);
               continue;
             }
-
             ticket.decision = await this.decisionService.findOne({
-              where: { id: ticket.decision.parent.id },
+              where: { id: ticket.parent.id },
             });
             await this.ticketService.save(ticket);
 
