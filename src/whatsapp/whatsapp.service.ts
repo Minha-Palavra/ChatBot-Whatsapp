@@ -1086,7 +1086,11 @@ export class WhatsappService {
   }
 
   private confirmatioOptionHasPrefix(option: string, prefix: string): boolean {
-    if (option === `${prefix}-yes` || option === `${prefix}-no`) {
+    if (
+      option === `${prefix}-yes` ||
+      option === `${prefix}-no` ||
+      option === `${prefix}-cancel`
+    ) {
       return true;
     }
     return false;
