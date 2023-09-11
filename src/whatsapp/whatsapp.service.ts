@@ -289,11 +289,10 @@ export class WhatsappService {
           }
 
           if (selectedOption === 'previous-category') {
-            if (!ticket.decision.parent) {
+            if (!ticket.decision.parent.id) {
               this.logger.error(
                 `${ticket.decision.slug} has no parent category.`,
               );
-
               await this.sendMessage(
                 phoneNumber,
                 'Esta não é uma opção válida neste momento. Por favor, selecione uma opção válida.',
