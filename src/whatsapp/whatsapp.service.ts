@@ -1046,7 +1046,7 @@ export class WhatsappService {
       type: 'reply',
       reply: {
         id: `${optionsPrefix}-cancel`,
-        title: 'cancel',
+        title: 'Cancelar',
       },
     });
 
