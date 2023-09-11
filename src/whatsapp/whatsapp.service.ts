@@ -133,6 +133,13 @@ export class WhatsappService {
           description: this.clampString(child.description, 72),
         });
       }
+      if (decision.parent) {
+        interactive.action.sections[0].rows.push({
+          title: this.clampString('Voltar', 24),
+          id: 'previous-category',
+          description: this.clampString('Voltar para a categoria anterior', 72),
+        });
+      }
     }
     return interactive;
   }
@@ -276,6 +283,28 @@ export class WhatsappService {
 
           if (!selectedOption) {
             this.logger.error('Failed to get selected option from message.');
+            continue;
+          }
+
+          if (selectedOption === 'previous-category') {
+            if (!ticket.decision.parent) {
+              this.logger.error(
+                `${ticket.decision.slug} has no parent category.`,
+              );
+
+              await this.sendMessage(
+                phoneNumber,
+                'Esta não é uma opção válida neste momento. Por favor, selecione uma opção válida.',
+              );
+              await this.sendCategoryOptions(phoneNumber, ticket.decision);
+              continue;
+            }
+
+            ticket.decision = await this.decisionService.findOne({
+              where: { id: ticket.decision.parent.id },
+            });
+            await this.ticketService.save(ticket);
+
             continue;
           }
 
