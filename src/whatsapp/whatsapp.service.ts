@@ -100,6 +100,7 @@ export class WhatsappService {
   ): Promise<InteractiveObject> {
     let decision = await this.decisionService.findOne({
       where: [{ slug: root.slug }, { id: root.id }],
+      relations: ['parent'],
     });
 
     decision = await this.decisionService.fillChildren(decision);
@@ -133,6 +134,7 @@ export class WhatsappService {
           description: this.clampString(child.description, 72),
         });
       }
+
       if (decision.parent) {
         interactive.action.sections[0].rows.push({
           title: this.clampString('Voltar', 24),
