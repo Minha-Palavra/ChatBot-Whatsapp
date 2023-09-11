@@ -220,7 +220,7 @@ export class WhatsappService {
           );
 
           if (selectedOption === `${optionsPrefix}-cancel`) {
-            this.cancelTicket(ticket);
+            await this.cancelTicket(ticket);
             continue;
           }
 
@@ -365,7 +365,7 @@ export class WhatsappService {
           }
 
           if (selectedOption === `${optionsPrefix}-cancel`) {
-            this.cancelTicket(ticket);
+            await this.cancelTicket(ticket);
             continue;
           }
 
@@ -439,7 +439,7 @@ export class WhatsappService {
           }
 
           if (selectedOption === `${optionsPrefix}-cancel`) {
-            this.cancelTicket(ticket);
+            await this.cancelTicket(ticket);
             continue;
           }
 
@@ -508,7 +508,7 @@ export class WhatsappService {
           }
 
           if (selectedOption === `${optionsPrefix}-cancel`) {
-            this.cancelTicket(ticket);
+            await this.cancelTicket(ticket);
             continue;
           }
 
@@ -618,7 +618,7 @@ export class WhatsappService {
           }
 
           if (selectedOption === `${optionsPrefix}-cancel`) {
-            this.cancelTicket(ticket);
+            await this.cancelTicket(ticket);
             continue;
           }
 
@@ -677,7 +677,7 @@ export class WhatsappService {
           }
 
           if (selectedOption === `${optionsPrefix}-cancel`) {
-            this.cancelTicket(ticket);
+            await this.cancelTicket(ticket);
             continue;
           }
 
@@ -749,7 +749,7 @@ export class WhatsappService {
           }
 
           if (selectedOption === `${optionsPrefix}-cancel`) {
-            this.cancelTicket(ticket);
+            await this.cancelTicket(ticket);
             continue;
           }
 
@@ -815,7 +815,7 @@ export class WhatsappService {
           }
 
           if (selectedOption === `${optionsPrefix}-cancel`) {
-            this.cancelTicket(ticket);
+            await this.cancelTicket(ticket);
             continue;
           }
 
@@ -870,7 +870,7 @@ export class WhatsappService {
           }
 
           if (selectedOption === `${optionsPrefix}-cancel`) {
-            this.cancelTicket(ticket);
+            await this.cancelTicket(ticket);
             continue;
           }
 
