@@ -221,6 +221,7 @@ export class WhatsappService {
 
           if (selectedOption === `${optionsPrefix}-cancel`) {
             this.cancelTicket(ticket);
+            continue;
           }
 
           if (selectedOption === `${optionsPrefix}-no`) {
@@ -365,6 +366,7 @@ export class WhatsappService {
 
           if (selectedOption === `${optionsPrefix}-cancel`) {
             this.cancelTicket(ticket);
+            continue;
           }
 
           if (selectedOption === `${optionsPrefix}-no`) {
@@ -438,6 +440,7 @@ export class WhatsappService {
 
           if (selectedOption === `${optionsPrefix}-cancel`) {
             this.cancelTicket(ticket);
+            continue;
           }
 
           if (selectedOption === `${optionsPrefix}-no`) {
@@ -506,6 +509,7 @@ export class WhatsappService {
 
           if (selectedOption === `${optionsPrefix}-cancel`) {
             this.cancelTicket(ticket);
+            continue;
           }
 
           if (selectedOption === `${optionsPrefix}-no`) {
@@ -615,6 +619,7 @@ export class WhatsappService {
 
           if (selectedOption === `${optionsPrefix}-cancel`) {
             this.cancelTicket(ticket);
+            continue;
           }
 
           if (selectedOption === `${optionsPrefix}-no`) {
@@ -673,6 +678,7 @@ export class WhatsappService {
 
           if (selectedOption === `${optionsPrefix}-cancel`) {
             this.cancelTicket(ticket);
+            continue;
           }
 
           if (selectedOption === `${optionsPrefix}-no`) {
@@ -744,6 +750,7 @@ export class WhatsappService {
 
           if (selectedOption === `${optionsPrefix}-cancel`) {
             this.cancelTicket(ticket);
+            continue;
           }
 
           if (selectedOption === `${optionsPrefix}-no`) {
@@ -809,6 +816,7 @@ export class WhatsappService {
 
           if (selectedOption === `${optionsPrefix}-cancel`) {
             this.cancelTicket(ticket);
+            continue;
           }
 
           if (selectedOption === `${optionsPrefix}-no`) {
@@ -863,6 +871,7 @@ export class WhatsappService {
 
           if (selectedOption === `${optionsPrefix}-cancel`) {
             this.cancelTicket(ticket);
+            continue;
           }
 
           if (selectedOption === `${optionsPrefix}-no`) {
