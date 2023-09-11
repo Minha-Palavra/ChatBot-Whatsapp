@@ -137,14 +137,12 @@ export class WhatsappService {
     return interactive;
   }
 
-  private async cancelTicket(ticket: TicketEntity) {
-    //
-    ticket = await this.ticketService.findOne({ where: { id: ticket.id } });
+  private async cancelTicket(phoneNumber: string, ticket: TicketEntity) {
     ticket.state = TicketState.Finished;
 
     await this.ticketService.save(ticket);
     await this.sendMessage(
-      ticket.user.phonenumber,
+      phoneNumber,
       'O ticket foi cancelado com sucesso. Obrigado por usar o nosso serviço.',
     );
   }
@@ -220,7 +218,7 @@ export class WhatsappService {
           );
 
           if (selectedOption === `${optionsPrefix}-cancel`) {
-            await this.cancelTicket(ticket);
+            await this.cancelTicket(phoneNumber, ticket);
             continue;
           }
 
@@ -365,7 +363,7 @@ export class WhatsappService {
           }
 
           if (selectedOption === `${optionsPrefix}-cancel`) {
-            await this.cancelTicket(ticket);
+            await this.cancelTicket(phoneNumber, ticket);
             continue;
           }
 
@@ -439,7 +437,7 @@ export class WhatsappService {
           }
 
           if (selectedOption === `${optionsPrefix}-cancel`) {
-            await this.cancelTicket(ticket);
+            await this.cancelTicket(phoneNumber, ticket);
             continue;
           }
 
@@ -508,7 +506,7 @@ export class WhatsappService {
           }
 
           if (selectedOption === `${optionsPrefix}-cancel`) {
-            await this.cancelTicket(ticket);
+            await this.cancelTicket(phoneNumber, ticket);
             continue;
           }
 
@@ -618,7 +616,7 @@ export class WhatsappService {
           }
 
           if (selectedOption === `${optionsPrefix}-cancel`) {
-            await this.cancelTicket(ticket);
+            await this.cancelTicket(phoneNumber, ticket);
             continue;
           }
 
@@ -677,7 +675,7 @@ export class WhatsappService {
           }
 
           if (selectedOption === `${optionsPrefix}-cancel`) {
-            await this.cancelTicket(ticket);
+            await this.cancelTicket(phoneNumber, ticket);
             continue;
           }
 
@@ -749,7 +747,7 @@ export class WhatsappService {
           }
 
           if (selectedOption === `${optionsPrefix}-cancel`) {
-            await this.cancelTicket(ticket);
+            await this.cancelTicket(phoneNumber, ticket);
             continue;
           }
 
@@ -815,7 +813,7 @@ export class WhatsappService {
           }
 
           if (selectedOption === `${optionsPrefix}-cancel`) {
-            await this.cancelTicket(ticket);
+            await this.cancelTicket(phoneNumber, ticket);
             continue;
           }
 
@@ -870,7 +868,7 @@ export class WhatsappService {
           }
 
           if (selectedOption === `${optionsPrefix}-cancel`) {
-            await this.cancelTicket(ticket);
+            await this.cancelTicket(phoneNumber, ticket);
             continue;
           }
 
