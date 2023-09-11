@@ -137,6 +137,17 @@ export class WhatsappService {
     return interactive;
   }
 
+  private async cancelTicket(ticket: TicketEntity) {
+    //
+    ticket.state = TicketState.Finished;
+
+    await this.ticketService.save(ticket);
+    await this.sendMessage(
+      ticket.user.phonenumber,
+      'O ticket foi cancelado com sucesso. Obrigado por usar o nosso serviço.',
+    );
+  }
+
   private async processMessages(value: ValueObject) {
     if (!this.isValidContact(value)) {
       this.logger.error("value doesn't have a valid contact.");
@@ -206,6 +217,10 @@ export class WhatsappService {
             customer.phonenumber,
             'Certo. Informaremos ao prestador de serviço.',
           );
+
+          if (selectedOption === `${optionsPrefix}-cancel`) {
+            this.cancelTicket(ticket);
+          }
 
           if (selectedOption === `${optionsPrefix}-no`) {
             ticket.accepted = false;
@@ -347,6 +362,10 @@ export class WhatsappService {
             continue;
           }
 
+          if (selectedOption === `${optionsPrefix}-cancel`) {
+            this.cancelTicket(ticket);
+          }
+
           if (selectedOption === `${optionsPrefix}-no`) {
             user.fullname = null;
 
@@ -416,6 +435,10 @@ export class WhatsappService {
             continue;
           }
 
+          if (selectedOption === `${optionsPrefix}-cancel`) {
+            this.cancelTicket(ticket);
+          }
+
           if (selectedOption === `${optionsPrefix}-no`) {
             user.taxpayerNumber = null;
 
@@ -478,6 +501,10 @@ export class WhatsappService {
               `O email ${serviceProvider.email}, está correto?`,
               optionsPrefix,
             );
+          }
+
+          if (selectedOption === `${optionsPrefix}-cancel`) {
+            this.cancelTicket(ticket);
           }
 
           if (selectedOption === `${optionsPrefix}-no`) {
@@ -585,6 +612,10 @@ export class WhatsappService {
             continue;
           }
 
+          if (selectedOption === `${optionsPrefix}-cancel`) {
+            this.cancelTicket(ticket);
+          }
+
           if (selectedOption === `${optionsPrefix}-no`) {
             ticket.client = null;
 
@@ -637,6 +668,10 @@ export class WhatsappService {
               optionsPrefix,
             );
             continue;
+          }
+
+          if (selectedOption === `${optionsPrefix}-cancel`) {
+            this.cancelTicket(ticket);
           }
 
           if (selectedOption === `${optionsPrefix}-no`) {
@@ -706,6 +741,10 @@ export class WhatsappService {
             continue;
           }
 
+          if (selectedOption === `${optionsPrefix}-cancel`) {
+            this.cancelTicket(ticket);
+          }
+
           if (selectedOption === `${optionsPrefix}-no`) {
             customer.taxpayerNumber = null;
 
@@ -767,6 +806,10 @@ export class WhatsappService {
             );
           }
 
+          if (selectedOption === `${optionsPrefix}-cancel`) {
+            this.cancelTicket(ticket);
+          }
+
           if (selectedOption === `${optionsPrefix}-no`) {
             customer.email = null;
 
@@ -815,6 +858,10 @@ export class WhatsappService {
               optionsPrefix,
             );
             continue;
+          }
+
+          if (selectedOption === `${optionsPrefix}-cancel`) {
+            this.cancelTicket(ticket);
           }
 
           if (selectedOption === `${optionsPrefix}-no`) {
