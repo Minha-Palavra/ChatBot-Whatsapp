@@ -309,7 +309,7 @@ export class WhatsappService {
               where: { id: ticket.decision.parent.id },
             });
             await this.ticketService.save(ticket);
-
+            await this.sendCategoryOptions(phoneNumber, ticket.decision);
             continue;
           }
 
