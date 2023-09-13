@@ -294,7 +294,7 @@ export class WhatsappService {
               relations: ['parent'],
             });
 
-            if (!ticket.decision.parent.id) {
+            if (!ticket.decision.parent) {
               this.logger.error(
                 `${ticket.decision.slug} has no parent category.`,
               );
