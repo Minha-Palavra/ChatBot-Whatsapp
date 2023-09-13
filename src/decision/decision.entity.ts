@@ -2,17 +2,15 @@ import {
   Column,
   Entity,
   Index,
+  JoinTable,
+  ManyToMany,
   OneToMany,
-  Tree,
-  TreeChildren,
-  TreeParent,
 } from 'typeorm';
 import { AbstractEntity } from '../shared/abstract.entity';
 import { ApiProperty } from '@nestjs/swagger';
 import { TicketEntity } from '../ticket/ticket.entity';
 
 @Entity({ name: 'decision' })
-@Tree('nested-set')
 export class DecisionEntity extends AbstractEntity {
   @ApiProperty()
   @Column()
@@ -20,7 +18,7 @@ export class DecisionEntity extends AbstractEntity {
 
   @ApiProperty()
   @Index({ unique: false })
-  @Column() // todo: make unique. ex "assistencia-tecnica/venda-de-aparelhos-quebrados" is duplicated
+  @Column()
   slug: string;
 
   @ApiProperty()
@@ -28,11 +26,12 @@ export class DecisionEntity extends AbstractEntity {
   description: string;
 
   @ApiProperty({ type: () => DecisionEntity })
-  @TreeParent() // todo: add options here
-  parent: DecisionEntity;
+  @ManyToMany(() => DecisionEntity, (decision) => decision.parent)
+  @JoinTable()
+  parent: DecisionEntity[];
 
   @ApiProperty({ type: () => [DecisionEntity] })
-  @TreeChildren() // todo: add options here
+  @ManyToMany(() => DecisionEntity, (decision) => decision.children)
   children: DecisionEntity[];
 
   // reference to ticket
