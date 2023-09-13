@@ -290,7 +290,7 @@ export class WhatsappService {
 
           if (selectedOption === 'previous-category') {
             ticket.decision = await this.decisionService.findOne({
-              where: { id: ticket.id },
+              where: { id: ticket.decision.id },
               relations: ['parent'],
             });
 
@@ -306,7 +306,7 @@ export class WhatsappService {
               continue;
             }
             ticket.decision = await this.decisionService.findOne({
-              where: { id: ticket.parent.id },
+              where: { id: ticket.decision.parent.id },
             });
             await this.ticketService.save(ticket);
 
