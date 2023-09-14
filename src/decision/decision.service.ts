@@ -54,20 +54,20 @@ export class DecisionService {
     }
 
     if (parent) {
-      entity.parents = entity.parents || [];
+      entity.parent = entity.parent || [];
       parent.children = parent.children || [];
 
       // check if parent already exists
-      if (entity.parents.find((p) => p.id === parent.id) === undefined)
-        entity.parents.push(parent);
+      if (entity.parent.find((p) => p.id === parent.id) === undefined)
+        entity.parent.push(parent);
 
       // check if child already exists
       if (parent.children.find((c) => c.id === entity.id) === undefined)
         parent.children.push(entity);
 
       // check circular reference
-      if (entity.parents.find((p) => p.id === entity.id) !== undefined)
-        entity.parents = entity.parents.filter((p) => p.id !== entity.id);
+      if (entity.parent.find((p) => p.id === entity.id) !== undefined)
+        entity.parent = entity.parent.filter((p) => p.id !== entity.id);
       if (parent.children.find((c) => c.id === parent.id) !== undefined)
         parent.children = parent.children.filter((c) => c.id !== parent.id);
 
@@ -103,7 +103,7 @@ export class DecisionService {
 
     decisionEntity.children = await this.repository.find({
       where: {
-        parents: {
+        parent: {
           id: decisionEntity.id,
         },
       },

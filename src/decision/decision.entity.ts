@@ -28,10 +28,10 @@ export class DecisionEntity extends AbstractEntity {
   @ApiProperty({ type: () => DecisionEntity })
   @ManyToMany(() => DecisionEntity, (decision) => decision.children)
   @JoinTable()
-  parents: DecisionEntity[];
+  parent: DecisionEntity[];
 
   @ApiProperty({ type: () => [DecisionEntity] })
-  @ManyToMany(() => DecisionEntity, (decision) => decision.parents)
+  @ManyToMany(() => DecisionEntity, (decision) => decision.parent)
   children: DecisionEntity[];
 
   // reference to ticket
