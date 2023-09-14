@@ -136,11 +136,16 @@ export class WhatsappService {
       }
 
       if (decision.parent) {
-        interactive.action.sections[0].rows.push({
-          title: this.clampString('Voltar', 24),
-          id: 'previous-category',
-          description: this.clampString('Voltar para a categoria anterior', 72),
-        });
+        if (interactive.action.sections[0].rows.length < 9) {
+          interactive.action.sections[0].rows.push({
+            title: this.clampString('Voltar', 24),
+            id: 'previous-category',
+            description: this.clampString(
+              'Voltar para a categoria anterior',
+              72,
+            ),
+          });
+        }
       }
     }
     return interactive;
@@ -1306,6 +1311,7 @@ export class WhatsappService {
     if (!optionList) {
       return false;
     }
+    this.logger.log(JSON.stringify(optionList));
     const message = await this.wa.messages.interactive(optionList, phoneNumber);
 
     this.logger.log(`${message.statusCode()} ${message.responseBodyToJSON()}`);
