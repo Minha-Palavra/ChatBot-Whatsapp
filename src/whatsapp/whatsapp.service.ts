@@ -135,7 +135,7 @@ export class WhatsappService {
         });
       }
 
-      if (decision.parent) {
+      if (decision.parents) {
         if (interactive.action.sections[0].rows.length < 9) {
           interactive.action.sections[0].rows.push({
             title: this.clampString('Voltar', 24),
