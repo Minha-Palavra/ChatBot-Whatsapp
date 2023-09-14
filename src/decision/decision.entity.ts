@@ -17,7 +17,7 @@ export class DecisionEntity extends AbstractEntity {
   title: string;
 
   @ApiProperty()
-  @Index({ unique: false })
+  @Index({ unique: true })
   @Column()
   slug: string;
 
