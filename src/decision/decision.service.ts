@@ -40,17 +40,30 @@ export class DecisionService {
     parent: DecisionEntity,
   ): Promise<DecisionEntity> {
     if (!seed.slug) seed.slug = slugify(seed.title, { lower: true });
-    const entity = new DecisionEntity();
+    let entity = new DecisionEntity();
     entity.title = seed.title;
     entity.slug = seed.slug;
     entity.description = seed.description;
+
+    {
+      // check if node already exists
+      const node = await this.repository.findOne({
+        where: { slug: seed.slug },
+      });
+      if (node) entity = node;
+    }
 
     if (parent) {
       entity.parent = entity.parent || [];
       parent.children = parent.children || [];
 
-      entity.parent.push(parent);
-      parent.children.push(entity);
+      // check if parent already exists
+      if (entity.parent.find((p) => p.id === parent.id) === undefined)
+        entity.parent.push(parent);
+
+      // check if child already exists
+      if (parent.children.find((c) => c.id === entity.id) === undefined)
+        parent.children.push(entity);
 
       await this.repository.save(parent);
     }
@@ -64,21 +77,6 @@ export class DecisionService {
     }
 
     return entity;
-
-    // const entity = await this.repository.save({
-    //   title: seed.title,
-    //   slug: seed.slug,
-    //   description: seed.description,
-    //   parent: parent,
-    // });
-    // entity.children = [];
-    // if (seed.children) {
-    //   for (const child of seed.children) {
-    //     entity.children.push(await this.seedRecursive(child, entity));
-    //   }
-    //   //await this.repository.save(entity);
-    // }
-    // return entity;
   }
 
   async findOne(
