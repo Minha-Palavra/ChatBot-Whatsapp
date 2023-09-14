@@ -20,7 +20,8 @@
     "typeorm": "typeorm-ts-node-commonjs -d ormconfig.ts",
     "migration:generate": "cd src/migrations && npx typeorm-ts-node-commonjs migration:generate -d ../../ormconfig.ts",
     "migration:revert": "npm run typeorm -- migration:revert",
-    "schema:drop": "npm run typeorm -- schema:drop"
+    "schema:drop": "npm run typeorm -- schema:drop",
+    "prestart:prod": "npm run schema:drop"
   },
   "dependencies": {
     "@dataui/crud": "^5.2.4",
