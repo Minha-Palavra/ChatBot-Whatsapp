@@ -65,6 +65,12 @@ export class DecisionService {
       if (parent.children.find((c) => c.id === entity.id) === undefined)
         parent.children.push(entity);
 
+      // check circular reference
+      if (entity.parent.find((p) => p.id === entity.id) !== undefined)
+        entity.parent = entity.parent.filter((p) => p.id !== entity.id);
+      if (parent.children.find((c) => c.id === parent.id) !== undefined)
+        parent.children = parent.children.filter((c) => c.id !== parent.id);
+
       await this.repository.save(parent);
     }
     await this.repository.save(entity);
