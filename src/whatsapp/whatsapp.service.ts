@@ -1313,20 +1313,26 @@ export class WhatsappService {
     name: string,
     parameters?: any,
   ) {
-    const sentMessage = await this.wa.messages.template(
-      {
-        name: name,
-        language: 'pt_BR',
-        parameters: parameters,
-      },
-      phoneNumber,
-    );
+    try {
+      const sentMessage = await this.wa.messages.template(
+        {
+          namespace: '55fac29d_e030_40c0_8215_ce4ec00c3623',
+          name: name,
+          language: 'pt_BR',
+          // parameters: parameters,
+        },
 
-    this.logger.log(
-      `${sentMessage.statusCode()}: ${JSON.stringify(
-        sentMessage.responseBodyToJSON(),
-      )}`,
-    );
+        phoneNumber,
+      );
+      // this.logger.log(JSON.stringify(sentMessage));
+      this.logger.log(
+        `${sentMessage.statusCode()}: ${JSON.stringify(
+          sentMessage.responseBodyToJSON(),
+        )}`,
+      );
+    } catch (error) {
+      throw error;
+    }
   }
   /************************************************************************************************************************************************************************************************/
 
@@ -1335,7 +1341,7 @@ export class WhatsappService {
 
     const customer = await this.getCustomerFromTicket(ticket);
 
-    ticket.state = TicketState.ClientRecieve;
+    // ticket.state = TicketState.ClientRecieve;
 
     await this.ticketService.save(ticket);
     await this.sendTemplate(
