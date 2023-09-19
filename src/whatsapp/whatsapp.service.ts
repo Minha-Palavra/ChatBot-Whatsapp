@@ -225,6 +225,7 @@ export class WhatsappService {
             'Você aceita a proposta?',
             optionsPrefix,
           );
+          continue;
         }
         // The ticket is waiting for the customer to accept or decline the proposal.
         if (ticket.state === TicketState.ClientApproval) {
