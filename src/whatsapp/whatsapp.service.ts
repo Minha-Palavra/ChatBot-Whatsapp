@@ -193,6 +193,34 @@ export class WhatsappService {
       ticket = await this.findCustomerNewestTicket(user);
       // Customer has a ticket and the ticket is not finished.
       if (ticket && ticket.state !== TicketState.Finished) {
+        if (ticket.state === TicketState.ClientRecieve) {
+          if (message.type === 'text') {
+            await this.sendTemplate(
+              user.phonenumber,
+              'envio_de_contrato_minha_palavra',
+            );
+            continue;
+          }
+          const optionsPrefix = 'customer-approval';
+          const customer = await this.getCustomerFromTicket(ticket);
+
+          ticket.state = TicketState.ClientApproval;
+
+          await this.ticketService.save(ticket);
+
+          await this.sendMessage(
+            customer.phonenumber,
+            `Ola, ${ticket.client.fullname}!
+            O seu prestador de serviço ${ticket.user.fullname}, enviou uma proposta para você.
+            `,
+          );
+          await this.sendMessage(ticket.client.phonenumber, ticket.proporsal);
+          await this.sendConfirmationOptions(
+            ticket.client.phonenumber,
+            'Você aceita a proposta?',
+            optionsPrefix,
+          );
+        }
         // The ticket is waiting for the customer to accept or decline the proposal.
         if (ticket.state === TicketState.ClientApproval) {
           const optionsPrefix = 'customer-approval';
@@ -942,7 +970,10 @@ export class WhatsappService {
           continue;
         }
 
-        if (ticket.state === TicketState.ClientApproval) {
+        if (
+          ticket.state === TicketState.ClientRecieve ||
+          ticket.state === TicketState.ClientApproval
+        ) {
           if (message.type !== 'text') {
             this.logger.error(`${message.type} is not a text message.`);
           }
@@ -1277,27 +1308,53 @@ export class WhatsappService {
   }
 
   /************************************************************************************************************************************************************************************************/
+  private async sendTemplate(
+    phoneNumber: string,
+    name: string,
+    parameters?: any,
+  ) {
+    const sentMessage = await this.wa.messages.template(
+      {
+        name: name,
+        language: 'pt_BR',
+        parameters: parameters,
+      },
+      phoneNumber,
+    );
+
+    this.logger.log(
+      `${sentMessage.statusCode()}: ${JSON.stringify(
+        sentMessage.responseBodyToJSON(),
+      )}`,
+    );
+  }
+  /************************************************************************************************************************************************************************************************/
 
   private async sendProposalToCustomer(ticket: TicketEntity) {
     const optionsPrefix = 'customer-approval';
 
     const customer = await this.getCustomerFromTicket(ticket);
 
-    ticket.state = TicketState.ClientApproval;
+    ticket.state = TicketState.ClientRecieve;
 
     await this.ticketService.save(ticket);
-    await this.sendMessage(
+    await this.sendTemplate(
       customer.phonenumber,
-      `Ola, ${ticket.client.fullname}!
-      O seu prestador de serviço ${ticket.user.fullname}, enviou uma proposta para você.
-      `,
+      'envio_de_contrato_minha_palavra',
     );
-    await this.sendMessage(ticket.client.phonenumber, ticket.proporsal);
-    await this.sendConfirmationOptions(
-      ticket.client.phonenumber,
-      'Você aceita a proposta?',
-      optionsPrefix,
-    );
+
+    // await this.sendMessage(
+    //   customer.phonenumber,
+    //   `Ola, ${ticket.client.fullname}!
+    //   O seu prestador de serviço ${ticket.user.fullname}, enviou uma proposta para você.
+    //   `,
+    // );
+    // await this.sendMessage(ticket.client.phonenumber, ticket.proporsal);
+    // await this.sendConfirmationOptions(
+    //   ticket.client.phonenumber,
+    //   'Você aceita a proposta?',
+    //   optionsPrefix,
+    // );
   }
 
   private async sendCategoryOptions(

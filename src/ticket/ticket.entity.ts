@@ -19,6 +19,7 @@ export enum TicketState {
   ClientName = 'CLIENT_NAME',
   ClientTaxpayerNumber = 'CLIENT_TAXPAYER_NUMBER',
   ClientEmail = 'CLIENT_EMAIL',
+  ClientRecieve = 'CLIENT_RECIEVE',
   ClientApproval = 'CLIENT_APPROVAL',
   Proporsal = 'PROPOSAL',
 }
