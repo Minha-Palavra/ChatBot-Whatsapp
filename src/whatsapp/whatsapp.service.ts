@@ -171,7 +171,11 @@ export class WhatsappService {
     const messages = value.messages;
 
     for (const message of messages) {
-      if (message.type !== 'text' && message.type !== 'interactive') {
+      if (
+        message.type !== 'text' &&
+        message.type !== 'interactive' &&
+        message.type !== 'button'
+      ) {
         this.logger.error(
           `${message.type} is not a text or a interactive message.`,
         );
@@ -201,6 +205,7 @@ export class WhatsappService {
             );
             continue;
           }
+
           const optionsPrefix = 'customer-approval';
           const customer = await this.getCustomerFromTicket(ticket);
 
