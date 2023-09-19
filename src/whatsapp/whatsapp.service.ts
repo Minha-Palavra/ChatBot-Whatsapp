@@ -1318,7 +1318,9 @@ export class WhatsappService {
         {
           namespace: '55fac29d_e030_40c0_8215_ce4ec00c3623',
           name: name,
-          language: 'pt_BR',
+          language: {
+            code: 'pt_BR',
+          },
           // parameters: parameters,
         },
 
@@ -1341,7 +1343,7 @@ export class WhatsappService {
 
     const customer = await this.getCustomerFromTicket(ticket);
 
-    // ticket.state = TicketState.ClientRecieve;
+    ticket.state = TicketState.ClientRecieve;
 
     await this.ticketService.save(ticket);
     await this.sendTemplate(
