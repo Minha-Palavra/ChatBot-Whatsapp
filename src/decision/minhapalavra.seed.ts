@@ -14,8 +14,7 @@ export const MinhaPalavraSeedData: MinhaPalavraSeedType = {
     {
       title: 'Assistência técnica',
       slug: 'assistencia-tecnica',
-      description:
-        'Obtenha suporte técnico especializado para uma variedade de dispositivos e aparelhos. De consertos rápidos a diagnósticos completos, encontre profissionais qualificados para atender às suas necessidades de manutenção.',
+      description: 'Selecione o serviço que melhor descreve o que faz.',
       children: [
         {
           title: 'Aparelhos Eletrônicos',
@@ -244,7 +243,7 @@ export const MinhaPalavraSeedData: MinhaPalavraSeedType = {
       title: 'Aulas',
       slug: 'aulas',
       description:
-        'Explore uma ampla gama de aulas conduzidas por profissionais qualificados em diversos campos acadêmicos e habilidades. Seja para reforço escolar, preparação para concursos, ou aprendizado de um novo idioma, nós temos o instrutor certo para você.',
+        'Selecione o tipo de aulas que se adequa melhor ao que ensina.',
       children: [
         {
           title: 'Acadêmicos',
@@ -454,7 +453,7 @@ export const MinhaPalavraSeedData: MinhaPalavraSeedType = {
       title: 'Autos',
       slug: 'automoveis',
       description:
-        'Serviços especializados para atender todas as suas necessidades automotivas. De reparos elétricos a melhorias no conforto, garantimos a melhor solução para o seu veículo.',
+        'Selecione aqui o que melhor descreve o serviço ou venda de veículos, peças e acessórios que você realiza.',
       children: [
         {
           title: 'Auto Elétrica',
@@ -484,6 +483,11 @@ export const MinhaPalavraSeedData: MinhaPalavraSeedType = {
               slug: 'automoveis/som-automotivo',
               description:
                 'Eleve sua experiência de condução com sistemas de som de alta qualidade. Seja para atualizações ou reparos, temos as soluções que você precisa.',
+            },
+            {
+              title: 'Motos',
+              slug: 'automoveis/motos',
+              description: 'Oferecemos serviços especializados para motos.',
             },
           ],
         },
@@ -565,56 +569,56 @@ export const MinhaPalavraSeedData: MinhaPalavraSeedType = {
         {
           title: 'Venda de Automóveis',
           description:
-            'Descubra uma vasta gama de automóveis à sua escolha. Desde os modelos mais recentes até os clássicos, garantimos a qualidade e a excelência em cada veículo que oferecemos. Permita-nos ajudá-lo a encontrar o carro dos seus sonhos.',
+            'Temos os melhores automóveis, motos, peças e acessórios para você.',
           children: [
             {
               title: 'Venda de Automóveis',
               slug: 'automoveis/venda-de-automoveis',
               description:
-                'Seja um sedan familiar, um SUV robusto, um hatchback ágil ou um esportivo de alta performance, temos o veículo certo para você. Explore nossa seleção de carros e encontre aquele que melhor se adapta ao seu estilo de vida e orçamento.',
+                'Temos os melhores automóveis, motos, peças e acessórios para você.',
             },
           ],
         },
       ],
     },
     {
-      title: 'Consultoria',
-      slug: 'consultoria',
+      title: 'Especialistas',
+      slug: 'especialistas',
       description:
-        'Oferecemos uma gama diversificada de serviços de consultoria para atender às suas necessidades específicas. De conselhos pessoais e profissionais a orientações jurídicas e empresariais, nossos especialistas estão aqui para guiá-lo e apoiá-lo em cada etapa.',
+        'Selecione entre os especialistas o que melhor se enquadra nos serviços que você irá prestar.',
       children: [
         {
-          title: 'Mídia',
+          title: 'Marketing',
           description:
             'Serviços relacionados à produção, gerenciamento e disseminação de conteúdo em várias plataformas.',
           children: [
             {
               title: 'Assessoria de Imprensa',
-              slug: 'consultoria/assessoria-de-imprensa',
+              slug: 'especialistas/assessoria-de-imprensa',
               description:
                 'Gerenciamento e promoção da imagem de indivíduos ou organizações para a mídia, incluindo a gestão de comunicados de imprensa e relações com jornalistas.',
             },
             {
               title: 'Escrita e Conteúdo',
-              slug: 'consultoria/escrita-e-conteudo',
+              slug: 'especialistas/escrita-e-conteudo',
               description:
                 'Criação e redação de textos para diferentes finalidades, incluindo conteúdo web, marketing, editoriais e mais.',
             },
             {
               title: 'Pesquisa em Geral',
-              slug: 'consultoria/pesquisas-em-geral',
+              slug: 'especialistas/pesquisas-em-geral',
               description:
                 'Realização de estudos e análises em diversas áreas, coletando e interpretando dados para fornecer insights e informações.',
             },
             {
               title: 'Produção de Conteúdo',
-              slug: 'consultoria/producao-padronizacao-e-revisao-de-conteudo',
+              slug: 'especialistas/producao-padronizacao-e-revisao-de-conteudo',
               description:
                 'Elaboração, padronização e revisão de materiais para publicação, garantindo clareza, precisão e consistência.',
             },
             {
               title: 'Tradutores',
-              slug: 'consultoria/traducao',
+              slug: 'especialistas/traducao',
               description:
                 'Conversão de textos de um idioma para outro, mantendo a essência, contexto e tonalidade do conteúdo original.',
             },
@@ -627,117 +631,117 @@ export const MinhaPalavraSeedData: MinhaPalavraSeedType = {
           children: [
             {
               title: 'Administração de Imóveis',
-              slug: 'consultoria/administracao-de-imoveis',
+              slug: 'especialistas/administracao-de-imoveis',
               description:
                 'Gestão de propriedades imobiliárias, incluindo locação, manutenção, e assuntos relacionados ao aluguel e venda.',
             },
             {
               title: 'Assessor de Investimentos',
-              slug: 'consultoria/assessor-de-investimentos',
+              slug: 'especialistas/assessor-de-investimentos',
               description:
                 'Especialista em orientar sobre investimentos, ajudando a definir a melhor estratégia para alocação de recursos.',
             },
             {
               title: 'Auxílio administrativo',
-              slug: 'consultoria/auxilio-administrativo',
+              slug: 'especialistas/auxilio-administrativo',
               description:
                 'Suporte em tarefas administrativas gerais, como organização, planejamento e outras atividades de escritório.',
             },
             {
               title: 'Contador',
-              slug: 'consultoria/contador',
+              slug: 'especialistas/contador',
               description:
                 'Profissional especializado em contabilidade, encarregado de gerenciar e auditar as finanças de uma empresa ou indivíduo.',
             },
             {
               title: 'Corretor',
-              slug: 'consultoria/corretor',
+              slug: 'especialistas/corretor',
               description:
                 'Especialista em intermediar a compra, venda ou aluguel de propriedades ou outros ativos, como ações.',
             },
             {
               title: 'Despachante',
-              slug: 'consultoria/despachante',
+              slug: 'especialistas/despachante',
               description:
                 'Profissional que trata da expedição ou despacho de documentos e realizações de serviços burocráticos.',
             },
             {
               title: 'Digitalizar documentos',
-              slug: 'consultoria/digitacao-e-digitalizacao-de-documentos',
+              slug: 'especialistas/digitacao-e-digitalizacao-de-documentos',
               description:
                 'Serviço de transformação de documentos físicos em formato digital, além de digitação e organização de arquivos.',
             },
             {
               title: 'Economia e Finanças',
-              slug: 'consultoria/economia-e-financas',
+              slug: 'especialistas/economia-e-financas',
               description:
                 'Assessoria em questões econômicas e financeiras, abrangendo análise de mercado, planejamento financeiro e mais.',
             },
             {
               title: 'Recrutamento e Seleção',
-              slug: 'consultoria/recrutamento-e-selecao',
+              slug: 'especialistas/recrutamento-e-selecao',
               description:
                 'Processo de atração, seleção e integração de profissionais para preencher vagas em uma organização.',
             },
             {
               title: 'Segurança do trabalho',
-              slug: 'consultoria/seguranca-do-trabalho',
+              slug: 'especialistas/seguranca-do-trabalho',
               description:
                 'Serviços focados em garantir um ambiente de trabalho seguro, prevenindo acidentes e doenças ocupacionais.',
             },
           ],
         },
         {
-          title: 'Jurídico',
+          title: 'Advocatício',
           description:
             'Serviços relacionados ao campo legal, focados em proporcionar assistência e orientação jurídica.',
           children: [
             {
               title: 'Advogado',
-              slug: 'consultoria/advogado',
+              slug: 'especialistas/advogado',
               description:
                 'Profissional do direito, habilitado a representar e defender os interesses de indivíduos ou entidades em questões legais.',
             },
             {
               title: 'Mediação de Conflitos',
-              slug: 'consultoria/mediacao-de-conflitos',
+              slug: 'especialistas/mediacao-de-conflitos',
               description:
                 'Processo em que uma terceira parte neutra auxilia as partes envolvidas a chegar a um acordo ou solução para um conflito.',
             },
             {
               title: 'Testamento e Planejamento Patrimonial',
-              slug: 'consultoria/testamento-e-planejamento-patrimonial',
+              slug: 'especialistas/testamento-e-planejamento-patrimonial',
               description:
                 'Orientação e elaboração de documentos legais para planejar a distribuição de ativos após a morte e organizar questões patrimoniais.',
+            },
+            {
+              title: 'Detetive particular',
+              slug: 'especialistas/detetive-particular',
+              description:
+                'Profissional especializado na investigação e obtenção de informações confidenciais de caráter pessoal ou corporativo.',
             },
           ],
         },
         {
-          title: 'Pessoal',
+          title: 'Consultoria e Turismo',
           description:
             'Serviços personalizados voltados para atender necessidades individuais e específicas.',
           children: [
             {
               title: 'Consultor pessoal',
-              slug: 'consultoria/consultor-pessoal',
+              slug: 'especialistas/consultor-pessoal',
               description:
                 'Profissional dedicado a orientar indivíduos em decisões pessoais, carreira ou outras consultas individuais.',
             },
             {
               title: 'Consultoria especializada',
-              slug: 'consultoria/consultoria-especializada',
+              slug: 'especialistas/consultoria-especializada',
               description:
                 'Assessoria em áreas específicas, oferecendo soluções e orientações baseadas em expertise e conhecimento especializado.',
             },
             {
-              title: 'Detetive particular',
-              slug: 'consultoria/detetive-particular',
-              description:
-                'Profissional especializado na investigação e obtenção de informações confidenciais de caráter pessoal ou corporativo.',
-            },
-            {
               title: 'Guia de Turismo',
-              slug: 'consultoria/guia-de-turismo',
+              slug: 'especialistas/guia-de-turismo',
               description:
                 'Especialista em conduzir e apresentar locais turísticos, proporcionando experiências enriquecedoras aos visitantes.',
             },
@@ -748,90 +752,13 @@ export const MinhaPalavraSeedData: MinhaPalavraSeedType = {
     {
       title: 'Design e Tecnologia',
       slug: 'design-e-tecnologia',
-      description: 'Soluções inovadoras combinando design e tecnologia.',
+      description:
+        'Selecione aqui o que melhor descreve o serviço que irá prestar.',
       children: [
         {
-          title: 'Tecnologia',
-          description: 'Tecnologias avançadas para impulsionar seu negócio.',
-          children: [
-            {
-              title: 'Apps para smartphone',
-              slug: 'design-e-tecnologia/aplicativos-para-celular-e-redes-sociais',
-              description:
-                'Aplicativos móveis personalizados para todas as plataformas.',
-            },
-            {
-              title: 'Desenvolvimento de games',
-              slug: 'design-e-tecnologia/desenvolvimento-de-games',
-              description:
-                'Criação de jogos interativos e envolventes para diversas plataformas.',
-            },
-            {
-              title: 'Desenvolvimento de sites',
-              slug: 'design-e-tecnologia/desenvolvimento-de-sites-e-sistemas',
-              description:
-                'Websites responsivos e otimizados para sua presença online.',
-            },
-            {
-              title: 'Marketing digital',
-              slug: 'design-e-tecnologia/marketing-online',
-              description:
-                'Estratégias digitais para ampliar sua visibilidade online.',
-            },
-            {
-              title: 'UI design',
-              slug: 'design-e-tecnologia/ux-ui-design',
-              description: 'Interfaces intuitivas e esteticamente agradáveis.',
-            },
-          ],
-        },
-        {
-          title: 'Gráfica',
+          title: 'Áudio, Design e Vídeo',
           description:
-            'Soluções gráficas completas para todas as suas necessidades visuais.',
-          children: [
-            {
-              title: 'Convites',
-              slug: 'design-e-tecnologia/convites',
-              description:
-                'Convites personalizados para todos os tipos de eventos, refletindo o estilo e a personalidade da sua celebração.',
-            },
-            {
-              title: 'Criação de logos',
-              slug: 'design-e-tecnologia/criacao-de-logos',
-              description:
-                'Designs de logos únicos que representam a identidade e os valores da sua marca.',
-            },
-            {
-              title: 'Criação de marcas',
-              slug: 'design-e-tecnologia/criacao-de-marca',
-              description:
-                'Desenvolvimento de identidades de marca que se destacam e deixam uma impressão duradoura.',
-            },
-            {
-              title: 'Diagramador',
-              slug: 'design-e-tecnologia/diagramador',
-              description:
-                'Layouts estruturados e organizados para publicações, livros e mais, garantindo legibilidade e estética.',
-            },
-            {
-              title: 'Materiais promocionais',
-              slug: 'design-e-tecnologia/materiais-promocionais',
-              description:
-                'Materiais de marketing visualmente atraentes para promover sua marca ou evento.',
-            },
-            {
-              title: 'Produção gráfica',
-              slug: 'design-e-tecnologia/producao-grafica',
-              description:
-                'Produção gráfica de alta qualidade para todos os seus materiais impressos, desde cartões de visita até banners.',
-            },
-          ],
-        },
-        {
-          title: 'Áudio / Visual',
-          description:
-            'Serviços especializados em áudio e visual para aprimorar sua presença digital e física.',
+            'Oferecemos produções em Audio, Video e Web e App Design.',
           children: [
             {
               title: 'Animação motion',
@@ -883,13 +810,92 @@ export const MinhaPalavraSeedData: MinhaPalavraSeedType = {
             },
           ],
         },
+        {
+          title: 'Materiais Gráficos',
+          description:
+            'Soluções gráficas completas para todas as suas necessidades visuais.',
+          children: [
+            {
+              title: 'Convites',
+              slug: 'design-e-tecnologia/convites',
+              description:
+                'Convites personalizados para todos os tipos de eventos, refletindo o estilo e a personalidade da sua celebração.',
+            },
+            {
+              title: 'Criação de logos',
+              slug: 'design-e-tecnologia/criacao-de-logos',
+              description:
+                'Designs de logos únicos que representam a identidade e os valores da sua marca.',
+            },
+            {
+              title: 'Criação de marcas',
+              slug: 'design-e-tecnologia/criacao-de-marca',
+              description:
+                'Desenvolvimento de identidades de marca que se destacam e deixam uma impressão duradoura.',
+            },
+            {
+              title: 'Diagramador',
+              slug: 'design-e-tecnologia/diagramador',
+              description:
+                'Layouts estruturados e organizados para publicações, livros e mais, garantindo legibilidade e estética.',
+            },
+            {
+              title: 'Materiais promocionais',
+              slug: 'design-e-tecnologia/materiais-promocionais',
+              description:
+                'Materiais de marketing visualmente atraentes para promover sua marca ou evento.',
+            },
+            {
+              title: 'Produção gráfica',
+              slug: 'design-e-tecnologia/producao-grafica',
+              description:
+                'Produção gráfica de alta qualidade para todos os seus materiais impressos, desde cartões de visita até banners.',
+            },
+          ],
+        },
+        {
+          title: 'Tecnologia',
+          description:
+            'Desenvolvimento e programação de plataformas Web, Webapps e apps, marketing digital e UI design.',
+          children: [
+            {
+              title: 'Apps para smartphone',
+              slug: 'design-e-tecnologia/aplicativos-para-celular-e-redes-sociais',
+              description:
+                'Aplicativos móveis personalizados para todas as plataformas.',
+            },
+            {
+              title: 'Desenvolvimento de games',
+              slug: 'design-e-tecnologia/desenvolvimento-de-games',
+              description:
+                'Criação de jogos interativos e envolventes para diversas plataformas.',
+            },
+            {
+              title: 'Desenvolvimento de sites',
+              slug: 'design-e-tecnologia/desenvolvimento-de-sites-e-sistemas',
+              description:
+                'Websites responsivos e otimizados para sua presença online.',
+            },
+            {
+              title: 'Marketing digital',
+              slug: 'design-e-tecnologia/marketing-online',
+              description:
+                'Estratégias digitais para ampliar sua visibilidade online.',
+            },
+            {
+              title: 'UI design',
+              slug: 'design-e-tecnologia/ux-ui-design',
+              description: 'Interfaces intuitivas e esteticamente agradáveis.',
+            },
+          ],
+        },
       ],
     },
     {
       title: 'Eventos',
       slug: 'eventos',
       description:
-        'Transforme momentos em memórias inesquecíveis com nossos serviços de eventos.',
+        'Selecione aqui o que melhor descreve o serviço que irá prestar.',
       children: [
         {
           title: 'Equipe e Suporte',
@@ -1069,12 +1075,16 @@ export const MinhaPalavraSeedData: MinhaPalavraSeedType = {
             },
           ],
         },
+        {
+          title: 'Locação',
+          description: 'Telões, Leds, Sinalizadores e Iluminação.',
+        },
       ],
     },
     {
       title: 'Moda e beleza',
       description:
-        'Descubra um mundo de serviços dedicados à realçar sua beleza e estilo pessoal.',
+        'Selecione entre as opções o que mais se encaixa no serviço que realiza.',
       slug: 'moda-e-beleza',
       children: [
         {
@@ -1159,8 +1169,7 @@ export const MinhaPalavraSeedData: MinhaPalavraSeedType = {
         },
         {
           title: 'Estilo',
-          description:
-            'Descubra profissionais que podem elevar seu estilo e ajudá-lo a se expressar melhor através da moda e do visual.',
+          description: 'Moda, corte e costura, locações e muito mais.',
           children: [
             {
               title: 'Alfaiate',
@@ -1192,24 +1201,33 @@ export const MinhaPalavraSeedData: MinhaPalavraSeedType = {
               description:
                 'Especialistas em analisar a harmonia e estética do rosto para criar looks que destacam suas melhores características.',
             },
+            {
+              title: 'Locações',
+              description: 'Locação de vestidos, trajes finos e fantasias.',
+            },
           ],
         },
         {
-          title: 'Artes e Magia',
+          title: 'Artes e Bem Estar',
           description:
-            'Mergulhe no mundo das artes manuais e descubra práticas e técnicas esotéricas para enriquecer sua jornada espiritual.',
+            'Selecione aqui o que melhor se enquadra nos serviços que realiza.',
           children: [
             {
-              title: 'Artesanato',
-              slug: 'moda-e-beleza/artesanato',
-              description:
-                'Crie ou adquira peças feitas à mão, cada uma com uma história única, refletindo a paixão e a habilidade do artesão.',
-            },
-            {
-              title: 'Esotérico',
-              slug: 'moda-e-beleza/esoterico',
-              description:
-                'Explore práticas e conhecimentos esotéricos para aprofundar sua conexão espiritual e entender os mistérios do universo.',
+              title: 'Artes e Alternativos',
+              description: 'Serviços Artesanais e Tratamentos Alternativos.',
+              children: [
+                {
+                  title: 'Artesanato',
+                  slug: 'moda-e-beleza/artesanato',
+                  description: 'Artesanatos e manufaturados.',
+                },
+                {
+                  title: 'Tratamentos Alternativos',
+                  slug: 'moda-e-beleza/esoterico',
+                  description:
+                    'Seviços Holísticos, práticas diferenciadas, reike, relaxamento e massagens.',
+                },
+              ],
             },
           ],
         },
@@ -1219,7 +1237,7 @@ export const MinhaPalavraSeedData: MinhaPalavraSeedType = {
       title: 'Reformas e reparos',
       slug: 'reformas-e-reparos',
       description:
-        'Serviços especializados para todas as suas necessidades de reforma e reparo.',
+        'Selecione aqui o serviço que corresponde a sua especialidade.',
       children: [
         {
           title: 'Aluguel de Maquinário',
@@ -1341,7 +1359,7 @@ export const MinhaPalavraSeedData: MinhaPalavraSeedType = {
         {
           title: 'Reformas e Reparos',
           description:
-            'Serviços variados para manutenção e melhoria de sua propriedade, desde pequenos consertos até reformas completas.',
+            'Selecione aqui o serviço que corresponde a sua especialidade.',
           children: [
             {
               title: 'Encanador',
@@ -1521,7 +1539,7 @@ export const MinhaPalavraSeedData: MinhaPalavraSeedType = {
       title: 'Saúde',
       slug: 'saude',
       description:
-        'Serviços relacionados à saúde, bem-estar e tratamentos médicos especializados.',
+        'Selecione aqui o serviço que melhor corresponde a sua especialidade.',
       children: [
         {
           title: 'Biomedicina Estética',
@@ -1544,8 +1562,7 @@ export const MinhaPalavraSeedData: MinhaPalavraSeedType = {
         },
         {
           title: 'Para o Corpo',
-          description:
-            'Serviços especializados voltados para a saúde, bem-estar e cuidados com o corpo.',
+          description: 'Dentistas, Médicos e Especialidades.',
           children: [
             {
               title: 'Cozinheira',
@@ -1665,7 +1682,7 @@ export const MinhaPalavraSeedData: MinhaPalavraSeedType = {
       title: 'Serviços Domésticos',
       slug: 'familia',
       description:
-        'Uma variedade de serviços dedicados a facilitar e melhorar o ambiente doméstico e as necessidades da casa.',
+        'Selecione aqui o serviço que melhor descreve as suas funções e habilidades.',
       children: [
         {
           title: 'Para a Casa',
@@ -1756,7 +1773,7 @@ export const MinhaPalavraSeedData: MinhaPalavraSeedType = {
         {
           title: 'Para os Pets',
           description:
-            'Serviços dedicados ao bem-estar e cuidado dos seus animais de estimação.',
+            'Cuidados dedicados ao bem-estar e cuidado dos seus animais de estimação.',
           children: [
             {
               title: 'Adestrador de Cães',
@@ -1771,10 +1788,9 @@ export const MinhaPalavraSeedData: MinhaPalavraSeedType = {
                 'Especialistas em caminhadas com cães, garantindo que seu pet tenha exercícios regulares e momentos de diversão ao ar livre.',
             },
             {
-              title: 'Serviços para Pets',
+              title: 'Cuidados para Pets',
               slug: 'familia/servicos-para-pets',
-              description:
-                'Uma gama de serviços voltados para os cuidados e necessidades dos seus animais de estimação.',
+              description: 'Veterinários, Banho & Tosa e Outros.',
             },
           ],
         },
