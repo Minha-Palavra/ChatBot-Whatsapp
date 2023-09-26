@@ -1274,6 +1274,19 @@ export class WhatsappService {
     );
   }
 
+  private async requestServiceDeadline(
+    phoneNumber: string,
+    ticket: TicketEntity,
+  ) {
+    ticket.state = TicketState.ServiceDeadline; // Novo estado correspondente à etapa de definição do prazo.
+    ticket = await this.ticketService.save(ticket);
+
+    await this.sendMessage(
+      phoneNumber,
+      'Qual o prazo para a prestação do serviço?',
+    );
+  }
+
   private async requestPaymentMethod(
     phoneNumber: string,
     ticket: TicketEntity,

@@ -22,6 +22,7 @@ export enum TicketState {
   ClientRecieve = 'CLIENT_RECIEVE',
   ClientApproval = 'CLIENT_APPROVAL',
   Proporsal = 'PROPOSAL',
+  ServiceDeadline = 'SERVICE_DEADLINE',
 }
 
 @Entity({ name: 'ticket' })
