@@ -1270,7 +1270,7 @@ export class WhatsappService {
 
     await this.sendMessage(
       phoneNumber,
-      'Qual é a descrição do serviço que deseja fornecer?',
+      'Descreva em detalhes o serviço que irá prestar.',
     );
   }
 
@@ -1283,7 +1283,7 @@ export class WhatsappService {
 
     await this.sendMessage(
       phoneNumber,
-      'Qual é o valor e o método de pagamento?',
+      'Qual é o valor total? Qual é a forma de Pagamento? É possível pagar à vista ou parcelar? Em caso de parcelamento, em quantas vezes pode ser feito? Qual a data estipulada para os pagamentos? E qual a multa em caso de atraso ou cancelamento do serviço?',
     );
   }
 
@@ -1314,6 +1314,7 @@ export class WhatsappService {
   }
 
   /************************************************************************************************************************************************************************************************/
+
   private async sendTemplate(
     phoneNumber: string,
     name: string,
@@ -1342,6 +1343,7 @@ export class WhatsappService {
       throw error;
     }
   }
+
   /************************************************************************************************************************************************************************************************/
 
   private async sendProposalToCustomer(ticket: TicketEntity) {
