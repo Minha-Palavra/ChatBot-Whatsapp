@@ -1140,6 +1140,7 @@ export class WhatsappService {
     phoneNumber: string,
     message: string,
     optionsPrefix: string,
+    cancel = true,
   ) {
     // Generate the confirmation options using the preffix.
     const confirmation = await this.generateConfirmationOptions(
@@ -1384,6 +1385,23 @@ export class WhatsappService {
     //   'Você aceita a proposta?',
     //   optionsPrefix,
     // );
+  }
+
+  private async sendInitialMessage(
+    phoneNumber: string,
+    decision: DecisionEntity,
+  ) {
+    const optionsPrefix = 'initial-message';
+    await this.sendMessage(
+      phoneNumber,
+      'Estou ciente de estar participando do teste para o surgimento do MINHA PALAVRA. Uma plataforma que irá colaborar para fortalecer os acordos do dia-a-dia. Nesta fase beta teste não nos responsabilizamos por erros ou instabilidades da plataforma. Os emails serão solicitados para pesquisas futuras. Seus dados estão sob as leis de LGPD.',
+    );
+    await this.sendConfirmationOptions(
+      phoneNumber,
+      'Podemos continuar?',
+      optionsPrefix,
+      false,
+    );
   }
 
   private async sendCategoryOptions(
