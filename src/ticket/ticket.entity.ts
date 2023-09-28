@@ -23,6 +23,8 @@ export enum TicketState {
   ClientApproval = 'CLIENT_APPROVAL',
   Proporsal = 'PROPOSAL',
   ServiceDeadline = 'SERVICE_DEADLINE',
+  LGPD = 'LGPD',
+  JurisdictionInDispute = 'JURISDICTION_IN_DISPUTE',
 }
 
 @Entity({ name: 'ticket' })

@@ -654,6 +654,27 @@ export class WhatsappService {
           ticket.paymentMethod = paymentMethod;
 
           await this.ticketService.save(ticket);
+          await this.requestJurisdictionInDispute(phoneNumber, ticket);
+          continue;
+        }
+
+        if (ticket.state === TicketState.JurisdictionInDispute) {
+          if (message.type !== 'text') {
+            this.logger.error(`${message.type} is not a text message.`);
+
+            await this.sendMessage(
+              phoneNumber,
+              'Esta não é uma opção válida neste momento. Por favor, selecione uma opção válida.',
+            );
+            await this.requestJurisdictionInDispute(phoneNumber, ticket);
+            continue;
+          }
+
+          const paymentMethod = message.text.body;
+
+          ticket.paymentMethod = paymentMethod;
+
+          await this.ticketService.save(ticket);
           await this.requestCustomerPhoneNumber(phoneNumber, ticket);
           continue;
         }
@@ -1279,6 +1300,19 @@ export class WhatsappService {
     ticket = await this.ticketService.save(ticket);
 
     this.sendMessage(phoneNumber, 'Qual é o email do cliente?');
+  }
+
+  private async requestJurisdictionInDispute(
+    phoneNumber: string,
+    ticket: TicketEntity,
+  ) {
+    ticket.state = TicketState.JurisdictionInDispute; // Novo estado correspondente à etapa de definição da comarca.
+    ticket = await this.ticketService.save(ticket);
+
+    await this.sendMessage(
+      phoneNumber,
+      'Em caso de disputa, qual comarca será usada para o juizado?',
+    );
   }
 
   /************************************************************************************************************************************************************************************************/
