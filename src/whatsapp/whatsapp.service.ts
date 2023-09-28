@@ -342,7 +342,8 @@ export class WhatsappService {
             await this.cancelTicket(phoneNumber, ticket);
             continue;
           }
-
+          ticket.state = TicketState.Chosing;
+          await this.ticketService.save(ticket);
           await this.sendCategoryOptions(phoneNumber, ticket.decision);
           continue;
         }
@@ -1239,6 +1240,7 @@ export class WhatsappService {
     const confirmation = await this.generateConfirmationOptions(
       message,
       optionsPrefix,
+      cancel,
     );
 
     const messageSent = await this.wa.messages.interactive(
