@@ -19,6 +19,8 @@ export class ProposalController {
       '1234567890', //clientPhoneNumber
       'cliente@example.com', //clientEmail
       '272.409.380-18', // clientTaxpayerNumber
+      '1 ano', //deadline
+      'Juizado Especial Cível', //disputeForum
     );
 
     return response;

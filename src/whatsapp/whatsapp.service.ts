@@ -670,9 +670,9 @@ export class WhatsappService {
             continue;
           }
 
-          const paymentMethod = message.text.body;
+          const disputeForum = message.text.body;
 
-          ticket.paymentMethod = paymentMethod;
+          ticket.disputeForum = disputeForum;
 
           await this.ticketService.save(ticket);
           await this.requestCustomerPhoneNumber(phoneNumber, ticket);
@@ -1128,6 +1128,8 @@ export class WhatsappService {
       customer.phonenumber,
       customer.email,
       customer.taxpayerNumber,
+      ticket.deadline,
+      ticket.disputeForum,
     );
 
     ticket.proporsal = proporsal;

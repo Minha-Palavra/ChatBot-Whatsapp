@@ -20,6 +20,8 @@ export class ProposalService {
     clientPhoneNumber: string,
     clientEmail: string,
     clientTaxpayerNumber: string,
+    deadline: string,
+    disputeForum: string,
   ): Promise<any> {
     const apiKey = this.configService.chatGPTConfig.apiKey;
     const openai = new OpenAI({
@@ -34,24 +36,28 @@ export class ProposalService {
     // };
 
     const prompt = `
-    Faça um contrato formal de prestação de serviço:
-    Categoria: ${category}
-    Descrição do serviço: ${description}
-    Valor e meio de pagamento: ${payment}
+    Crie um contrato de prestação de serviço utilizando os seguintes dados:
+
+    **Categoria do Serviço**: ${category}
+    **Descrição do Serviço**: ${description}
+    **Valor, forma de pagamento e multa**: ${payment}
+    **Prazo de prestação do Serviço**: ${deadline}
     
-    Detalhes do contratado:
-    Nome do contratado: ${userName}
-    E-mail do contratado: ${userEmail}
-    Telefone do contratado: ${userPhoneNumber}
-    CNPJ/CPF do contratado: ${userTaxpayerNumber}
+    **Detalhes do Contratado**:
+    - **Nome**: ${userName}
+    - **E-mail**: ${userEmail}
+    - **Telefone**: ${userPhoneNumber}
+    - **CPF/CNPJ**: ${userTaxpayerNumber}
     
-    Detalhes do contratante:
-    Nome do contratante: ${clientNome}
-    E-mail do contratante: ${clientEmail}
-    Telefone do contratante: ${clientPhoneNumber}
-    CPF/CNPJ do contratante: ${clientTaxpayerNumber}
+    **Detalhes do Contratante**:
+    - **Nome**: ${clientNome}
+    - **E-mail**: ${clientEmail}
+    - **Telefone**: ${clientPhoneNumber}
+    - **CPF/CNPJ**: ${clientTaxpayerNumber}
     
-    Este acordo não terá endereços, nacionalidade, estado civil, profissão, anexos e nem do Foro, a assinatura do contrato será através do apertar do botão Sim enviado via Whatsapp número +1 (802) 383-6625. O contrato será enviado via WhatsApp de forma que deve-se usar de  ** para os trechos em negrito e **** para os trechos em itálico. Sem colocar espaço para assinatura do solicitante e contratante.`;
+    **Foro para Resolução de Disputas**: ${disputeForum}
+
+    Observações: Este contrato não incluirá detalhes sobre endereços, nacionalidade, estado civil ou profissão. O contrato será validado pelo apertar do botão "Sim" enviado via WhatsApp número +1 (802) 383-6625. Formate o contrato usando ** para trechos em negrito e **** para trechos em itálico. Não inclua espaços para preenchimento manual da assinatura e data.`;
     // this.logger.log(prompt);
     // this.logger.log(headers);
     const data = {

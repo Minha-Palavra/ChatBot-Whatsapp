@@ -55,6 +55,10 @@ export class TicketEntity extends AbstractEntity {
 
   @ApiProperty()
   @Column({ nullable: true })
+  disputeForum: string;
+
+  @ApiProperty()
+  @Column({ nullable: true })
   accepted: boolean;
 
   @ApiProperty()
