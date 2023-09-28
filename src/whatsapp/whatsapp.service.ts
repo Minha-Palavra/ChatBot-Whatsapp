@@ -301,7 +301,7 @@ export class WhatsappService {
       // Service provider has a ticket and the ticket is not finished.
       if (ticket && ticket.state !== TicketState.Finished) {
         if (ticket.state === TicketState.LGPD) {
-          const optionsPrefix = 'LGPD';
+          const optionsPrefix = 'initial-message';
 
           if (message.type === 'text') {
             await this.sendMessage(
@@ -1190,6 +1190,7 @@ export class WhatsappService {
   private async generateConfirmationOptions(
     message: string,
     optionsPrefix: string,
+    cancel = true,
   ): Promise<InteractiveObject> {
     const interactive: InteractiveObject = {
       action: {
@@ -1216,15 +1217,15 @@ export class WhatsappService {
         title: 'Não',
       },
     });
-
-    interactive.action.buttons.push({
-      type: 'reply',
-      reply: {
-        id: `${optionsPrefix}-cancel`,
-        title: 'Cancelar',
-      },
-    });
-
+    if (cancel) {
+      interactive.action.buttons.push({
+        type: 'reply',
+        reply: {
+          id: `${optionsPrefix}-cancel`,
+          title: 'Cancelar',
+        },
+      });
+    }
     return interactive;
   }
 
@@ -1497,6 +1498,7 @@ export class WhatsappService {
     decision: DecisionEntity,
   ) {
     const optionsPrefix = 'initial-message';
+    await this.sendMessage(phoneNumber, '*Bem-vindo ao MinhaPalavra!*');
     await this.sendMessage(
       phoneNumber,
       'Estou ciente de estar participando do teste para o surgimento do MINHA PALAVRA. Uma plataforma que irá colaborar para fortalecer os acordos do dia-a-dia. Nesta fase beta teste não nos responsabilizamos por erros ou instabilidades da plataforma. Os emails serão solicitados para pesquisas futuras. Seus dados estão sob as leis de LGPD.',
