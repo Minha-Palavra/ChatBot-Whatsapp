@@ -300,6 +300,53 @@ export class WhatsappService {
       ticket = await this.findServiceProviderNewestTicket(user);
       // Service provider has a ticket and the ticket is not finished.
       if (ticket && ticket.state !== TicketState.Finished) {
+        if (ticket.state === TicketState.LGPD) {
+          const optionsPrefix = 'LGPD';
+
+          if (message.type === 'text') {
+            await this.sendMessage(
+              phoneNumber,
+              'Esta não é uma opção válida neste momento. Por favor, selecione uma opção válida.',
+            );
+            await this.sendConfirmationOptions(
+              phoneNumber,
+              'Podemos continuar?',
+              optionsPrefix,
+              false,
+            );
+            continue;
+          }
+
+          const selectedOption = this.getSelectedConfirmationOption(message);
+
+          if (!selectedOption) {
+            this.logger.error('Failed to get selected option from message.');
+            continue;
+          }
+
+          if (!this.confirmatioOptionHasPrefix(selectedOption, optionsPrefix)) {
+            this.logger.error(
+              `${selectedOption} is not a valid option for ${optionsPrefix}.`,
+            );
+
+            await this.sendConfirmationOptions(
+              phoneNumber,
+              'Podemos continuar?',
+              optionsPrefix,
+              false,
+            );
+            continue;
+          }
+
+          if (selectedOption === `${optionsPrefix}-no`) {
+            await this.cancelTicket(phoneNumber, ticket);
+            continue;
+          }
+
+          await this.sendCategoryOptions(phoneNumber, ticket.decision);
+          continue;
+        }
+
         // Service provider is chosing an category option.
         if (ticket.state === TicketState.Chosing) {
           // If the message is not interactive, menas that user is not chosing an category option.
@@ -1040,7 +1087,8 @@ export class WhatsappService {
       // If the user has no ticket or the newest ticket is finished, then create one.
       ticket = await this.createTicketForUser(user);
       // Send the category options.
-      await this.sendCategoryOptions(phoneNumber, ticket.decision);
+      //await this.sendCategoryOptions(phoneNumber, ticket.decision);
+      await this.sendInitialMessage(phoneNumber, ticket.decision);
       continue;
     }
   }
@@ -1053,7 +1101,7 @@ export class WhatsappService {
     return await this.ticketService.create({
       user: user,
       decision: initialDecision,
-      state: TicketState.Chosing,
+      state: TicketState.LGPD,
     });
   }
 
