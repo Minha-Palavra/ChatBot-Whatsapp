@@ -49,6 +49,10 @@ export class TicketEntity extends AbstractEntity {
 
   @ApiProperty()
   @Column({ nullable: true })
+  deadline: string;
+
+  @ApiProperty()
+  @Column({ nullable: true })
   accepted: boolean;
 
   @ApiProperty()

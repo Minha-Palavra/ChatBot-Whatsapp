@@ -612,6 +612,27 @@ export class WhatsappService {
           ticket.description = description;
 
           await this.ticketService.save(ticket);
+          await this.requestServiceDeadline(phoneNumber, ticket);
+          continue;
+        }
+
+        if (ticket.state === TicketState.ServiceDeadline) {
+          if (message.type !== 'text') {
+            this.logger.error(`${message.type} is not a text message.`);
+
+            await this.sendMessage(
+              phoneNumber,
+              'Esta não é uma opção válida neste momento. Por favor, selecione uma opção válida.',
+            );
+            await this.requestServiceDeadline(phoneNumber, ticket);
+            continue;
+          }
+
+          const deadline = message.text.body;
+
+          ticket.deadline = deadline;
+
+          await this.ticketService.save(ticket);
           await this.requestPaymentMethod(phoneNumber, ticket);
           continue;
         }
