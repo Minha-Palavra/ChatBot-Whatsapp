@@ -38,26 +38,26 @@ export class ProposalService {
     const prompt = `
     Crie um contrato de prestação de serviço utilizando os seguintes dados:
 
-    **Categoria do Serviço**: ${category}
-    **Descrição do Serviço**: ${description}
-    **Valor, forma de pagamento e multa**: ${payment}
-    **Prazo de prestação do Serviço**: ${deadline}
+    *Categoria do Serviço*: ${category}
+    *Descrição do Serviço*: ${description}
+    *Valor, forma de pagamento e multa*: ${payment}
+    *Prazo de prestação do Serviço*: ${deadline}
     
-    **Detalhes do Contratado**:
-    - **Nome**: ${userName}
-    - **E-mail**: ${userEmail}
-    - **Telefone**: ${userPhoneNumber}
-    - **CPF/CNPJ**: ${userTaxpayerNumber}
+    *Detalhes do Contratado*:
+    - *Nome*: ${userName}
+    - *E-mail*: ${userEmail}
+    - *Telefone*: ${userPhoneNumber}
+    - *CPF/CNPJ*: ${userTaxpayerNumber}
     
-    **Detalhes do Contratante**:
-    - **Nome**: ${clientNome}
-    - **E-mail**: ${clientEmail}
-    - **Telefone**: ${clientPhoneNumber}
-    - **CPF/CNPJ**: ${clientTaxpayerNumber}
+    *Detalhes do Contratante*:
+    - *Nome*: ${clientNome}
+    - *E-mail*: ${clientEmail}
+    - *Telefone*: ${clientPhoneNumber}
+    - *CPF/CNPJ*: ${clientTaxpayerNumber}
     
-    **Foro para Resolução de Disputas**: ${disputeForum}
+    *Foro para Resolução de Disputas*: ${disputeForum}
 
-    Observações: Este contrato não incluirá detalhes sobre endereços, nacionalidade, estado civil ou profissão. O contrato será validado pelo apertar do botão "Sim" enviado via WhatsApp número +1 (802) 383-6625. Formate o contrato usando ** para trechos em negrito e **** para trechos em itálico. Não inclua espaços para preenchimento manual da assinatura e data.`;
+    Observações: Este contrato não incluirá detalhes sobre endereços, nacionalidade, estado civil ou profissão. O contrato será validado pelo apertar do botão "Sim" enviado via WhatsApp número +1 (802) 383-6625. Formate o contrato usando * para trechos em negrito e ** para trechos em itálico. Não inclua espaços para preenchimento manual da assinatura e data.`;
     // this.logger.log(prompt);
     // this.logger.log(headers);
     const data = {

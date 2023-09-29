@@ -224,6 +224,7 @@ export class WhatsappService {
             ticket.client.phonenumber,
             'Você aceita a proposta?',
             optionsPrefix,
+            false,
           );
           continue;
         }
@@ -256,6 +257,7 @@ export class WhatsappService {
               phoneNumber,
               'Você aceita a proposta?',
               optionsPrefix,
+              false,
             );
             continue;
           }
@@ -1403,9 +1405,21 @@ export class WhatsappService {
     ticket.state = TicketState.PaymentMethod;
     ticket = await this.ticketService.save(ticket);
 
+    await this.sendMessage(phoneNumber, '*Metodo de Pagemento:*');
     await this.sendMessage(
       phoneNumber,
-      'Qual é o valor total? Qual é a forma de Pagamento? É possível pagar à vista ou parcelar? Em caso de parcelamento, em quantas vezes pode ser feito? Qual a data estipulada para os pagamentos? E qual a multa em caso de atraso ou cancelamento do serviço?',
+      'Responda a perguntas que fazem sentido ao seu contrato como:',
+    );
+    await this.sendMessage(
+      phoneNumber,
+      `• Qual é o valor?
+      • Qual é a forma de Pagamento? 
+      • É possível pagar à vista ou parcelar?
+      • Em caso de parcelamento, em quantas vezes pode ser feito? 
+      • Qual é a data estipulada para os pagamentos?
+      • Há juros? Explique como funciona.
+      • Há multa em caso de atraso ou cancelamento do serviço?
+      • Qual é a multa em caso de atraso ou cancelamento do serviço?`,
     );
   }
 
