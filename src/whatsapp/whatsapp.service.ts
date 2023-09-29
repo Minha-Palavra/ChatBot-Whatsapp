@@ -1412,15 +1412,14 @@ export class WhatsappService {
     );
     await this.sendMessage(
       phoneNumber,
-      `
-      • Qual é o valor?
-      • Qual é a forma de Pagamento? 
-      • É possível pagar à vista ou parcelar?
-      • Em caso de parcelamento, em quantas vezes pode ser feito? 
-      • Qual é a data estipulada para os pagamentos?
-      • Há juros? Explique como funciona.
-      • Há multa em caso de atraso ou cancelamento do serviço?
-      • Qual é a multa em caso de atraso ou cancelamento do serviço?`,
+      `• Qual é o valor?
+• Qual é a forma de Pagamento? 
+• É possível pagar à vista ou parcelar?
+• Em caso de parcelamento, em quantas vezes pode ser feito? 
+• Qual é a data estipulada para os pagamentos?
+• Há juros? Explique como funciona.
+• Há multa em caso de atraso ou cancelamento do serviço?
+• Qual é a multa em caso de atraso ou cancelamento do serviço?`,
     );
   }
 
