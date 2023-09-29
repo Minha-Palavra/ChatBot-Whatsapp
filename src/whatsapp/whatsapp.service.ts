@@ -1412,7 +1412,8 @@ export class WhatsappService {
     );
     await this.sendMessage(
       phoneNumber,
-      `• Qual é o valor?
+      `
+      • Qual é o valor?
       • Qual é a forma de Pagamento? 
       • É possível pagar à vista ou parcelar?
       • Em caso de parcelamento, em quantas vezes pode ser feito? 
@@ -1517,7 +1518,7 @@ export class WhatsappService {
     await this.sendMessage(phoneNumber, '*Bem-vindo ao MinhaPalavra!*');
     await this.sendMessage(
       phoneNumber,
-      'Estou ciente de estar participando do teste para o surgimento do MINHA PALAVRA. Uma plataforma que irá colaborar para fortalecer os acordos do dia-a-dia. Nesta fase beta teste não nos responsabilizamos por erros ou instabilidades da plataforma. Os emails serão solicitados para pesquisas futuras. Seus dados estão sob as leis de LGPD.',
+      'Estou ciente de estar participando do teste para o surgimento do *MINHA PALAVRA*. Uma plataforma que irá colaborar para fortalecer os acordos do dia-a-dia. Nesta fase beta teste não nos responsabilizamos por erros ou instabilidades da plataforma. Os emails serão solicitados para pesquisas futuras. Seus dados estão sob as leis de LGPD.',
     );
     await this.sendConfirmationOptions(
       phoneNumber,
