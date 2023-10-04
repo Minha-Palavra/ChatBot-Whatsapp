@@ -56,8 +56,8 @@ export class ProposalService {
     - *CPF/CNPJ*: ${clientTaxpayerNumber}
     
     *Foro para Resolução de Disputas*: ${disputeForum}
-    *Data:* ${Date.now().toString()} como data do contrato.
-    Observações: Este contrato não incluirá detalhes sobre endereços, nacionalidade, estado civil ou profissão. O contrato será validado pelo apertar do botão "Sim" enviado via WhatsApp número +1 (802) 383-6625. Formate o contrato usando * para trechos em negrito e ** para trechos em itálico. Não inclua espaços para preenchimento manual da assinatura e data.`;
+    *Data do Contrato:* ${Date.now().toString()} como data do contrato.
+    Observações: Este contrato não incluirá detalhes sobre endereços, nacionalidade, estado civil ou profissão. O contrato será validado pelo apertar do botão "Sim" enviado via WhatsApp número +1 (802) 383-6625. Formate o contrato usando * para trechos em negrito e ** para trechos em itálico. Não inclua espaços para preenchimento manual da assinatura.`;
     // this.logger.log(prompt);
     // this.logger.log(headers);
     const data = {

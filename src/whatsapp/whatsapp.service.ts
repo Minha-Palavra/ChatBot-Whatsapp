@@ -1072,13 +1072,69 @@ export class WhatsappService {
           ticket.state === TicketState.ClientRecieve ||
           ticket.state === TicketState.ClientApproval
         ) {
-          if (message.type !== 'text') {
-            this.logger.error(`${message.type} is not a text message.`);
+          const optionsPrefix = 'client-approval';
+
+          if (message.type === 'text') {
+            await this.sendMessage(
+              phoneNumber,
+              'O cliente ainda não respondeu à proposta. Recomendamos aguardar sua resposta.',
+            );
+            await this.sendConfirmationOptions(
+              phoneNumber,
+              'No entanto, se preferir, podemos cancelar o ticket. Deseja proceder com o cancelamento?',
+              optionsPrefix,
+              false,
+            );
+            continue;
           }
 
+          const selectedOption = this.getSelectedConfirmationOption(message);
+
+          if (!selectedOption) {
+            this.logger.error('Failed to get selected option from message.');
+            continue;
+          }
+
+          if (!this.confirmatioOptionHasPrefix(selectedOption, optionsPrefix)) {
+            this.logger.error(
+              `${selectedOption} is not a valid option for ${optionsPrefix}.`,
+            );
+
+            await this.sendMessage(
+              phoneNumber,
+              'Esta não é uma opção válida neste momento.',
+            );
+
+            await this.sendMessage(
+              phoneNumber,
+              'O cliente ainda não respondeu à proposta. Recomendamos aguardar sua resposta.',
+            );
+
+            await this.sendConfirmationOptions(
+              phoneNumber,
+              'No entanto, se preferir, podemos cancelar o ticket. Deseja proceder com o cancelamento?',
+              optionsPrefix,
+              false,
+            );
+            continue;
+          }
+
+          if (selectedOption === `${optionsPrefix}-no`) {
+            await this.sendMessage(
+              phoneNumber,
+              'Certo, então vamos aguardar a resposta do cliente.',
+            );
+            continue;
+          }
+
+          await this.cancelTicket(phoneNumber, ticket);
+          const customer = await this.userService.findOne({
+            where: { id: ticket.client.id },
+          });
+
           await this.sendMessage(
-            phoneNumber,
-            'Por favor, aguarde a resposta do cliente.',
+            customer.phonenumber,
+            'O ticket foi cancelado pelo prestador de serviço. Por favor entre em contato com ele para mais informações.',
           );
 
           continue;
