@@ -28,13 +28,14 @@ export class ProposalService {
       apiKey: apiKey,
     });
 
-    // const url = 'https://api.openai.com/v1/completions';
-
-    // const headers = {
-    //   Authorization: `Bearer ${apiKey}`,
-    //   'Content-Type': 'application/json',
-    // };
-
+    const date: Date = new Date();
+    const opcoes = { year: 'numeric', month: '2-digit', day: '2-digit' };
+    const dataFormatada = date.toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+    this.logger.log(dataFormatada);
     const prompt = `
     Crie um contrato de prestação de serviço utilizando os seguintes dados:
 
@@ -56,7 +57,7 @@ export class ProposalService {
     - *CPF/CNPJ*: ${clientTaxpayerNumber}
     
     *Foro para Resolução de Disputas*: ${disputeForum}
-    *Data do Contrato:* ${Date.now().toLocaleString()} como data do contrato.
+    *Data do Contrato:* ${dataFormatada}
     Observações: Este contrato não incluirá detalhes sobre endereços, nacionalidade, estado civil ou profissão. O contrato será validado pelo apertar do botão "Sim" enviado via WhatsApp número +1 (802) 383-6625. Formate o contrato usando * para trechos em negrito e ** para trechos em itálico. Não inclua espaços para preenchimento manual da assinatura.`;
     // this.logger.log(prompt);
     // this.logger.log(headers);
