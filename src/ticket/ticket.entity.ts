@@ -67,5 +67,9 @@ export class TicketEntity extends AbstractEntity {
 
   @ApiProperty()
   @ManyToOne(() => UserEntity, (user) => user.tickets, { nullable: true })
+  serviceProvider: UserEntity;
+
+  @ApiProperty()
+  @ManyToOne(() => UserEntity, (user) => user.tickets, { nullable: true })
   client: UserEntity;
 }

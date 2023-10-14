@@ -1152,6 +1152,8 @@ export class WhatsappService {
     }
   }
 
+
+  
   private async createTicketForUser(user: UserEntity): Promise<TicketEntity> {
     const initialDecision = await this.decisionService.findOne({
       where: { slug: 'bem-vindo' },
