@@ -27,6 +27,12 @@ export enum TicketState {
   JurisdictionInDispute = 'JURISDICTION_IN_DISPUTE',
 }
 
+export enum TicketOwner {
+  None = 'NONE',
+  ServiceProvider = 'SERVICE_PROVIDER',
+  Customer = 'CUSTOMER',
+}
+
 @Entity({ name: 'ticket' })
 export class TicketEntity extends AbstractEntity {
   @ApiProperty()
@@ -36,6 +42,10 @@ export class TicketEntity extends AbstractEntity {
   @ApiProperty({ enum: TicketState })
   @Column({ type: 'enum', enum: TicketState, default: TicketState.NONE })
   state: TicketState;
+
+  @ApiProperty({ enum: TicketOwner })
+  @Column({ type: 'enum', enum: TicketOwner, default: TicketOwner.None })
+  owner: TicketOwner;
 
   @ApiProperty()
   @Column({ nullable: true })
@@ -67,9 +77,9 @@ export class TicketEntity extends AbstractEntity {
 
   @ApiProperty()
   @ManyToOne(() => UserEntity, (user) => user.tickets, { nullable: true })
-  serviceProvider: UserEntity;
+  counterpart: UserEntity;
 
-  @ApiProperty()
-  @ManyToOne(() => UserEntity, (user) => user.tickets, { nullable: true })
-  client: UserEntity;
+  // @ApiProperty()
+  // @ManyToOne(() => UserEntity, (user) => user.tickets, { nullable: true })
+  // client: UserEntity;
 }

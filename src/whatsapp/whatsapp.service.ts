@@ -9,7 +9,11 @@ import { ConfigService } from '@nestjs/config';
 import { MessageDirection } from '../history/history.entity';
 import { UserService } from '../user/user.service';
 import { TicketService } from '../ticket/ticket.service';
-import { TicketEntity, TicketState } from '../ticket/ticket.entity';
+import {
+  TicketEntity,
+  TicketOwner,
+  TicketState,
+} from '../ticket/ticket.entity';
 import { InteractiveObject } from 'whatsapp/src/types/messages';
 import { phone } from 'phone';
 import { DecisionService } from '../decision/decision.service';
@@ -192,6 +196,7 @@ export class WhatsappService {
       }
 
       let ticket;
+      ticket = await this.findUserNewestTicket(user);
 
       // CUSTOMER.
       ticket = await this.findCustomerNewestTicket(user);
@@ -298,7 +303,7 @@ export class WhatsappService {
         continue;
       }
 
-      // SERVICE PROVIDER.
+      // SERVICE PROVIDER. Owner
       ticket = await this.findServiceProviderNewestTicket(user);
       // Service provider has a ticket and the ticket is not finished.
       if (ticket && ticket.state !== TicketState.Finished) {
@@ -1143,17 +1148,25 @@ export class WhatsappService {
         continue;
       }
 
-      // If the user has no ticket or the newest ticket is finished, then create one.
+      // if (ticket && ticket.state !== TicketState.Finished) {
+      //   if (ticket.owner === TicketOwner.ServiceProvider) {
+      //     continue;
+      //   }
+
+      //   if (ticket.owner === TicketOwner.Customer) {
+      //     continue;
+      //   }
+      //   if (ticket.owner === TicketOwner.None) {
+      //     continue;
+      //   }
+      // }
+      // If the user has no open ticket, then create a new one.
       ticket = await this.createTicketForUser(user);
-      // Send the category options.
-      //await this.sendCategoryOptions(phoneNumber, ticket.decision);
       await this.sendInitialMessage(phoneNumber, ticket.decision);
       continue;
     }
   }
 
-
-  
   private async createTicketForUser(user: UserEntity): Promise<TicketEntity> {
     const initialDecision = await this.decisionService.findOne({
       where: { slug: 'bem-vindo' },
@@ -1166,13 +1179,23 @@ export class WhatsappService {
     });
   }
 
+  private async findUserNewestTicket(
+    user: UserEntity,
+  ): Promise<TicketEntity | null> {
+    return await this.ticketService.findOne({
+      where: { user: { id: user.id } },
+      order: { updatedAt: 'DESC' },
+      relations: { decision: true, counterpart: true, user: true },
+    });
+  }
+
   private async findServiceProviderNewestTicket(
     user: UserEntity,
   ): Promise<TicketEntity | null> {
     return await this.ticketService.findOne({
       where: { user: { id: user.id } },
       order: { updatedAt: 'DESC' },
-      relations: { decision: true, client: true, user: true },
+      relations: { decision: true, counterpart: true, user: true },
     });
   }
 
@@ -1180,9 +1203,9 @@ export class WhatsappService {
     user: UserEntity,
   ): Promise<TicketEntity | null> {
     return await this.ticketService.findOne({
-      where: { client: { id: user.id } },
+      where: { counterpart: { id: user.id } },
       order: { updatedAt: 'DESC' },
-      relations: { decision: true, client: true, user: true },
+      relations: { decision: true, counterpart: true, user: true },
     });
   }
 
@@ -1212,7 +1235,7 @@ export class WhatsappService {
     ticket: TicketEntity,
   ): Promise<UserEntity | null> {
     return await this.userService.findOne({
-      where: { id: ticket.client.id },
+      where: { id: ticket.counterpart.id },
     });
   }
 
