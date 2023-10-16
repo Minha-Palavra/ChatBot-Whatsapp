@@ -196,10 +196,9 @@ export class WhatsappService {
       }
 
       let ticket;
-      ticket = await this.findUserNewestTicket(user);
 
       // CUSTOMER.
-      ticket = await this.findCustomerNewestTicket(user);
+      ticket = await this.findCounterpartNewestTicket(user);
       // Customer has a ticket and the ticket is not finished.
       if (ticket && ticket.state !== TicketState.Finished) {
         if (ticket.state === TicketState.ClientRecieve) {
@@ -212,7 +211,7 @@ export class WhatsappService {
           }
 
           const optionsPrefix = 'customer-approval';
-          const customer = await this.getCustomerFromTicket(ticket);
+          const customer = await this.getCounterpartFromTicket(ticket);
 
           ticket.state = TicketState.ClientApproval;
 
@@ -220,13 +219,16 @@ export class WhatsappService {
 
           await this.sendMessage(
             customer.phonenumber,
-            `Ola, ${ticket.client.fullname}!
+            `Ola, ${ticket.counterpart.fullname}!
             O seu prestador de serviço ${ticket.user.fullname}, enviou uma proposta para você.
             `,
           );
-          await this.sendMessage(ticket.client.phonenumber, ticket.proporsal);
+          await this.sendMessage(
+            ticket.counterpart.phonenumber,
+            ticket.proporsal,
+          );
           await this.sendConfirmationOptions(
-            ticket.client.phonenumber,
+            ticket.counterpart.phonenumber,
             'Você aceita a proposta?',
             optionsPrefix,
             false,
@@ -236,10 +238,8 @@ export class WhatsappService {
         // The ticket is waiting for the customer to accept or decline the proposal.
         if (ticket.state === TicketState.ClientApproval) {
           const optionsPrefix = 'customer-approval';
-          const serviceProvider = await this.getServiceProviderFromTicket(
-            ticket,
-          );
-          const customer = await this.getCustomerFromTicket(ticket);
+          const serviceProvider = await this.getUserFromTicket(ticket);
+          const customer = await this.getCounterpartFromTicket(ticket);
           // Customer has trying to interact with the ticket by text.
           if (message.type === 'text') {
             await this.sendProposalToCustomer(ticket);
@@ -304,7 +304,7 @@ export class WhatsappService {
       }
 
       // SERVICE PROVIDER. Owner
-      ticket = await this.findServiceProviderNewestTicket(user);
+      ticket = await this.findUserNewestTicket(user);
       // Service provider has a ticket and the ticket is not finished.
       if (ticket && ticket.state !== TicketState.Finished) {
         if (ticket.state === TicketState.LGPD) {
@@ -443,18 +443,75 @@ export class WhatsappService {
               phoneNumber,
               'Chegou no fim da arvore de decisão.',
             );
-
-            await this.requestServiceProviderName(phoneNumber, ticket);
+            await this.requestContext(phoneNumber, ticket);
             continue;
           }
+        }
+
+        // TODO:
+        if (ticket.state === TicketState.Context) {
+          const optionsPrefix = 'ticket-context';
+          if (message.type === 'text') {
+            await this.sendMessage(
+              phoneNumber,
+              'Esta não é uma opção válida neste momento. Por favor, selecione uma opção válida.',
+            );
+            // TODO:
+            await this.sendContextOptions(
+              phoneNumber,
+              'Você é o cliente (aquele que procura um serviço) ou o prestador (aquele que oferece o serviço)?',
+              optionsPrefix,
+              false,
+            );
+            continue;
+          }
+
+          const selectedOption = this.getSelectedConfirmationOption(message);
+
+          if (!selectedOption) {
+            this.logger.error('Failed to get selected option from message.');
+            continue;
+          }
+
+          if (!this.contextOptionHasPrefix(selectedOption, optionsPrefix)) {
+            this.logger.error(
+              `${selectedOption} is not a valid option for ${optionsPrefix}.`,
+            );
+
+            await this.sendContextOptions(
+              phoneNumber,
+              'Você é o cliente (aquele que procura um serviço) ou o prestador (aquele que oferece o serviço)?',
+              optionsPrefix,
+              false,
+            );
+            continue;
+          }
+
+          if (selectedOption === `${optionsPrefix}-cancel`) {
+            await this.cancelTicket(phoneNumber, ticket);
+            continue;
+          }
+
+          if (selectedOption === `${optionsPrefix}-service-provider`) {
+            ticket.owner = TicketOwner.ServiceProvider;
+            await this.ticketService.save(ticket);
+          }
+
+          if (selectedOption === `${optionsPrefix}-customer`) {
+            ticket.owner = TicketOwner.Customer;
+            await this.ticketService.save(ticket);
+          }
+
+          ticket.state = TicketState.Context;
+          await this.ticketService.save(ticket);
+          await this.requestUserName(phoneNumber, ticket);
+          continue;
         }
 
         if (ticket.state === TicketState.Name) {
           const optionsPrefix = 'service-provider-name';
 
-          const serviceProvider = await this.getServiceProviderFromTicket(
-            ticket,
-          );
+          const serviceProvider = await this.getUserFromTicket(ticket);
 
           if (message.type === 'text') {
             const fullName = message.text.body;
@@ -499,20 +556,18 @@ export class WhatsappService {
             user.fullname = null;
 
             await this.userService.save(user);
-            await this.requestServiceProviderName(phoneNumber, ticket);
+            await this.requestUserName(phoneNumber, ticket);
             continue;
           }
 
-          await this.requestServiceProviderTaxpayerNumber(phoneNumber, ticket);
+          await this.requestUserTaxpayerNumber(phoneNumber, ticket);
           continue;
         }
 
         if (ticket.state === TicketState.TaxpayerNumber) {
           const optionsPrefix = 'service-provider-taxpayer-number';
 
-          const serviceProvider = await this.getServiceProviderFromTicket(
-            ticket,
-          );
+          const serviceProvider = await this.getUserFromTicket(ticket);
 
           if (message.type === 'text') {
             const taxpayerNumber = message.text.body.replace(/\D/g, '');
@@ -522,10 +577,7 @@ export class WhatsappService {
                 phoneNumber,
                 'Este não é um CPF/CPNJ válido. Por favor, digite um CPF/CPNJ válido.',
               );
-              await this.requestServiceProviderTaxpayerNumber(
-                phoneNumber,
-                ticket,
-              );
+              await this.requestUserTaxpayerNumber(phoneNumber, ticket);
               continue;
             }
 
@@ -573,23 +625,18 @@ export class WhatsappService {
             user.taxpayerNumber = null;
 
             await this.userService.save(user);
-            await this.requestServiceProviderTaxpayerNumber(
-              phoneNumber,
-              ticket,
-            );
+            await this.requestUserTaxpayerNumber(phoneNumber, ticket);
             continue;
           }
 
-          await this.requestServiceProviderEmail(phoneNumber, ticket);
+          await this.requestUserEmail(phoneNumber, ticket);
           continue;
         }
 
         if (ticket.state === TicketState.Email) {
           const optionsPrefix = 'service-provider-email';
 
-          const serviceProvider = await this.getServiceProviderFromTicket(
-            ticket,
-          );
+          const serviceProvider = await this.getUserFromTicket(ticket);
 
           if (message.type === 'text') {
             const email = message.text.body;
@@ -599,7 +646,7 @@ export class WhatsappService {
                 phoneNumber,
                 'Este não é um email válido. Por favor, digite um email válido.',
               );
-              await this.requestServiceProviderEmail(phoneNumber, ticket);
+              await this.requestUserEmail(phoneNumber, ticket);
               continue;
             }
 
@@ -642,7 +689,7 @@ export class WhatsappService {
             user.email = null;
 
             await this.userService.save(user);
-            await this.requestServiceProviderEmail(phoneNumber, ticket);
+            await this.requestUserEmail(phoneNumber, ticket);
             continue;
           }
 
@@ -730,7 +777,7 @@ export class WhatsappService {
           ticket.disputeForum = disputeForum;
 
           await this.ticketService.save(ticket);
-          await this.requestCustomerPhoneNumber(phoneNumber, ticket);
+          await this.requestCounterpartPhoneNumber(phoneNumber, ticket);
           continue;
         }
 
@@ -745,7 +792,7 @@ export class WhatsappService {
                 phoneNumber,
                 'Este não é um número de telefone válido. Por favor, digite um número de telefone válido.',
               );
-              await this.requestCustomerPhoneNumber(phoneNumber, ticket);
+              await this.requestCounterpartPhoneNumber(phoneNumber, ticket);
               continue;
             }
             customerPhoneNumber = this.formatPhoneNumber(customerPhoneNumber);
@@ -758,7 +805,11 @@ export class WhatsappService {
             await this.ticketService.save(ticket);
             await this.sendConfirmationOptions(
               phoneNumber,
-              `O número de telefone do cliente é ${customerPhoneNumber}, está correto?`,
+              `O número de telefone do ${
+                ticket.owner === TicketOwner.ServiceProvider
+                  ? 'cliente'
+                  : 'provedor de serviço'
+              }  é ${customerPhoneNumber}, está correto?`,
               optionsPrefix,
             );
             continue;
@@ -775,11 +826,15 @@ export class WhatsappService {
               `${selectedOption} is not a valid option for ${optionsPrefix}.`,
             );
 
-            const customer = await this.getCustomerFromTicket(ticket);
+            const customer = await this.getCounterpartFromTicket(ticket);
 
             await this.sendConfirmationOptions(
               phoneNumber,
-              `O número de telefone do cliente é ${customer.phonenumber}, está correto?`,
+              `O número de telefone do ${
+                ticket.owner === TicketOwner.ServiceProvider
+                  ? 'cliente'
+                  : 'provedor de serviço'
+              } é ${customer.phonenumber}, está correto?`,
               optionsPrefix,
             );
             continue;
@@ -794,11 +849,11 @@ export class WhatsappService {
             ticket.client = null;
 
             await this.ticketService.save(ticket);
-            await this.requestCustomerPhoneNumber(phoneNumber, ticket);
+            await this.requestCounterpartPhoneNumber(phoneNumber, ticket);
             continue;
           }
 
-          await this.requestCustomerName(phoneNumber, ticket);
+          await this.requestCounterpartName(phoneNumber, ticket);
           continue;
         }
 
@@ -806,7 +861,7 @@ export class WhatsappService {
           const optionsPrefix = 'customer-name';
 
           const customer = await this.userService.findOne({
-            where: { id: ticket.client.id },
+            where: { id: ticket.counterpart.id },
           });
 
           if (message.type === 'text') {
@@ -817,7 +872,11 @@ export class WhatsappService {
             await this.userService.save(customer);
             await this.sendConfirmationOptions(
               phoneNumber,
-              `O nome do cliente é ${fullName}, está correto?`,
+              `O nome do ${
+                ticket.owner === TicketOwner.ServiceProvider
+                  ? 'cliente'
+                  : 'provedor de serviço'
+              } é ${fullName}, está correto?`,
               optionsPrefix,
             );
 
@@ -838,7 +897,11 @@ export class WhatsappService {
 
             await this.sendConfirmationOptions(
               phoneNumber,
-              `O nome do cliente é ${customer.fullname}, está correto?`,
+              `O nome do ${
+                ticket.owner === TicketOwner.ServiceProvider
+                  ? 'cliente'
+                  : 'provedor de serviço'
+              } é ${customer.fullname}, está correto?`,
               optionsPrefix,
             );
             continue;
@@ -853,12 +916,12 @@ export class WhatsappService {
             customer.fullname = null;
 
             await this.userService.save(customer);
-            await this.requestCustomerName(phoneNumber, ticket);
+            await this.requestCounterpartName(phoneNumber, ticket);
 
             continue;
           }
 
-          await this.requestCustomerTaxpayerNumber(phoneNumber, ticket);
+          await this.requestCounterpartNumber(phoneNumber, ticket);
           continue;
         }
 
@@ -866,7 +929,7 @@ export class WhatsappService {
           const optionsPrefix = 'customer-taxpayer-number';
 
           const customer = await this.userService.findOne({
-            where: { id: ticket.client.id },
+            where: { id: ticket.counterpart.id },
           });
 
           if (message.type === 'text') {
@@ -877,7 +940,7 @@ export class WhatsappService {
                 phoneNumber,
                 'Este não é um CPF ou CPNJ válido. Por favor, digite um CPF ou CPNJ válido.',
               );
-              await this.requestCustomerTaxpayerNumber(phoneNumber, ticket);
+              await this.requestCounterpartNumber(phoneNumber, ticket);
               continue;
             }
 
@@ -925,11 +988,11 @@ export class WhatsappService {
             customer.taxpayerNumber = null;
 
             await this.userService.save(customer);
-            await this.requestCustomerTaxpayerNumber(phoneNumber, ticket);
+            await this.requestCounterpartNumber(phoneNumber, ticket);
             continue;
           }
 
-          await this.requestCustomerEmail(phoneNumber, ticket);
+          await this.requestCounterpartEmail(phoneNumber, ticket);
           continue;
         }
 
@@ -937,7 +1000,7 @@ export class WhatsappService {
           const optionsPrefix = 'customer-email';
 
           const customer = await this.userService.findOne({
-            where: { id: ticket.client.id },
+            where: { id: ticket.counterpart.id },
           });
 
           if (message.type === 'text') {
@@ -948,7 +1011,7 @@ export class WhatsappService {
                 phoneNumber,
                 'Este não é um email válido. Por favor, digite um email válido.',
               );
-              await this.requestCustomerEmail(phoneNumber, ticket);
+              await this.requestCounterpartEmail(phoneNumber, ticket);
               continue;
             }
 
@@ -991,7 +1054,7 @@ export class WhatsappService {
             customer.email = null;
 
             await this.userService.save(customer);
-            await this.requestCustomerEmail(phoneNumber, ticket);
+            await this.requestCounterpartEmail(phoneNumber, ticket);
             continue;
           }
 
@@ -1031,7 +1094,11 @@ export class WhatsappService {
             await this.sendMessage(phoneNumber, ticket.proporsal);
             await this.sendConfirmationOptions(
               phoneNumber,
-              'A proposta está correta? Podemos enviar para o cliente?',
+              `A proposta está correta? Podemos enviar para o ${
+                ticket.owner === TicketOwner.ServiceProvider
+                  ? 'cliente'
+                  : 'provedor de serviço'
+              }?`,
               optionsPrefix,
             );
             continue;
@@ -1068,7 +1135,11 @@ export class WhatsappService {
           await this.sendProposalToCustomer(ticket);
           await this.sendMessage(
             phoneNumber,
-            'Enviamos a proposta para o cliente, por favor aguarde que este responda.',
+            `Enviamos a proposta para o ${
+              ticket.owner === TicketOwner.ServiceProvider
+                ? 'cliente'
+                : 'provedor de serviço'
+            }, por favor aguarde que este responda.`,
           );
           continue;
         }
@@ -1082,7 +1153,11 @@ export class WhatsappService {
           if (message.type === 'text') {
             await this.sendMessage(
               phoneNumber,
-              'O cliente ainda não respondeu à proposta. Recomendamos aguardar sua resposta.',
+              `O ${
+                ticket.owner === TicketOwner.ServiceProvider
+                  ? 'cliente'
+                  : 'provedor de serviço'
+              } ainda não respondeu à proposta. Recomendamos aguardar sua resposta.`,
             );
             await this.sendConfirmationOptions(
               phoneNumber,
@@ -1112,7 +1187,11 @@ export class WhatsappService {
 
             await this.sendMessage(
               phoneNumber,
-              'O cliente ainda não respondeu à proposta. Recomendamos aguardar sua resposta.',
+              `O ${
+                ticket.owner === TicketOwner.ServiceProvider
+                  ? 'cliente'
+                  : 'provedor de serviço'
+              } ainda não respondeu à proposta. Recomendamos aguardar sua resposta.`,
             );
 
             await this.sendConfirmationOptions(
@@ -1127,19 +1206,27 @@ export class WhatsappService {
           if (selectedOption === `${optionsPrefix}-no`) {
             await this.sendMessage(
               phoneNumber,
-              'Certo, então vamos aguardar a resposta do cliente.',
+              `Certo, então vamos aguardar a resposta do ${
+                ticket.owner === TicketOwner.ServiceProvider
+                  ? 'cliente'
+                  : 'provedor de serviço'
+              }.`,
             );
             continue;
           }
 
           await this.cancelTicket(phoneNumber, ticket);
           const customer = await this.userService.findOne({
-            where: { id: ticket.client.id },
+            where: { id: ticket.counterpart.id },
           });
 
           await this.sendMessage(
             customer.phonenumber,
-            'O ticket foi cancelado pelo prestador de serviço. Por favor entre em contato com ele para mais informações.',
+            `O ticket foi cancelado pelo ${
+              ticket.owner === TicketOwner.ServiceProvider
+                ? 'cliente'
+                : 'provedor de serviço'
+            }. Por favor entre em contato com ele para mais informações.`,
           );
 
           continue;
@@ -1189,17 +1276,7 @@ export class WhatsappService {
     });
   }
 
-  private async findServiceProviderNewestTicket(
-    user: UserEntity,
-  ): Promise<TicketEntity | null> {
-    return await this.ticketService.findOne({
-      where: { user: { id: user.id } },
-      order: { updatedAt: 'DESC' },
-      relations: { decision: true, counterpart: true, user: true },
-    });
-  }
-
-  private async findCustomerNewestTicket(
+  private async findCounterpartNewestTicket(
     user: UserEntity,
   ): Promise<TicketEntity | null> {
     return await this.ticketService.findOne({
@@ -1223,15 +1300,13 @@ export class WhatsappService {
     } else return null;
   }
 
-  private async getServiceProviderFromTicket(
-    ticket: TicketEntity,
-  ): Promise<UserEntity> {
+  private async getUserFromTicket(ticket: TicketEntity): Promise<UserEntity> {
     return await this.userService.findOne({
       where: { id: ticket.user.id },
     });
   }
 
-  private async getCustomerFromTicket(
+  private async getCounterpartFromTicket(
     ticket: TicketEntity,
   ): Promise<UserEntity | null> {
     return await this.userService.findOne({
@@ -1240,27 +1315,54 @@ export class WhatsappService {
   }
 
   private async generateProposal(ticket: TicketEntity) {
-    const serviceProvider = await this.getServiceProviderFromTicket(ticket);
-    const customer = await this.getCustomerFromTicket(ticket);
+    const serviceProvider = await this.getUserFromTicket(ticket);
+    const customer = await this.getCounterpartFromTicket(ticket);
 
     await this.sendMessage(
       serviceProvider.phonenumber,
       'Estamos gerando a proposta para você. Por favor, aguarde.',
     );
 
+    const owner = ticket.owner;
     const proporsal = await this.proposalService.generateProposal(
       ticket.decision.title,
       ticket.description,
       ticket.paymentMethod,
-      serviceProvider.fullname,
-      serviceProvider.phonenumber,
-      serviceProvider.email,
-      serviceProvider.taxpayerNumber,
-      customer.fullname,
-      customer.phonenumber,
-      customer.email,
-      customer.taxpayerNumber,
+      //
+      owner === TicketOwner.ServiceProvider
+        ? serviceProvider.fullname
+        : customer.fullname,
+      //
+      owner === TicketOwner.ServiceProvider
+        ? serviceProvider.phonenumber
+        : customer.phonenumber,
+      //
+      owner === TicketOwner.ServiceProvider
+        ? serviceProvider.email
+        : customer.email,
+      //
+      owner === TicketOwner.ServiceProvider
+        ? serviceProvider.taxpayerNumber
+        : customer.taxpayerNumber,
+      //
+      owner === TicketOwner.ServiceProvider
+        ? customer.fullname
+        : serviceProvider.fullname,
+      //
+      owner === TicketOwner.ServiceProvider
+        ? customer.phonenumber
+        : serviceProvider.phonenumber,
+      //
+      owner === TicketOwner.ServiceProvider
+        ? customer.email
+        : serviceProvider.email,
+      //
+      owner === TicketOwner.ServiceProvider
+        ? customer.taxpayerNumber
+        : serviceProvider.taxpayerNumber,
+      //
       ticket.deadline,
+      //
       ticket.disputeForum,
     );
 
@@ -1313,6 +1415,49 @@ export class WhatsappService {
     return interactive;
   }
 
+  private async generateContextOptions(
+    message: string,
+    optionsPrefix: string,
+    cancel = true,
+  ): Promise<InteractiveObject> {
+    const interactive: InteractiveObject = {
+      action: {
+        buttons: [],
+      },
+      type: InteractiveTypesEnum.Button,
+      body: {
+        text: message,
+      },
+    };
+
+    interactive.action.buttons.push({
+      type: 'reply',
+      reply: {
+        id: `${optionsPrefix}-service-provider`,
+        title: 'Prestador de serviço',
+      },
+    });
+
+    interactive.action.buttons.push({
+      type: 'reply',
+      reply: {
+        id: `${optionsPrefix}-customer`,
+        title: 'Cliente',
+      },
+    });
+
+    if (cancel) {
+      interactive.action.buttons.push({
+        type: 'reply',
+        reply: {
+          id: `${optionsPrefix}-cancel`,
+          title: 'Cancelar',
+        },
+      });
+    }
+    return interactive;
+  }
+
   private async sendConfirmationOptions(
     phoneNumber: string,
     message: string,
@@ -1321,6 +1466,31 @@ export class WhatsappService {
   ) {
     // Generate the confirmation options using the preffix.
     const confirmation = await this.generateConfirmationOptions(
+      message,
+      optionsPrefix,
+      cancel,
+    );
+
+    const messageSent = await this.wa.messages.interactive(
+      confirmation,
+      phoneNumber,
+    );
+
+    this.logger.log(
+      `${messageSent.statusCode()} ${messageSent.responseBodyToJSON()}`,
+    );
+
+    return true;
+  }
+
+  private async sendContextOptions(
+    phoneNumber: string,
+    message: string,
+    optionsPrefix: string,
+    cancel = true,
+  ) {
+    // Generate the confirmation options using the preffix.
+    const confirmation = await this.generateContextOptions(
       message,
       optionsPrefix,
       cancel,
@@ -1349,6 +1519,16 @@ export class WhatsappService {
     return false;
   }
 
+  private contextOptionHasPrefix(option: string, prefix: string): boolean {
+    if (
+      option === `${prefix}-service-provider` ||
+      option === `${prefix}-customer` ||
+      option === `${prefix}-cancel`
+    ) {
+      return true;
+    }
+    return false;
+  }
   private getSelectedOptionFromMessage(message: any): string | null {
     const interaction: any = message.interactive;
 
@@ -1368,17 +1548,14 @@ export class WhatsappService {
     }
   }
 
-  private async requestServiceProviderName(
-    phoneNumber: string,
-    ticket: TicketEntity,
-  ) {
+  private async requestUserName(phoneNumber: string, ticket: TicketEntity) {
     ticket.state = TicketState.Name;
     ticket = await this.ticketService.save(ticket);
 
     this.sendMessage(phoneNumber, 'Qual é o seu nome?');
   }
 
-  private async requestServiceProviderTaxpayerNumber(
+  private async requestUserTaxpayerNumber(
     phoneNumber: string,
     ticket: TicketEntity,
   ) {
@@ -1388,17 +1565,14 @@ export class WhatsappService {
     this.sendMessage(phoneNumber, 'Qual é o seu CPF/CPNJ?');
   }
 
-  private async requestServiceProviderEmail(
-    phoneNumber: string,
-    ticket: TicketEntity,
-  ) {
+  private async requestUserEmail(phoneNumber: string, ticket: TicketEntity) {
     ticket.state = TicketState.Email;
     ticket = await this.ticketService.save(ticket);
 
     this.sendMessage(phoneNumber, 'Qual é o seu email?');
   }
 
-  private async requestCustomerPhoneNumber(
+  private async requestCounterpartPhoneNumber(
     phoneNumber: string,
     ticket: TicketEntity,
   ) {
@@ -1407,35 +1581,63 @@ export class WhatsappService {
 
     this.sendMessage(
       phoneNumber,
-      'Qual é o número de telefone do seu cliente?',
+      `Qual é o número de telefone do seu ${
+        ticket.owner === TicketOwner.ServiceProvider
+          ? 'cliente'
+          : 'provedor de serviço'
+      }?`,
     );
   }
 
-  private async requestCustomerName(phoneNumber: string, ticket: TicketEntity) {
+  private async requestCounterpartName(
+    phoneNumber: string,
+    ticket: TicketEntity,
+  ) {
     ticket.state = TicketState.ClientName;
     ticket = await this.ticketService.save(ticket);
 
-    this.sendMessage(phoneNumber, 'Qual é o nome do seu cliente?');
+    this.sendMessage(
+      phoneNumber,
+      `Qual é o nome do seu ${
+        ticket.owner === TicketOwner.ServiceProvider
+          ? 'cliente'
+          : 'provedor de serviço'
+      }?`,
+    );
   }
 
-  private async requestCustomerTaxpayerNumber(
+  private async requestCounterpartNumber(
     phoneNumber: string,
     ticket: TicketEntity,
   ) {
     ticket.state = TicketState.ClientTaxpayerNumber;
     ticket = await this.ticketService.save(ticket);
 
-    this.sendMessage(phoneNumber, 'Qual é o seu CPF/CPNJ do seu cliente?');
+    this.sendMessage(
+      phoneNumber,
+      `Qual é o seu CPF/CPNJ do seu ${
+        ticket.owner === TicketOwner.ServiceProvider
+          ? 'cliente'
+          : 'provedor de serviço'
+      }?`,
+    );
   }
 
-  private async requestCustomerEmail(
+  private async requestCounterpartEmail(
     phoneNumber: string,
     ticket: TicketEntity,
   ) {
     ticket.state = TicketState.ClientEmail;
     ticket = await this.ticketService.save(ticket);
 
-    this.sendMessage(phoneNumber, 'Qual é o email do cliente?');
+    this.sendMessage(
+      phoneNumber,
+      `Qual é o email do ${
+        ticket.owner === TicketOwner.ServiceProvider
+          ? 'cliente'
+          : 'provedor de serviço'
+      }?`,
+    );
   }
 
   private async requestJurisdictionInDispute(
@@ -1479,6 +1681,18 @@ export class WhatsappService {
     );
   }
 
+  private async requestContext(phoneNumber: string, ticket: TicketEntity) {
+    const optionsPrefix = 'ticket-context';
+    ticket.state = TicketState.Context;
+    ticket = await this.ticketService.save(ticket);
+    await this.sendContextOptions(
+      phoneNumber,
+      'Você é o cliente (aquele que procura por um serviço) ou o prestador (aquele que oferece o serviço)?',
+      optionsPrefix,
+      false,
+    );
+  }
+
   private async requestPaymentMethod(
     phoneNumber: string,
     ticket: TicketEntity,
@@ -1508,12 +1722,16 @@ export class WhatsappService {
     ticket: TicketEntity,
   ) {
     const optionsPrefix = 'service-provider-proporsal';
-    const serviceProvider = await this.getServiceProviderFromTicket(ticket);
+    const serviceProvider = await this.getUserFromTicket(ticket);
     await this.sendMessage(serviceProvider.phonenumber, 'Está e a proposta:');
     await this.sendMessage(serviceProvider.phonenumber, ticket.proporsal);
     await this.sendConfirmationOptions(
       serviceProvider.phonenumber,
-      'A proposta está correta? Podemos enviar para o cliente?',
+      `A proposta está correta? Podemos enviar para o ${
+        ticket.owner === TicketOwner.ServiceProvider
+          ? 'cliente'
+          : 'provedor de serviço'
+      }?`,
       optionsPrefix,
     );
   }
@@ -1566,7 +1784,7 @@ export class WhatsappService {
   private async sendProposalToCustomer(ticket: TicketEntity) {
     const optionsPrefix = 'customer-approval';
 
-    const customer = await this.getCustomerFromTicket(ticket);
+    const customer = await this.getCounterpartFromTicket(ticket);
 
     ticket.state = TicketState.ClientRecieve;
 
@@ -1578,13 +1796,13 @@ export class WhatsappService {
 
     // await this.sendMessage(
     //   customer.phonenumber,
-    //   `Ola, ${ticket.client.fullname}!
+    //   `Ola, ${ticket.counterpart.fullname}!
     //   O seu prestador de serviço ${ticket.user.fullname}, enviou uma proposta para você.
     //   `,
     // );
-    // await this.sendMessage(ticket.client.phonenumber, ticket.proporsal);
+    // await this.sendMessage(ticket.counterpart.phonenumber, ticket.proporsal);
     // await this.sendConfirmationOptions(
-    //   ticket.client.phonenumber,
+    //   ticket.counterpart.phonenumber,
     //   'Você aceita a proposta?',
     //   optionsPrefix,
     // );

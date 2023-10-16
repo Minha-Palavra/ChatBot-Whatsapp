@@ -9,7 +9,7 @@ export const MinhaPalavraSeedData: MinhaPalavraSeedType = {
   title: 'Bem-vindo ao MinhaPalavra!',
   slug: 'bem-vindo',
   description:
-    'Navegue por nossas categorias e escolha aquela que melhor representa o serviço que você deseja prestar.',
+    'Navegue por nossas categorias e escolha aquela que melhor representa o serviço que você deseja.',
   children: [
     {
       title: 'Assistência técnica',
@@ -585,7 +585,7 @@ export const MinhaPalavraSeedData: MinhaPalavraSeedType = {
       title: 'Especialistas',
       slug: 'especialistas',
       description:
-        'Selecione entre os especialistas o que melhor se enquadra nos serviços que você irá prestar.',
+        'Selecione entre os especialistas o que melhor se enquadra nos serviços que deseja.',
       children: [
         {
           title: 'Marketing',

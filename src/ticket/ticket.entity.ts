@@ -10,6 +10,7 @@ export enum TicketState {
   Chosing = 'CHOSING',
   Finished = 'FINISHED',
   Name = 'NAME',
+  Context = 'CONTEXT',
   TaxpayerNumber = 'TAXPAYER_NUMBER',
   Email = 'EMAIL',
   JobDescription = 'JOB_DESCRIPTION',
