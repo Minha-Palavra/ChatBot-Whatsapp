@@ -293,7 +293,11 @@ export class WhatsappService {
 
             await this.sendMessage(
               serviceProvider.phonenumber,
-              'Infelizmente o cliente não aceitou a sua proposta.',
+              `Infelizmente o ${
+                ticket.owner === TicketOwner.ServiceProvider
+                  ? 'cliente'
+                  : 'provedor de serviço'
+              } não aceitou a sua proposta.`,
             );
             continue;
           }
@@ -304,7 +308,11 @@ export class WhatsappService {
           await this.ticketService.save(ticket);
           await this.sendMessage(
             serviceProvider.phonenumber,
-            'Parabéns! O cliente aceitou a sua proposta.',
+            `Parabéns! O ${
+              ticket.owner === TicketOwner.ServiceProvider
+                ? 'cliente'
+                : 'provedor de serviço'
+            } aceitou a sua proposta.`,
           );
           continue;
         }
