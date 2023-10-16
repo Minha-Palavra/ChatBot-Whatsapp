@@ -1680,7 +1680,7 @@ export class WhatsappService {
 
     await this.sendMessage(
       phoneNumber,
-      'Descreva em detalhes o serviço que irá prestar.',
+      'Descreva em detalhes o serviço que irá prestar ou que deseja receber.',
     );
   }
 
