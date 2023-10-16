@@ -220,7 +220,11 @@ export class WhatsappService {
           await this.sendMessage(
             customer.phonenumber,
             `Ola, ${ticket.counterpart.fullname}!
-            O seu prestador de serviço ${ticket.user.fullname}, enviou uma proposta para você.
+            O seu ${
+              ticket.owner === TicketOwner.ServiceProvider
+                ? 'provedor de serviço'
+                : 'cliente'
+            } ${ticket.user.fullname}, enviou uma proposta para você.
             `,
           );
           await this.sendMessage(
@@ -269,7 +273,11 @@ export class WhatsappService {
 
           await this.sendMessage(
             customer.phonenumber,
-            'Certo. Informaremos ao prestador de serviço.',
+            `Certo. Informaremos ao ${
+              ticket.owner === TicketOwner.ServiceProvider
+                ? 'provedor de serviço'
+                : 'cliente'
+            }.`,
           );
 
           if (selectedOption === `${optionsPrefix}-cancel`) {
