@@ -808,7 +808,7 @@ export class WhatsappService {
               phonenumber: customerPhoneNumber,
             });
 
-            ticket.client = client;
+            ticket.counterpart = client;
 
             await this.ticketService.save(ticket);
             await this.sendConfirmationOptions(
@@ -854,7 +854,7 @@ export class WhatsappService {
           }
 
           if (selectedOption === `${optionsPrefix}-no`) {
-            ticket.client = null;
+            ticket.counterpart = null;
 
             await this.ticketService.save(ticket);
             await this.requestCounterpartPhoneNumber(phoneNumber, ticket);
@@ -1135,7 +1135,7 @@ export class WhatsappService {
             ticket.paymentMethod = null;
             ticket.paymentAmount = null;
             ticket.proporsal = null;
-            ticket.client = null;
+            ticket.counterpart = null;
             await this.ticketService.save(ticket);
             continue;
           }
@@ -1442,7 +1442,7 @@ export class WhatsappService {
       type: 'reply',
       reply: {
         id: `${optionsPrefix}-service-provider`,
-        title: 'Prestador de serviço',
+        title: 'Prestador de Serviço',
       },
     });
 
