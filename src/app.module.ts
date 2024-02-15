@@ -1,17 +1,15 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
-import { WhatsappModule } from './whatsapp/whatsapp.module';
-import { HistoryModule } from './history/history.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { SharedModule } from './shared/shared.module';
-import { ApiConfigService } from './shared/config.service';
-import { addTransactionalDataSource } from 'typeorm-transactional';
 import { DataSource } from 'typeorm';
-import { DecisionModule } from './decision/decision.module';
+import { addTransactionalDataSource } from 'typeorm-transactional';
+import { AppController } from './app.controller';
+import { HistoryModule } from './history/history.module';
+import { ApiConfigService } from './shared/api-config.service';
+import { SharedModule } from './shared/shared.module';
 import { TicketModule } from './ticket/ticket.module';
-import { ProposalModule } from './proposal/proposal.module';
+import { UserModule } from './user/user.module';
+import { WhatsappModule } from './whatsapp/whatsapp.module';
 
 @Module({
   imports: [
@@ -20,23 +18,22 @@ import { ProposalModule } from './proposal/proposal.module';
     }),
     TypeOrmModule.forRootAsync({
       imports: [SharedModule],
+      inject: [ApiConfigService],
       useFactory: (configService: ApiConfigService) =>
         configService.postgresConfig,
-      inject: [ApiConfigService],
       dataSourceFactory: async (options) => {
         if (!options) {
-          throw new Error('Invalid options passed');
+          throw new Error('Invalid options provided');
         }
         return addTransactionalDataSource(new DataSource(options));
       },
     }),
     WhatsappModule,
-    HistoryModule,
-    DecisionModule,
     TicketModule,
-    ProposalModule,
+    UserModule,
+    HistoryModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [],
 })
 export class AppModule {}

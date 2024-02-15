@@ -1,11 +1,14 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { TicketEntity } from './ticket.entity';
-import { FindOneOptions, FindOptions, Repository } from 'typeorm';
 import { TypeOrmCrudService } from '@dataui/crud-typeorm';
+import { Injectable, Logger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { UserEntity } from '../user/entities/user.entity';
+import { TicketEntity } from './entities/ticket.entity';
 
 @Injectable()
 export class TicketService extends TypeOrmCrudService<TicketEntity> {
+  private readonly logger = new Logger(TicketService.name);
+
   constructor(
     @InjectRepository(TicketEntity)
     private readonly repository: Repository<TicketEntity>,
@@ -13,15 +16,25 @@ export class TicketService extends TypeOrmCrudService<TicketEntity> {
     super(repository);
   }
 
-  create(data: Partial<TicketEntity>) {
-    return this.repository.save(data);
+  public async findUserNewestOpenTicket(
+    user: Partial<UserEntity>,
+  ): Promise<TicketEntity | null> {
+    return await this.findOne({
+      where: {
+        // user,
+        // status: 'open',
+      },
+      order: {
+        createdAt: 'DESC',
+      },
+    });
   }
 
-  save(data: Partial<TicketEntity>) {
-    return this.repository.save(data);
+  public async create(data: Partial<TicketEntity>) {
+    return await this.repository.save(data);
   }
 
-  async findOneOptions(options: FindOneOptions<TicketEntity>) {
-    return await this.repository.findOne(options);
+  public async save(data: Partial<TicketEntity>) {
+    return await this.repository.save(data);
   }
 }

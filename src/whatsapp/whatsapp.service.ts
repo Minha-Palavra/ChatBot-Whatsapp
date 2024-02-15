@@ -3,1396 +3,137 @@ import {
   Logger,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import { HistoryService } from '../history/history.service';
-import { ValueObject, WebhookObject } from 'whatsapp/build/types/webhooks';
 import { ConfigService } from '@nestjs/config';
-import { MessageDirection } from '../history/history.entity';
-import { UserService } from '../user/user.service';
+
+// import WhatsApp from 'whatsapp';
+import { InteractiveTypesEnum } from 'whatsapp/build/types/enums';
+import { InteractiveObject } from 'whatsapp/build/types/messages';
+import { ValueObject, WebhookObject } from 'whatsapp/build/types/webhooks';
 import { TicketService } from '../ticket/ticket.service';
-import {
-  TicketEntity,
-  TicketOwner,
-  TicketState,
-} from '../ticket/ticket.entity';
-import { InteractiveObject } from 'whatsapp/src/types/messages';
-import { phone } from 'phone';
-import { DecisionService } from '../decision/decision.service';
-import { DecisionEntity } from '../decision/decision.entity';
-import { InteractiveTypesEnum } from 'whatsapp/src/types/enums';
-import { UserEntity } from 'src/user/user.entity';
-import { ProposalService } from 'src/proposal/proposal.service';
+import { getUserStateProcessor, UserState } from '../user/entities/user-state';
+import { UserRegistrationInitialState } from '../user/states/user-registration-initial-state';
+import { UserService } from '../user/user.service';
+import { messages } from './entities/messages';
+import { IMessageState } from './states/message-state.interface';
+import { MessagesProcessingContext } from './states/messages-processing-context';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const WhatsApp = require('whatsapp');
 
 @Injectable()
 export class WhatsappService {
-  wa = new WhatsApp(this.configService.get('WA_PHONE_NUMBER_ID'));
+  private readonly whatsapp = new WhatsApp(
+    this.configService.get('WA_PHONE_NUMBER_ID'),
+  );
   private readonly logger = new Logger(WhatsappService.name);
 
   constructor(
-    public historyService: HistoryService,
     private configService: ConfigService,
-    private userService: UserService,
-    private ticketService: TicketService,
-    private decisionService: DecisionService,
-    private proposalService: ProposalService,
+    // private historyService: HistoryService,
+    public ticketService: TicketService,
+    public userService: UserService,
   ) {}
 
-  async checkWebhookMinimumRequirements(body: WebhookObject) {
+  public async checkWebhookMinimumRequirements(body: WebhookObject) {
     if (body.object !== 'whatsapp_business_account') {
-      console.error('object is not whatsapp_business_account: ' + body.object);
+      this.logger.error(
+        `object is not whatsapp_business_account: ${body.object}.`,
+      );
       throw new UnprocessableEntityException({
-        message: 'object is not whatsapp_business_account',
+        message: 'object is not whatsapp_business_account.',
       });
     }
   }
 
-  async saveMessage(body: WebhookObject) {
-    await this.historyService.create(body, MessageDirection.INCOMING);
-  }
-
-  async handleWebhook(body: WebhookObject) {
-    this.logger.log('Message Arrived: ' + JSON.stringify(body));
-
+  public async handleWebhook(body: WebhookObject): Promise<string> {
+    // await this.historyService.create(body, MessageDirection.INCOMING);
     await this.checkWebhookMinimumRequirements(body);
-    await this.saveMessage(body);
 
     let isMessage = false;
+
     for (const entry of body.entry) {
       for (const change of entry.changes) {
         if (change.field !== 'messages') {
-          this.logger.error('field is not messages: ' + change.field);
+          this.logger.error(`field is not messages: ${change.field}`);
           continue;
         }
+
         const value = change.value;
+
         if (value.messaging_product !== 'whatsapp') {
           this.logger.error(
-            'messaging_product is not whatsapp: ' + value.messaging_product,
+            `messaging_product is not whatsapp: ${value.messaging_product}`,
           );
           continue;
         }
+
         if (value.statuses) {
-          this.logger.error('status message arrived. not processed');
+          this.logger.error('status message arrived. not processed.');
           continue;
         }
+
         if (value.contacts === undefined || value.contacts.length !== 1) {
           this.logger.error(
-            'contacts.length is not 1: ' + value.contacts.length,
+            `contacts.length is not 1: ${value?.contacts.length}.`,
           );
           continue;
         }
+
         if (value.messages && value.messages.length !== 0) {
           isMessage = true;
-          await this.processMessages(value);
+          await this.processReceivedMessages(value);
         }
       }
     }
 
-    if (isMessage) this.logger.log(JSON.stringify(body));
+    if (isMessage) {
+      this.logger.log(JSON.stringify(body));
+    }
 
     return 'ok';
   }
 
-  clampString(str: string, max: number): string {
-    if (!str) return '.';
-    return str.length > max ? str.substr(0, max - 4) + '...' : str;
-  }
-
-  private async genarateInteractiveObjectFromDecision(
-    root: Partial<DecisionEntity>,
-  ): Promise<InteractiveObject> {
-    let decision = await this.decisionService.findOne({
-      where: [{ slug: root.slug }, { id: root.id }],
-      relations: ['parent'],
-    });
-
-    decision = await this.decisionService.fillChildren(decision);
-
-    if (!decision.children || decision.children.length === 0) return null;
-
-    const interactive: InteractiveObject = {
-      action: {
-        button: 'Escolha',
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        sections: [{ rows: [] }],
-      },
-      type: InteractiveTypesEnum.List,
-      body: {
-        text: this.clampString(decision.description, 1024),
-      },
-      header: {
-        type: 'text',
-        text: this.clampString(decision.title, 60),
-      },
-      footer: {
-        text: this.clampString('Escolha uma opção', 60),
-      },
-    };
-    if (decision.children.length > 0) {
-      for (const child of decision.children) {
-        interactive.action.sections[0].rows.push({
-          title: this.clampString(child.title, 24),
-          id: this.clampString(child.slug, 200),
-          description: this.clampString(child.description, 72),
-        });
-      }
-
-      if (decision.parent) {
-        if (interactive.action.sections[0].rows.length < 9) {
-          interactive.action.sections[0].rows.push({
-            title: this.clampString('Voltar', 24),
-            id: 'previous-category',
-            description: this.clampString(
-              'Voltar para a categoria anterior',
-              72,
-            ),
-          });
-        }
-      }
-    }
-    return interactive;
-  }
-
-  private async cancelTicket(phoneNumber: string, ticket: TicketEntity) {
-    ticket.state = TicketState.Finished;
-
-    await this.ticketService.save(ticket);
-    await this.sendMessage(
-      phoneNumber,
-      'O ticket foi cancelado com sucesso. Obrigado por usar o nosso serviço.',
+  public async sendMessage(
+    phoneNumber: string,
+    message: string,
+  ): Promise<void> {
+    const messageSent = await this.whatsapp.messages.text(
+      { body: message },
+      Number(phoneNumber),
+    );
+    this.logger.log(
+      `${messageSent.statusCode()}: #${JSON.stringify(messageSent.responseBodyToJSON)}`,
     );
   }
 
-  private async processMessages(value: ValueObject) {
-    if (!this.isValidContact(value)) {
-      this.logger.error("value doesn't have a valid contact.");
-      return;
-    }
-
-    const contact = value.contacts[0];
-    const messages = value.messages;
-
-    for (const message of messages) {
-      if (
-        message.type !== 'text' &&
-        message.type !== 'interactive' &&
-        message.type !== 'button'
-      ) {
-        this.logger.error(
-          `${message.type} is not a text or a interactive message.`,
-        );
-
-        continue;
-      }
-
-      const user = await this.getUserFromMessage(contact, message);
-      const phoneNumber = this.formatPhoneNumber(message.from);
-
-      if (!user) {
-        this.logger.error('Failed to get or create user from the message.');
-        return;
-      }
-
-      let ticket;
-
-      // CUSTOMER.
-      ticket = await this.findCounterpartNewestTicket(user);
-      // Customer has a ticket and the ticket is not finished.
-      if (ticket && ticket.state !== TicketState.Finished) {
-        if (ticket.state === TicketState.ClientRecieve) {
-          if (message.type === 'text') {
-            await this.sendTemplate(
-              user.phonenumber,
-              'envio_de_contrato_minha_palavra',
-            );
-            continue;
-          }
-
-          const optionsPrefix = 'customer-approval';
-          const customer = await this.getCounterpartFromTicket(ticket);
-
-          ticket.state = TicketState.ClientApproval;
-
-          await this.ticketService.save(ticket);
-
-          await this.sendMessage(
-            customer.phonenumber,
-            `Ola, ${ticket.counterpart.fullname}!
-            O seu ${
-              ticket.owner === TicketOwner.ServiceProvider
-                ? 'provedor de serviço'
-                : 'cliente'
-            } ${ticket.user.fullname}, enviou uma proposta para você.
-            `,
-          );
-          await this.sendMessage(
-            ticket.counterpart.phonenumber,
-            ticket.proporsal,
-          );
-          await this.sendConfirmationOptions(
-            ticket.counterpart.phonenumber,
-            'Você aceita a proposta?',
-            optionsPrefix,
-            false,
-          );
-          continue;
-        }
-        // The ticket is waiting for the customer to accept or decline the proposal.
-        if (ticket.state === TicketState.ClientApproval) {
-          const optionsPrefix = 'customer-approval';
-          const serviceProvider = await this.getUserFromTicket(ticket);
-          const customer = await this.getCounterpartFromTicket(ticket);
-          // Customer has trying to interact with the ticket by text.
-          if (message.type === 'text') {
-            await this.sendProposalToCustomer(ticket);
-            continue;
-          }
-
-          // Customer has trying to interact with the ticket by an interactive message.
-          const selectedOption = this.getSelectedConfirmationOption(message);
-
-          if (!selectedOption) {
-            this.logger.error('Failed to get selected option from message.');
-            continue;
-          }
-          if (!this.confirmatioOptionHasPrefix(selectedOption, optionsPrefix)) {
-            this.logger.error(
-              `${selectedOption} is not a valid option for ${optionsPrefix}.`,
-            );
-
-            await this.sendConfirmationOptions(
-              phoneNumber,
-              'Você aceita a proposta?',
-              optionsPrefix,
-              false,
-            );
-            continue;
-          }
-
-          await this.sendMessage(
-            customer.phonenumber,
-            `Certo. Informaremos ao ${
-              ticket.owner === TicketOwner.ServiceProvider
-                ? 'provedor de serviço'
-                : 'cliente'
-            }.`,
-          );
-
-          if (selectedOption === `${optionsPrefix}-cancel`) {
-            await this.cancelTicket(phoneNumber, ticket);
-            continue;
-          }
-
-          if (selectedOption === `${optionsPrefix}-no`) {
-            ticket.accepted = false;
-            ticket.state = TicketState.Finished;
-
-            await this.ticketService.save(ticket);
-
-            await this.sendMessage(
-              serviceProvider.phonenumber,
-              `Infelizmente o ${
-                ticket.owner === TicketOwner.ServiceProvider
-                  ? 'cliente'
-                  : 'provedor de serviço'
-              } não aceitou a sua proposta.`,
-            );
-            continue;
-          }
-
-          ticket.accepted = true;
-          ticket.state = TicketState.Finished;
-
-          await this.ticketService.save(ticket);
-          await this.sendMessage(
-            serviceProvider.phonenumber,
-            `Parabéns! O ${
-              ticket.owner === TicketOwner.ServiceProvider
-                ? 'cliente'
-                : 'provedor de serviço'
-            } aceitou a sua proposta.`,
-          );
-          continue;
-        }
-        continue;
-      }
-
-      // SERVICE PROVIDER. Owner
-      ticket = await this.findUserNewestTicket(user);
-      // Service provider has a ticket and the ticket is not finished.
-      if (ticket && ticket.state !== TicketState.Finished) {
-        if (ticket.state === TicketState.LGPD) {
-          const optionsPrefix = 'initial-message';
-
-          if (message.type === 'text') {
-            await this.sendMessage(
-              phoneNumber,
-              'Esta não é uma opção válida neste momento. Por favor, selecione uma opção válida.',
-            );
-            await this.sendConfirmationOptions(
-              phoneNumber,
-              'Podemos continuar?',
-              optionsPrefix,
-              false,
-            );
-            continue;
-          }
-
-          const selectedOption = this.getSelectedConfirmationOption(message);
-
-          if (!selectedOption) {
-            this.logger.error('Failed to get selected option from message.');
-            continue;
-          }
-
-          if (!this.confirmatioOptionHasPrefix(selectedOption, optionsPrefix)) {
-            this.logger.error(
-              `${selectedOption} is not a valid option for ${optionsPrefix}.`,
-            );
-
-            await this.sendConfirmationOptions(
-              phoneNumber,
-              'Podemos continuar?',
-              optionsPrefix,
-              false,
-            );
-            continue;
-          }
-
-          if (selectedOption === `${optionsPrefix}-no`) {
-            await this.cancelTicket(phoneNumber, ticket);
-            continue;
-          }
-          ticket.state = TicketState.Chosing;
-          await this.ticketService.save(ticket);
-          await this.sendCategoryOptions(phoneNumber, ticket.decision);
-          continue;
-        }
-
-        // Service provider is chosing an category option.
-        if (ticket.state === TicketState.Chosing) {
-          // If the message is not interactive, menas that user is not chosing an category option.
-          if (message.type !== 'interactive') {
-            this.logger.error(
-              `${message.type} is not valid when user is chosing an category option.`,
-            );
-
-            await this.sendMessage(
-              phoneNumber,
-              'Esta não é uma opção válida neste momento. Por favor, selecione uma opção válida.',
-            );
-            await this.sendCategoryOptions(phoneNumber, ticket.decision);
-            continue;
-          }
-
-          const availableOptions = await this.decisionService.fillChildren(
-            ticket.decision,
-          );
-
-          const selectedOption = this.getSelectedOptionFromMessage(message);
-
-          if (!selectedOption) {
-            this.logger.error('Failed to get selected option from message.');
-            continue;
-          }
-
-          if (selectedOption === 'previous-category') {
-            ticket.decision = await this.decisionService.findOne({
-              where: { id: ticket.decision.id },
-              relations: ['parent'],
-            });
-
-            if (!ticket.decision.parent) {
-              this.logger.error(
-                `${ticket.decision.slug} has no parent category.`,
-              );
-              await this.sendMessage(
-                phoneNumber,
-                'Esta não é uma opção válida neste momento. Por favor, selecione uma opção válida.',
-              );
-              await this.sendCategoryOptions(phoneNumber, ticket.decision);
-              continue;
-            }
-            ticket.decision = await this.decisionService.findOne({
-              where: { id: ticket.decision.parent.id },
-            });
-            await this.ticketService.save(ticket);
-            await this.sendCategoryOptions(phoneNumber, ticket.decision);
-            continue;
-          }
-
-          const isValid = await this.isValidCategoryOption(
-            selectedOption,
-            availableOptions,
-          );
-
-          if (!isValid) {
-            this.logger.error(
-              `${selectedOption} is not a valid option. of ${ticket.decision.slug}.`,
-            );
-
-            await this.sendMessage(
-              phoneNumber,
-              'Esta não é uma opção válida neste momento. Por favor, selecione uma opção válida.',
-            );
-            await this.sendCategoryOptions(phoneNumber, ticket.decision);
-            continue;
-          }
-
-          const category = availableOptions.children.find(
-            (child) => child.slug === selectedOption,
-          );
-
-          ticket.decision = category;
-          await this.ticketService.save(ticket);
-
-          const wasOptionsSent = await this.sendCategoryOptions(
-            phoneNumber,
-            ticket.decision,
-          );
-
-          // If the user reached the end of the decision tree, then send a message. and move to the next state.
-          if (!wasOptionsSent) {
-            await this.sendMessage(
-              phoneNumber,
-              'Chegou no fim da arvore de decisão.',
-            );
-            await this.requestContext(phoneNumber, ticket);
-            continue;
-          }
-        }
-
-        // TODO:
-        if (ticket.state === TicketState.Context) {
-          const optionsPrefix = 'ticket-context';
-          if (message.type === 'text') {
-            await this.sendMessage(
-              phoneNumber,
-              'Esta não é uma opção válida neste momento. Por favor, selecione uma opção válida.',
-            );
-            // TODO:
-            await this.sendContextOptions(
-              phoneNumber,
-              'Você é o cliente (aquele que procura um serviço) ou o prestador (aquele que oferece o serviço)?',
-              optionsPrefix,
-              false,
-            );
-            continue;
-          }
-
-          const selectedOption = this.getSelectedConfirmationOption(message);
-
-          if (!selectedOption) {
-            this.logger.error('Failed to get selected option from message.');
-            continue;
-          }
-
-          if (!this.contextOptionHasPrefix(selectedOption, optionsPrefix)) {
-            this.logger.error(
-              `${selectedOption} is not a valid option for ${optionsPrefix}.`,
-            );
-
-            await this.sendContextOptions(
-              phoneNumber,
-              'Você é o cliente (aquele que procura um serviço) ou o prestador (aquele que oferece o serviço)?',
-              optionsPrefix,
-              false,
-            );
-            continue;
-          }
-
-          if (selectedOption === `${optionsPrefix}-cancel`) {
-            await this.cancelTicket(phoneNumber, ticket);
-            continue;
-          }
-
-          if (selectedOption === `${optionsPrefix}-service-provider`) {
-            ticket.owner = TicketOwner.ServiceProvider;
-            await this.ticketService.save(ticket);
-          }
-
-          if (selectedOption === `${optionsPrefix}-customer`) {
-            ticket.owner = TicketOwner.Customer;
-            await this.ticketService.save(ticket);
-          }
-
-          ticket.state = TicketState.Context;
-          await this.ticketService.save(ticket);
-          await this.requestUserName(phoneNumber, ticket);
-          continue;
-        }
-
-        if (ticket.state === TicketState.Name) {
-          const optionsPrefix = 'service-provider-name';
-
-          const serviceProvider = await this.getUserFromTicket(ticket);
-
-          if (message.type === 'text') {
-            const fullName = message.text.body;
-
-            user.fullname = fullName;
-
-            await this.userService.save(user);
-            await this.sendConfirmationOptions(
-              phoneNumber,
-              `O seu nome completo é ${fullName}?`,
-              optionsPrefix,
-            );
-            continue;
-          }
-
-          const selectedOption = this.getSelectedConfirmationOption(message);
-
-          if (!selectedOption) {
-            this.logger.error('Failed to get selected option from message.');
-            continue;
-          }
-
-          if (!this.confirmatioOptionHasPrefix(selectedOption, optionsPrefix)) {
-            this.logger.error(
-              `${selectedOption} is not a valid option for ${optionsPrefix}.`,
-            );
-
-            await this.sendConfirmationOptions(
-              phoneNumber,
-              `O seu nome completo é ${serviceProvider.fullname}?`,
-              optionsPrefix,
-            );
-            continue;
-          }
-
-          if (selectedOption === `${optionsPrefix}-cancel`) {
-            await this.cancelTicket(phoneNumber, ticket);
-            continue;
-          }
-
-          if (selectedOption === `${optionsPrefix}-no`) {
-            user.fullname = null;
-
-            await this.userService.save(user);
-            await this.requestUserName(phoneNumber, ticket);
-            continue;
-          }
-
-          await this.requestUserTaxpayerNumber(phoneNumber, ticket);
-          continue;
-        }
-
-        if (ticket.state === TicketState.TaxpayerNumber) {
-          const optionsPrefix = 'service-provider-taxpayer-number';
-
-          const serviceProvider = await this.getUserFromTicket(ticket);
-
-          if (message.type === 'text') {
-            const taxpayerNumber = message.text.body.replace(/\D/g, '');
-
-            if (!this.isValidTaxpayerNumber(taxpayerNumber)) {
-              await this.sendMessage(
-                phoneNumber,
-                'Este não é um CPF/CPNJ válido. Por favor, digite um CPF/CPNJ válido.',
-              );
-              await this.requestUserTaxpayerNumber(phoneNumber, ticket);
-              continue;
-            }
-
-            user.taxpayerNumber = this.formatTaxpayerNumber(taxpayerNumber);
-
-            await this.userService.save(user);
-            await this.sendConfirmationOptions(
-              phoneNumber,
-              `O ${
-                taxpayerNumber.length === 11 ? 'CPF' : 'CPNJ'
-              } ${this.formatTaxpayerNumber(taxpayerNumber)}, está correto?`,
-              optionsPrefix,
-            );
-            continue;
-          }
-
-          const selectedOption = this.getSelectedConfirmationOption(message);
-
-          if (!selectedOption) {
-            this.logger.error('Failed to get selected option from message.');
-            continue;
-          }
-
-          if (!this.confirmatioOptionHasPrefix(selectedOption, optionsPrefix)) {
-            this.logger.error(
-              `${selectedOption} is not a valid option for ${optionsPrefix}.`,
-            );
-
-            await this.sendConfirmationOptions(
-              phoneNumber,
-              `O ${
-                serviceProvider.taxpayerNumber.length === 11 ? 'CPF' : 'CPNJ'
-              } ${serviceProvider.taxpayerNumber}, está correto?`,
-              optionsPrefix,
-            );
-            continue;
-          }
-
-          if (selectedOption === `${optionsPrefix}-cancel`) {
-            await this.cancelTicket(phoneNumber, ticket);
-            continue;
-          }
-
-          if (selectedOption === `${optionsPrefix}-no`) {
-            user.taxpayerNumber = null;
-
-            await this.userService.save(user);
-            await this.requestUserTaxpayerNumber(phoneNumber, ticket);
-            continue;
-          }
-
-          await this.requestUserEmail(phoneNumber, ticket);
-          continue;
-        }
-
-        if (ticket.state === TicketState.Email) {
-          const optionsPrefix = 'service-provider-email';
-
-          const serviceProvider = await this.getUserFromTicket(ticket);
-
-          if (message.type === 'text') {
-            const email = message.text.body;
-
-            if (!this.isValidEmail(email)) {
-              await this.sendMessage(
-                phoneNumber,
-                'Este não é um email válido. Por favor, digite um email válido.',
-              );
-              await this.requestUserEmail(phoneNumber, ticket);
-              continue;
-            }
-
-            user.email = email;
-
-            await this.userService.save(user);
-            await this.sendConfirmationOptions(
-              phoneNumber,
-              `O email ${email}, está correto?`,
-              optionsPrefix,
-            );
-            continue;
-          }
-
-          const selectedOption = this.getSelectedConfirmationOption(message);
-
-          if (!selectedOption) {
-            this.logger.error('Failed to get selected option from message.');
-            continue;
-          }
-
-          if (!this.confirmatioOptionHasPrefix(selectedOption, optionsPrefix)) {
-            this.logger.error(
-              `${selectedOption} is not a valid option for ${optionsPrefix}.`,
-            );
-
-            await this.sendConfirmationOptions(
-              phoneNumber,
-              `O email ${serviceProvider.email}, está correto?`,
-              optionsPrefix,
-            );
-          }
-
-          if (selectedOption === `${optionsPrefix}-cancel`) {
-            await this.cancelTicket(phoneNumber, ticket);
-            continue;
-          }
-
-          if (selectedOption === `${optionsPrefix}-no`) {
-            user.email = null;
-
-            await this.userService.save(user);
-            await this.requestUserEmail(phoneNumber, ticket);
-            continue;
-          }
-
-          await this.requestServiceDescription(phoneNumber, ticket);
-          continue;
-        }
-
-        if (ticket.state === TicketState.JobDescription) {
-          if (message.type !== 'text') {
-            this.logger.error(`${message.type} is not a text message.`);
-
-            await this.sendMessage(
-              phoneNumber,
-              'Esta não é uma opção válida neste momento. Por favor, selecione uma opção válida.',
-            );
-            await this.requestServiceDescription(phoneNumber, ticket);
-            continue;
-          }
-
-          const description = message.text.body;
-
-          ticket.description = description;
-
-          await this.ticketService.save(ticket);
-          await this.requestServiceDeadline(phoneNumber, ticket);
-          continue;
-        }
-
-        if (ticket.state === TicketState.ServiceDeadline) {
-          if (message.type !== 'text') {
-            this.logger.error(`${message.type} is not a text message.`);
-
-            await this.sendMessage(
-              phoneNumber,
-              'Esta não é uma opção válida neste momento. Por favor, selecione uma opção válida.',
-            );
-            await this.requestServiceDeadline(phoneNumber, ticket);
-            continue;
-          }
-
-          const deadline = message.text.body;
-
-          ticket.deadline = deadline;
-
-          await this.ticketService.save(ticket);
-          await this.requestPaymentMethod(phoneNumber, ticket);
-          continue;
-        }
-
-        if (ticket.state === TicketState.PaymentMethod) {
-          if (message.type !== 'text') {
-            this.logger.error(`${message.type} is not a text message.`);
-
-            await this.sendMessage(
-              phoneNumber,
-              'Esta não é uma opção válida neste momento. Por favor, selecione uma opção válida.',
-            );
-            await this.requestPaymentMethod(phoneNumber, ticket);
-            continue;
-          }
-
-          const paymentMethod = message.text.body;
-
-          ticket.paymentMethod = paymentMethod;
-
-          await this.ticketService.save(ticket);
-          await this.requestJurisdictionInDispute(phoneNumber, ticket);
-          continue;
-        }
-
-        if (ticket.state === TicketState.JurisdictionInDispute) {
-          if (message.type !== 'text') {
-            this.logger.error(`${message.type} is not a text message.`);
-
-            await this.sendMessage(
-              phoneNumber,
-              'Esta não é uma opção válida neste momento. Por favor, selecione uma opção válida.',
-            );
-            await this.requestJurisdictionInDispute(phoneNumber, ticket);
-            continue;
-          }
-
-          const disputeForum = message.text.body;
-
-          ticket.disputeForum = disputeForum;
-
-          await this.ticketService.save(ticket);
-          await this.requestCounterpartPhoneNumber(phoneNumber, ticket);
-          continue;
-        }
-
-        if (ticket.state === TicketState.ClientPhoneNumber) {
-          const optionsPrefix = 'customer-phone-number';
-
-          if (message.type === 'text') {
-            let customerPhoneNumber = message.text.body.replace(/\D/g, '');
-
-            if (!this.isValidPhoneNumber(customerPhoneNumber)) {
-              await this.sendMessage(
-                phoneNumber,
-                'Este não é um número de telefone válido. Por favor, digite um número de telefone válido.',
-              );
-              await this.requestCounterpartPhoneNumber(phoneNumber, ticket);
-              continue;
-            }
-            customerPhoneNumber = this.formatPhoneNumber(customerPhoneNumber);
-            const client = await this.userService.createOrFindOneByNumber({
-              phonenumber: customerPhoneNumber,
-            });
-
-            ticket.counterpart = client;
-
-            await this.ticketService.save(ticket);
-            await this.sendConfirmationOptions(
-              phoneNumber,
-              `O número de telefone do ${
-                ticket.owner === TicketOwner.ServiceProvider
-                  ? 'cliente'
-                  : 'provedor de serviço'
-              }  é ${customerPhoneNumber}, está correto?`,
-              optionsPrefix,
-            );
-            continue;
-          }
-
-          const selectedOption = this.getSelectedConfirmationOption(message);
-          if (!selectedOption) {
-            this.logger.error('Failed to get selected option from message.');
-            continue;
-          }
-
-          if (!this.confirmatioOptionHasPrefix(selectedOption, optionsPrefix)) {
-            this.logger.error(
-              `${selectedOption} is not a valid option for ${optionsPrefix}.`,
-            );
-
-            const customer = await this.getCounterpartFromTicket(ticket);
-
-            await this.sendConfirmationOptions(
-              phoneNumber,
-              `O número de telefone do ${
-                ticket.owner === TicketOwner.ServiceProvider
-                  ? 'cliente'
-                  : 'provedor de serviço'
-              } é ${customer.phonenumber}, está correto?`,
-              optionsPrefix,
-            );
-            continue;
-          }
-
-          if (selectedOption === `${optionsPrefix}-cancel`) {
-            await this.cancelTicket(phoneNumber, ticket);
-            continue;
-          }
-
-          if (selectedOption === `${optionsPrefix}-no`) {
-            ticket.counterpart = null;
-
-            await this.ticketService.save(ticket);
-            await this.requestCounterpartPhoneNumber(phoneNumber, ticket);
-            continue;
-          }
-
-          await this.requestCounterpartName(phoneNumber, ticket);
-          continue;
-        }
-
-        if (ticket.state === TicketState.ClientName) {
-          const optionsPrefix = 'customer-name';
-
-          const customer = await this.userService.findOne({
-            where: { id: ticket.counterpart.id },
-          });
-
-          if (message.type === 'text') {
-            const fullName = message.text.body;
-
-            customer.fullname = fullName;
-
-            await this.userService.save(customer);
-            await this.sendConfirmationOptions(
-              phoneNumber,
-              `O nome do ${
-                ticket.owner === TicketOwner.ServiceProvider
-                  ? 'cliente'
-                  : 'provedor de serviço'
-              } é ${fullName}, está correto?`,
-              optionsPrefix,
-            );
-
-            continue;
-          }
-
-          const selectedOption = this.getSelectedConfirmationOption(message);
-
-          if (!selectedOption) {
-            this.logger.error('Failed to get selected option from message.');
-            continue;
-          }
-
-          if (!this.confirmatioOptionHasPrefix(selectedOption, optionsPrefix)) {
-            this.logger.error(
-              `${selectedOption} is not a valid option for ${optionsPrefix}.`,
-            );
-
-            await this.sendConfirmationOptions(
-              phoneNumber,
-              `O nome do ${
-                ticket.owner === TicketOwner.ServiceProvider
-                  ? 'cliente'
-                  : 'provedor de serviço'
-              } é ${customer.fullname}, está correto?`,
-              optionsPrefix,
-            );
-            continue;
-          }
-
-          if (selectedOption === `${optionsPrefix}-cancel`) {
-            await this.cancelTicket(phoneNumber, ticket);
-            continue;
-          }
-
-          if (selectedOption === `${optionsPrefix}-no`) {
-            customer.fullname = null;
-
-            await this.userService.save(customer);
-            await this.requestCounterpartName(phoneNumber, ticket);
-
-            continue;
-          }
-
-          await this.requestCounterpartNumber(phoneNumber, ticket);
-          continue;
-        }
-
-        if (ticket.state === TicketState.ClientTaxpayerNumber) {
-          const optionsPrefix = 'customer-taxpayer-number';
-
-          const customer = await this.userService.findOne({
-            where: { id: ticket.counterpart.id },
-          });
-
-          if (message.type === 'text') {
-            const taxpayerNumber = message.text.body.replace(/\D/g, '');
-
-            if (!this.isValidTaxpayerNumber(taxpayerNumber)) {
-              await this.sendMessage(
-                phoneNumber,
-                'Este não é um CPF ou CPNJ válido. Por favor, digite um CPF ou CPNJ válido.',
-              );
-              await this.requestCounterpartNumber(phoneNumber, ticket);
-              continue;
-            }
-
-            customer.taxpayerNumber = this.formatTaxpayerNumber(taxpayerNumber);
-
-            await this.userService.save(customer);
-            await this.sendConfirmationOptions(
-              phoneNumber,
-              `O ${
-                taxpayerNumber.length === 11 ? 'CPF' : 'CPNJ'
-              } ${this.formatTaxpayerNumber(taxpayerNumber)}, está correto?`,
-              optionsPrefix,
-            );
-            continue;
-          }
-
-          const selectedOption = this.getSelectedConfirmationOption(message);
-
-          if (!selectedOption) {
-            this.logger.error('Failed to get selected option from message.');
-            continue;
-          }
-
-          if (!this.confirmatioOptionHasPrefix(selectedOption, optionsPrefix)) {
-            this.logger.error(
-              `${selectedOption} is not a valid option for ${optionsPrefix}.`,
-            );
-
-            await this.sendConfirmationOptions(
-              phoneNumber,
-              `O ${customer.taxpayerNumber.length === 11 ? 'CPF' : 'CPNJ'} ${
-                customer.taxpayerNumber
-              }, está correto?`,
-              optionsPrefix,
-            );
-            continue;
-          }
-
-          if (selectedOption === `${optionsPrefix}-cancel`) {
-            await this.cancelTicket(phoneNumber, ticket);
-            continue;
-          }
-
-          if (selectedOption === `${optionsPrefix}-no`) {
-            customer.taxpayerNumber = null;
-
-            await this.userService.save(customer);
-            await this.requestCounterpartNumber(phoneNumber, ticket);
-            continue;
-          }
-
-          await this.requestCounterpartEmail(phoneNumber, ticket);
-          continue;
-        }
-
-        if (ticket.state === TicketState.ClientEmail) {
-          const optionsPrefix = 'customer-email';
-
-          const customer = await this.userService.findOne({
-            where: { id: ticket.counterpart.id },
-          });
-
-          if (message.type === 'text') {
-            const email = message.text.body;
-
-            if (!this.isValidEmail(email)) {
-              await this.sendMessage(
-                phoneNumber,
-                'Este não é um email válido. Por favor, digite um email válido.',
-              );
-              await this.requestCounterpartEmail(phoneNumber, ticket);
-              continue;
-            }
-
-            customer.email = email;
-
-            await this.userService.save(customer);
-            await this.sendConfirmationOptions(
-              phoneNumber,
-              `O email ${email}, está correto?`,
-              optionsPrefix,
-            );
-            continue;
-          }
-
-          const selectedOption = this.getSelectedConfirmationOption(message);
-
-          if (!selectedOption) {
-            this.logger.error('Failed to get selected option from message.');
-            continue;
-          }
-
-          if (!this.confirmatioOptionHasPrefix(selectedOption, optionsPrefix)) {
-            this.logger.error(
-              `${selectedOption} is not a valid option for ${optionsPrefix}.`,
-            );
-
-            await this.sendConfirmationOptions(
-              phoneNumber,
-              `O email ${customer.email}, está correto?`,
-              optionsPrefix,
-            );
-          }
-
-          if (selectedOption === `${optionsPrefix}-cancel`) {
-            await this.cancelTicket(phoneNumber, ticket);
-            continue;
-          }
-
-          if (selectedOption === `${optionsPrefix}-no`) {
-            customer.email = null;
-
-            await this.userService.save(customer);
-            await this.requestCounterpartEmail(phoneNumber, ticket);
-            continue;
-          }
-
-          await this.generateProposal(ticket);
-          continue;
-        }
-
-        if (ticket.state === TicketState.Proporsal) {
-          const optionsPrefix = 'service-provider-proporsal';
-
-          if (!(message.type === 'interactive')) {
-            this.logger.error(
-              `${message.type} is not valid when user is chosing an category option.`,
-            );
-
-            await this.sendMessage(
-              phoneNumber,
-              'Esta não é uma opção válida neste momento. Por favor, selecione uma opção válida.',
-            );
-            await this.requestProporsalApprovalFromServiceProvider(ticket);
-            continue;
-          }
-
-          const selectedOption = this.getSelectedConfirmationOption(message);
-
-          if (!selectedOption) {
-            this.logger.error('Failed to get selected option from message.');
-            continue;
-          }
-
-          if (!this.confirmatioOptionHasPrefix(selectedOption, optionsPrefix)) {
-            this.logger.error(
-              `${selectedOption} is not a valid option for ${optionsPrefix}.`,
-            );
-
-            await this.sendMessage(phoneNumber, 'Está e a proposta:');
-            await this.sendMessage(phoneNumber, ticket.proporsal);
-            await this.sendConfirmationOptions(
-              phoneNumber,
-              `A proposta está correta? Podemos enviar para o ${
-                ticket.owner === TicketOwner.ServiceProvider
-                  ? 'cliente'
-                  : 'provedor de serviço'
-              }?`,
-              optionsPrefix,
-            );
-            continue;
-          }
-
-          if (selectedOption === `${optionsPrefix}-cancel`) {
-            await this.cancelTicket(phoneNumber, ticket);
-            continue;
-          }
-
-          if (selectedOption === `${optionsPrefix}-no`) {
-            //await this.generateProposal(user, client, ticket);
-            //TODO reestart the ticket.
-            await this.sendMessage(
-              user.phonenumber,
-              'Tudo bem, vamos começar de novo.',
-            );
-
-            const initialDecision = await this.decisionService.findOne({
-              where: { slug: 'bem-vindo' },
-            });
-
-            ticket.decision = initialDecision;
-            ticket.state = TicketState.Chosing;
-            ticket.description = null;
-            ticket.paymentMethod = null;
-            ticket.paymentAmount = null;
-            ticket.proporsal = null;
-            ticket.counterpart = null;
-            await this.ticketService.save(ticket);
-            continue;
-          }
-
-          await this.sendProposalToCustomer(ticket);
-          await this.sendMessage(
-            phoneNumber,
-            `Enviamos a proposta para o ${
-              ticket.owner === TicketOwner.ServiceProvider
-                ? 'cliente'
-                : 'provedor de serviço'
-            }, por favor aguarde que este responda.`,
-          );
-          continue;
-        }
-
-        if (
-          ticket.state === TicketState.ClientRecieve ||
-          ticket.state === TicketState.ClientApproval
-        ) {
-          const optionsPrefix = 'client-approval';
-
-          if (message.type === 'text') {
-            await this.sendMessage(
-              phoneNumber,
-              `O ${
-                ticket.owner === TicketOwner.ServiceProvider
-                  ? 'cliente'
-                  : 'provedor de serviço'
-              } ainda não respondeu à proposta. Recomendamos aguardar sua resposta.`,
-            );
-            await this.sendConfirmationOptions(
-              phoneNumber,
-              'No entanto, se preferir, podemos cancelar o ticket. Deseja proceder com o cancelamento?',
-              optionsPrefix,
-              false,
-            );
-            continue;
-          }
-
-          const selectedOption = this.getSelectedConfirmationOption(message);
-
-          if (!selectedOption) {
-            this.logger.error('Failed to get selected option from message.');
-            continue;
-          }
-
-          if (!this.confirmatioOptionHasPrefix(selectedOption, optionsPrefix)) {
-            this.logger.error(
-              `${selectedOption} is not a valid option for ${optionsPrefix}.`,
-            );
-
-            await this.sendMessage(
-              phoneNumber,
-              'Esta não é uma opção válida neste momento.',
-            );
-
-            await this.sendMessage(
-              phoneNumber,
-              `O ${
-                ticket.owner === TicketOwner.ServiceProvider
-                  ? 'cliente'
-                  : 'provedor de serviço'
-              } ainda não respondeu à proposta. Recomendamos aguardar sua resposta.`,
-            );
-
-            await this.sendConfirmationOptions(
-              phoneNumber,
-              'No entanto, se preferir, podemos cancelar o ticket. Deseja proceder com o cancelamento?',
-              optionsPrefix,
-              false,
-            );
-            continue;
-          }
-
-          if (selectedOption === `${optionsPrefix}-no`) {
-            await this.sendMessage(
-              phoneNumber,
-              `Certo, então vamos aguardar a resposta do ${
-                ticket.owner === TicketOwner.ServiceProvider
-                  ? 'cliente'
-                  : 'provedor de serviço'
-              }.`,
-            );
-            continue;
-          }
-
-          await this.cancelTicket(phoneNumber, ticket);
-          const customer = await this.userService.findOne({
-            where: { id: ticket.counterpart.id },
-          });
-
-          await this.sendMessage(
-            customer.phonenumber,
-            `O ticket foi cancelado pelo ${
-              ticket.owner === TicketOwner.ServiceProvider
-                ? 'cliente'
-                : 'provedor de serviço'
-            }. Por favor entre em contato com ele para mais informações.`,
-          );
-
-          continue;
-        }
-
-        continue;
-      }
-
-      // if (ticket && ticket.state !== TicketState.Finished) {
-      //   if (ticket.owner === TicketOwner.ServiceProvider) {
-      //     continue;
-      //   }
-
-      //   if (ticket.owner === TicketOwner.Customer) {
-      //     continue;
-      //   }
-      //   if (ticket.owner === TicketOwner.None) {
-      //     continue;
-      //   }
-      // }
-      // If the user has no open ticket, then create a new one.
-      ticket = await this.createTicketForUser(user);
-      await this.sendInitialMessage(phoneNumber, ticket.decision);
-      continue;
-    }
-  }
-
-  private async createTicketForUser(user: UserEntity): Promise<TicketEntity> {
-    const initialDecision = await this.decisionService.findOne({
-      where: { slug: 'bem-vindo' },
-    });
-
-    return await this.ticketService.create({
-      user: user,
-      decision: initialDecision,
-      state: TicketState.LGPD,
-    });
-  }
-
-  private async findUserNewestTicket(
-    user: UserEntity,
-  ): Promise<TicketEntity | null> {
-    return await this.ticketService.findOne({
-      where: { user: { id: user.id } },
-      order: { updatedAt: 'DESC' },
-      relations: { decision: true, counterpart: true, user: true },
-    });
-  }
-
-  private async findCounterpartNewestTicket(
-    user: UserEntity,
-  ): Promise<TicketEntity | null> {
-    return await this.ticketService.findOne({
-      where: { counterpart: { id: user.id } },
-      order: { updatedAt: 'DESC' },
-      relations: { decision: true, counterpart: true, user: true },
-    });
-  }
-
-  private async getUserFromMessage(
-    contact: any,
-    message: any,
-  ): Promise<UserEntity> {
-    if (message && message.from) {
-      const phoneNumber = this.formatPhoneNumber(message.from);
-      if (phoneNumber) {
-        return await this.userService.createOrFindOneByNumber({
-          phonenumber: phoneNumber,
-        });
-      } else return null;
-    } else return null;
-  }
-
-  private async getUserFromTicket(ticket: TicketEntity): Promise<UserEntity> {
-    return await this.userService.findOne({
-      where: { id: ticket.user.id },
-    });
-  }
-
-  private async getCounterpartFromTicket(
-    ticket: TicketEntity,
-  ): Promise<UserEntity | null> {
-    return await this.userService.findOne({
-      where: { id: ticket.counterpart.id },
-    });
-  }
-
-  private async generateProposal(ticket: TicketEntity) {
-    const serviceProvider = await this.getUserFromTicket(ticket);
-    const customer = await this.getCounterpartFromTicket(ticket);
-
-    await this.sendMessage(
-      serviceProvider.phonenumber,
-      'Estamos gerando a proposta para você. Por favor, aguarde.',
+  public async sendConfirmationOptions(
+    phoneNumber: string,
+    message: string,
+    prefix: string,
+    cancelable = true,
+  ) {
+    const options = await this.generateConfirmationOptions(
+      message,
+      prefix,
+      cancelable,
     );
 
-    const owner = ticket.owner;
-    const proporsal = await this.proposalService.generateProposal(
-      ticket.decision.title,
-      ticket.description,
-      ticket.paymentMethod,
-      //
-      owner === TicketOwner.ServiceProvider
-        ? serviceProvider.fullname
-        : customer.fullname,
-      //
-      owner === TicketOwner.ServiceProvider
-        ? serviceProvider.phonenumber
-        : customer.phonenumber,
-      //
-      owner === TicketOwner.ServiceProvider
-        ? serviceProvider.email
-        : customer.email,
-      //
-      owner === TicketOwner.ServiceProvider
-        ? serviceProvider.taxpayerNumber
-        : customer.taxpayerNumber,
-      //
-      owner === TicketOwner.ServiceProvider
-        ? customer.fullname
-        : serviceProvider.fullname,
-      //
-      owner === TicketOwner.ServiceProvider
-        ? customer.phonenumber
-        : serviceProvider.phonenumber,
-      //
-      owner === TicketOwner.ServiceProvider
-        ? customer.email
-        : serviceProvider.email,
-      //
-      owner === TicketOwner.ServiceProvider
-        ? customer.taxpayerNumber
-        : serviceProvider.taxpayerNumber,
-      //
-      ticket.deadline,
-      //
-      ticket.disputeForum,
+    const messageSent = await this.whatsapp.messages.interactive(
+      options,
+      Number(phoneNumber),
     );
 
-    ticket.proporsal = proporsal;
-    ticket.state = TicketState.Proporsal;
+    this.logger.log(
+      `${messageSent.statusCode()} ${messageSent.responseBodyToJSON()}`,
+    );
 
-    await this.ticketService.save(ticket);
-    await this.requestProporsalApprovalFromServiceProvider(ticket);
+    return true;
   }
 
   private async generateConfirmationOptions(
     message: string,
-    optionsPrefix: string,
-    cancel = true,
+    prefix: string,
+    cancelable = true,
   ): Promise<InteractiveObject> {
     const interactive: InteractiveObject = {
       action: {
@@ -1407,7 +148,7 @@ export class WhatsappService {
     interactive.action.buttons.push({
       type: 'reply',
       reply: {
-        id: `${optionsPrefix}-yes`,
+        id: `${prefix}-yes`,
         title: 'Sim',
       },
     });
@@ -1415,586 +156,80 @@ export class WhatsappService {
     interactive.action.buttons.push({
       type: 'reply',
       reply: {
-        id: `${optionsPrefix}-no`,
+        id: `${prefix}-no`,
         title: 'Não',
       },
     });
-    if (cancel) {
+
+    if (cancelable) {
       interactive.action.buttons.push({
         type: 'reply',
         reply: {
-          id: `${optionsPrefix}-cancel`,
+          id: `${prefix}-cancel`,
           title: 'Cancelar',
         },
       });
     }
+
     return interactive;
   }
 
-  private async generateContextOptions(
-    message: string,
-    optionsPrefix: string,
-    cancel = true,
-  ): Promise<InteractiveObject> {
-    const interactive: InteractiveObject = {
-      action: {
-        buttons: [],
-      },
-      type: InteractiveTypesEnum.Button,
-      body: {
-        text: message,
-      },
-    };
+  private async processReceivedMessages(value: ValueObject) {
+    const contact = value.contacts[0];
 
-    interactive.action.buttons.push({
-      type: 'reply',
-      reply: {
-        id: `${optionsPrefix}-service-provider`,
-        title: 'Prestador de Serviço',
-      },
-    });
+    // TODO: After the user creation if user wanna change the phoneNumber, it should be done by an email verification.
+    const user = await this.userService.findOneByWhatsappId(contact.wa_id);
 
-    interactive.action.buttons.push({
-      type: 'reply',
-      reply: {
-        id: `${optionsPrefix}-customer`,
-        title: 'Cliente',
-      },
-    });
+    let state: IMessageState;
 
-    if (cancel) {
-      interactive.action.buttons.push({
-        type: 'reply',
-        reply: {
-          id: `${optionsPrefix}-cancel`,
-          title: 'Cancelar',
-        },
-      });
-    }
-    return interactive;
-  }
-
-  private async sendConfirmationOptions(
-    phoneNumber: string,
-    message: string,
-    optionsPrefix: string,
-    cancel = true,
-  ) {
-    // Generate the confirmation options using the preffix.
-    const confirmation = await this.generateConfirmationOptions(
-      message,
-      optionsPrefix,
-      cancel,
-    );
-
-    const messageSent = await this.wa.messages.interactive(
-      confirmation,
-      phoneNumber,
-    );
-
-    this.logger.log(
-      `${messageSent.statusCode()} ${messageSent.responseBodyToJSON()}`,
-    );
-
-    return true;
-  }
-
-  private async sendContextOptions(
-    phoneNumber: string,
-    message: string,
-    optionsPrefix: string,
-    cancel = true,
-  ) {
-    // Generate the confirmation options using the preffix.
-    const confirmation = await this.generateContextOptions(
-      message,
-      optionsPrefix,
-      cancel,
-    );
-
-    const messageSent = await this.wa.messages.interactive(
-      confirmation,
-      phoneNumber,
-    );
-
-    this.logger.log(
-      `${messageSent.statusCode()} ${messageSent.responseBodyToJSON()}`,
-    );
-
-    return true;
-  }
-
-  private confirmatioOptionHasPrefix(option: string, prefix: string): boolean {
-    if (
-      option === `${prefix}-yes` ||
-      option === `${prefix}-no` ||
-      option === `${prefix}-cancel`
-    ) {
-      return true;
-    }
-    return false;
-  }
-
-  private contextOptionHasPrefix(option: string, prefix: string): boolean {
-    if (
-      option === `${prefix}-service-provider` ||
-      option === `${prefix}-customer` ||
-      option === `${prefix}-cancel`
-    ) {
-      return true;
-    }
-    return false;
-  }
-  private getSelectedOptionFromMessage(message: any): string | null {
-    const interaction: any = message.interactive;
-
-    if ('list_reply' in interaction) {
-      return interaction.list_reply.id;
-    } else {
-      this.logger.error('message.interactive.type is not ListReplyObject');
-      return null;
-    }
-  }
-
-  private getSelectedConfirmationOption(message: any): string | null {
-    const interactive: any = message.interactive;
-
-    if ('type' in interactive && interactive.type === 'button_reply') {
-      return interactive.button_reply.id;
-    }
-  }
-
-  private async requestUserName(phoneNumber: string, ticket: TicketEntity) {
-    ticket.state = TicketState.Name;
-    ticket = await this.ticketService.save(ticket);
-
-    this.sendMessage(phoneNumber, 'Qual é o seu nome?');
-  }
-
-  private async requestUserTaxpayerNumber(
-    phoneNumber: string,
-    ticket: TicketEntity,
-  ) {
-    ticket.state = TicketState.TaxpayerNumber;
-    ticket = await this.ticketService.save(ticket);
-
-    this.sendMessage(phoneNumber, 'Qual é o seu CPF/CPNJ?');
-  }
-
-  private async requestUserEmail(phoneNumber: string, ticket: TicketEntity) {
-    ticket.state = TicketState.Email;
-    ticket = await this.ticketService.save(ticket);
-
-    this.sendMessage(phoneNumber, 'Qual é o seu email?');
-  }
-
-  private async requestCounterpartPhoneNumber(
-    phoneNumber: string,
-    ticket: TicketEntity,
-  ) {
-    ticket.state = TicketState.ClientPhoneNumber;
-    ticket = await this.ticketService.save(ticket);
-
-    this.sendMessage(
-      phoneNumber,
-      `Qual é o número de telefone do seu ${
-        ticket.owner === TicketOwner.ServiceProvider
-          ? 'cliente'
-          : 'provedor de serviço'
-      }?`,
-    );
-  }
-
-  private async requestCounterpartName(
-    phoneNumber: string,
-    ticket: TicketEntity,
-  ) {
-    ticket.state = TicketState.ClientName;
-    ticket = await this.ticketService.save(ticket);
-
-    this.sendMessage(
-      phoneNumber,
-      `Qual é o nome do seu ${
-        ticket.owner === TicketOwner.ServiceProvider
-          ? 'cliente'
-          : 'provedor de serviço'
-      }?`,
-    );
-  }
-
-  private async requestCounterpartNumber(
-    phoneNumber: string,
-    ticket: TicketEntity,
-  ) {
-    ticket.state = TicketState.ClientTaxpayerNumber;
-    ticket = await this.ticketService.save(ticket);
-
-    this.sendMessage(
-      phoneNumber,
-      `Qual é o seu CPF/CPNJ do seu ${
-        ticket.owner === TicketOwner.ServiceProvider
-          ? 'cliente'
-          : 'provedor de serviço'
-      }?`,
-    );
-  }
-
-  private async requestCounterpartEmail(
-    phoneNumber: string,
-    ticket: TicketEntity,
-  ) {
-    ticket.state = TicketState.ClientEmail;
-    ticket = await this.ticketService.save(ticket);
-
-    this.sendMessage(
-      phoneNumber,
-      `Qual é o email do ${
-        ticket.owner === TicketOwner.ServiceProvider
-          ? 'cliente'
-          : 'provedor de serviço'
-      }?`,
-    );
-  }
-
-  private async requestJurisdictionInDispute(
-    phoneNumber: string,
-    ticket: TicketEntity,
-  ) {
-    ticket.state = TicketState.JurisdictionInDispute; // Novo estado correspondente à etapa de definição da comarca.
-    ticket = await this.ticketService.save(ticket);
-
-    await this.sendMessage(
-      phoneNumber,
-      'Em caso de disputa, qual comarca será usada para o juizado?',
-    );
-  }
-
-  /************************************************************************************************************************************************************************************************/
-
-  private async requestServiceDescription(
-    phoneNumber: string,
-    ticket: TicketEntity,
-  ) {
-    ticket.state = TicketState.JobDescription;
-    ticket = await this.ticketService.save(ticket);
-
-    await this.sendMessage(
-      phoneNumber,
-      'Descreva em detalhes o serviço que irá prestar ou que deseja receber.',
-    );
-  }
-
-  private async requestServiceDeadline(
-    phoneNumber: string,
-    ticket: TicketEntity,
-  ) {
-    ticket.state = TicketState.ServiceDeadline; // Novo estado correspondente à etapa de definição do prazo.
-    ticket = await this.ticketService.save(ticket);
-
-    await this.sendMessage(
-      phoneNumber,
-      'Qual o prazo para a prestação do serviço?',
-    );
-  }
-
-  private async requestContext(phoneNumber: string, ticket: TicketEntity) {
-    const optionsPrefix = 'ticket-context';
-    ticket.state = TicketState.Context;
-    ticket = await this.ticketService.save(ticket);
-    await this.sendContextOptions(
-      phoneNumber,
-      'Você é o cliente (aquele que procura por um serviço) ou o prestador (aquele que oferece o serviço)?',
-      optionsPrefix,
-      false,
-    );
-  }
-
-  private async requestPaymentMethod(
-    phoneNumber: string,
-    ticket: TicketEntity,
-  ) {
-    ticket.state = TicketState.PaymentMethod;
-    ticket = await this.ticketService.save(ticket);
-
-    await this.sendMessage(phoneNumber, '*Metodo de Pagemento:*');
-    await this.sendMessage(
-      phoneNumber,
-      'Responda a perguntas que fazem sentido ao seu contrato como:',
-    );
-    await this.sendMessage(
-      phoneNumber,
-      `• Qual é o valor?
-• Qual é a forma de Pagamento? 
-• É possível pagar à vista ou parcelar?
-• Em caso de parcelamento, em quantas vezes pode ser feito? 
-• Qual é a data estipulada para os pagamentos?
-• Há juros? Explique como funciona.
-• Há multa em caso de atraso ou cancelamento do serviço?
-• Qual é a multa em caso de atraso ou cancelamento do serviço?`,
-    );
-  }
-
-  private async requestProporsalApprovalFromServiceProvider(
-    ticket: TicketEntity,
-  ) {
-    const optionsPrefix = 'service-provider-proporsal';
-    const serviceProvider = await this.getUserFromTicket(ticket);
-    await this.sendMessage(serviceProvider.phonenumber, 'Está e a proposta:');
-    await this.sendMessage(serviceProvider.phonenumber, ticket.proporsal);
-    await this.sendConfirmationOptions(
-      serviceProvider.phonenumber,
-      `A proposta está correta? Podemos enviar para o ${
-        ticket.owner === TicketOwner.ServiceProvider
-          ? 'cliente'
-          : 'provedor de serviço'
-      }?`,
-      optionsPrefix,
-    );
-  }
-
-  private async sendMessage(phoneNumber: string, message: string) {
-    const sentMessage = await this.wa.messages.text(
-      { body: message },
-      phoneNumber,
-    );
-    this.logger.log(
-      `${sentMessage.statusCode()}: ${JSON.stringify(
-        sentMessage.responseBodyToJSON(),
-      )}`,
-    );
-  }
-
-  /************************************************************************************************************************************************************************************************/
-
-  private async sendTemplate(
-    phoneNumber: string,
-    name: string,
-    parameters?: any,
-  ) {
-    try {
-      const sentMessage = await this.wa.messages.template(
-        {
-          namespace: '55fac29d_e030_40c0_8215_ce4ec00c3623',
-          name: name,
-          language: {
-            code: 'pt_BR',
-          },
-          // parameters: parameters,
-        },
-
-        phoneNumber,
-      );
-      // this.logger.log(JSON.stringify(sentMessage));
-      this.logger.log(
-        `${sentMessage.statusCode()}: ${JSON.stringify(
-          sentMessage.responseBodyToJSON(),
-        )}`,
-      );
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  /************************************************************************************************************************************************************************************************/
-
-  private async sendProposalToCustomer(ticket: TicketEntity) {
-    const optionsPrefix = 'customer-approval';
-
-    const customer = await this.getCounterpartFromTicket(ticket);
-
-    ticket.state = TicketState.ClientRecieve;
-
-    await this.ticketService.save(ticket);
-    await this.sendTemplate(
-      customer.phonenumber,
-      'envio_de_contrato_minha_palavra',
-    );
-
-    // await this.sendMessage(
-    //   customer.phonenumber,
-    //   `Ola, ${ticket.counterpart.fullname}!
-    //   O seu prestador de serviço ${ticket.user.fullname}, enviou uma proposta para você.
-    //   `,
-    // );
-    // await this.sendMessage(ticket.counterpart.phonenumber, ticket.proporsal);
-    // await this.sendConfirmationOptions(
-    //   ticket.counterpart.phonenumber,
-    //   'Você aceita a proposta?',
-    //   optionsPrefix,
-    // );
-  }
-
-  private async sendInitialMessage(
-    phoneNumber: string,
-    decision: DecisionEntity,
-  ) {
-    const optionsPrefix = 'initial-message';
-    await this.sendMessage(phoneNumber, '*Bem-vindo ao MinhaPalavra!*');
-    await this.sendMessage(
-      phoneNumber,
-      'Estou ciente de estar participando do teste para o surgimento do *MINHA PALAVRA*. Uma plataforma que irá colaborar para fortalecer os acordos do dia-a-dia. Nesta fase beta teste não nos responsabilizamos por erros ou instabilidades da plataforma. Os emails serão solicitados para pesquisas futuras. Seus dados estão sob as leis de LGPD.',
-    );
-    await this.sendConfirmationOptions(
-      phoneNumber,
-      'Podemos continuar?',
-      optionsPrefix,
-      false,
-    );
-  }
-
-  private async sendCategoryOptions(
-    phoneNumber: string,
-    decision: DecisionEntity,
-  ): Promise<boolean> {
-    const optionList = await this.genarateInteractiveObjectFromDecision(
-      decision,
-    );
-
-    if (!optionList) {
-      return false;
-    }
-    this.logger.log(JSON.stringify(optionList));
-    const message = await this.wa.messages.interactive(optionList, phoneNumber);
-
-    this.logger.log(`${message.statusCode()} ${message.responseBodyToJSON()}`);
-
-    return true;
-  }
-
-  private async isValidCategoryOption(
-    selectedOption: string,
-    options: DecisionEntity,
-  ): Promise<boolean> {
-    return !!options.children.find((child) => child.slug === selectedOption);
-  }
-
-  private isValidContact(value: ValueObject): boolean {
-    return !(
-      value.contacts === undefined ||
-      value.contacts === null ||
-      value.contacts.length !== 1
-    );
-  }
-
-  private isValidPhoneNumber(phoneNumber: string): boolean {
-    if (!phone(phoneNumber, { country: 'BR' }).isValid) {
-      return phone(`+55${phoneNumber}`, { country: 'BR' }).isValid;
+    if (!user) {
+      // TODO: if user is not found, start user registration process.
+      state = new UserRegistrationInitialState();
     }
 
-    return true;
-  }
-
-  private formatPhoneNumber(phoneNumber: string): string | null {
-    const options = {
-      country: 'BR',
-      validateMobilePrefix: true,
-    };
-
-    let number = phone(phoneNumber, options);
-
-    if (number.isValid) {
-      if (number.isValid && number.phoneNumber.length === 13) {
-        number = phone(
-          number.phoneNumber.slice(0, 5) + '9' + number.phoneNumber.slice(5),
-          options,
-        );
-      }
-      return number.phoneNumber.replace(/\D/g, '');
+    if (user.state !== UserState.REGISTRATION_COMPLETE) {
+      //
+      state = getUserStateProcessor[user.state];
+      // // if (!user.acceptedDataPrivacyTerms) {
+      // //   // TODO: if user is found but data privacy is not confirmed, start data privacy confirmation process.
+      // //   state = new UserDataPrivacyConfirmationState();
+      // // }
+      //
+      // if (!user.fullName) {
+      //   // TODO: if user is found but full name is not confirmed, start full name confirmation process.
+      // }
+      //
+      // if (!user.phoneNumber) {
+      //   // TODO: if user is found but phone number is not confirmed, start phone number confirmation process.
+      // }
+      //
+      // if (!user.email) {
+      //   // TODO: if user is found but email is not confirmed, start email confirmation process.
+      // }
+      //
+      // if (!user.taxpayerNumber) {
+      //   // TODO: if user is found but taxpayer number is not confirmed, start taxpayer number confirmation process.
+      // }
     }
 
-    if (!number.isValid) {
-      number = phone(phoneNumber); // try without country code
-      if (number.isValid) {
-        return number.phoneNumber.replace(/\D/g, '');
-      }
-    }
-    return null;
-  }
+    // Conversation flow to select a ticket or create a new one.
+    const ticket = await this.ticketService.findUserNewestOpenTicket(user);
 
-  private isValidEmail(email: string): boolean {
-    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-    return emailRegex.test(email);
-  }
-
-  private isValidTaxpayerNumber(taxpayerNumber: string): boolean {
-    const numbers = taxpayerNumber.replace(/\D/g, '');
-
-    if (numbers.length !== 11 && numbers.length !== 14) {
-      return false;
+    if (!ticket) {
+      // TODO: if user does not have any open ticket. Then I should redirect it to menu flow.
+      // TODO: Menu flow allows user to select a ticket or create a new one.
     }
 
-    if (new Set(numbers.split('')).size === 1) {
-      return false;
-    }
+    // if(ticket.state !==) {
+    //   // state = getTicketStateProcessor[ticket.state];
+    // }
 
-    if (numbers.length === 11) {
-      let sum = 0;
-      for (let i = 0; i < 9; i++) {
-        sum += Number(numbers.charAt(i)) * (10 - i);
-      }
-      let remaining = sum % 11 < 2 ? 0 : 11 - (sum % 11);
-
-      if (remaining !== Number(numbers.charAt(9))) {
-        return false;
-      }
-
-      sum = 0;
-      for (let i = 0; i < 10; i++) {
-        sum += Number(numbers.charAt(i)) * (11 - i);
-      }
-      remaining = sum % 11 < 2 ? 0 : 11 - (sum % 11);
-
-      if (remaining !== Number(numbers.charAt(10))) {
-        return false;
-      }
-
-      return true;
-    }
-
-    if (numbers.length === 14) {
-      const weights1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
-      const weights2 = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
-
-      const calculateDigit = (numbers: string, weights: number[]) => {
-        let sum = 0;
-        for (let i = 0; i < numbers.length; i++) {
-          sum += Number(numbers[i]) * weights[i];
-        }
-        const remaining = sum % 11;
-        return remaining < 2 ? 0 : 11 - remaining;
-      };
-
-      if (
-        Number(numbers.charAt(12)) !==
-        calculateDigit(numbers.substr(0, 12), weights1)
-      ) {
-        return false;
-      }
-
-      if (
-        Number(numbers.charAt(13)) !==
-        calculateDigit(numbers.substr(0, 13), weights2)
-      ) {
-        return false;
-      }
-
-      return true;
-    }
-
-    return false;
-  }
-
-  private formatTaxpayerNumber(taxpayerNumber: string): string {
-    if (taxpayerNumber.length === 11) {
-      return taxpayerNumber.replace(
-        /(\d{3})(\d{3})(\d{3})(\d{2})/,
-        '$1.$2.$3-$4',
-      );
-    } else {
-      return taxpayerNumber.replace(
-        /(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,
-        '$1.$2.$3/$4-$5',
-      );
-    }
+    const context = new MessagesProcessingContext(
+      this,
+      this.userService,
+      this.logger,
+      state,
+    );
+    await context.processMessages(value);
   }
 }

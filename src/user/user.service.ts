@@ -1,11 +1,13 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { UserEntity } from './user.entity';
-import { FindOptionsRelations, Repository } from 'typeorm';
 import { TypeOrmCrudService } from '@dataui/crud-typeorm';
+import { Injectable, Logger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { UserEntity } from './entities/user.entity';
 
 @Injectable()
 export class UserService extends TypeOrmCrudService<UserEntity> {
+  private readonly logger = new Logger(UserService.name);
+
   constructor(
     @InjectRepository(UserEntity)
     private readonly repository: Repository<UserEntity>,
@@ -13,25 +15,49 @@ export class UserService extends TypeOrmCrudService<UserEntity> {
     super(repository);
   }
 
-  async createOrFindOneByNumber(
-    userPartial: Partial<UserEntity>,
-    relations?: FindOptionsRelations<UserEntity>,
-  ): Promise<UserEntity> {
-    if (!userPartial.phonenumber)
-      throw new InternalServerErrorException(
-        'cannot find a user without a phone number',
-      );
+  public async findOneByEmail(email: string): Promise<UserEntity> {
     const user = await this.repository.findOne({
-      where: userPartial,
-      relations: relations,
+      where: {
+        email: email,
+      },
     });
 
     if (user) return user;
-
-    return await this.repository.save(userPartial);
   }
 
-  async save(data: Partial<UserEntity>) {
+  public async findOneByPhoneNumber(phoneNumber: string): Promise<UserEntity> {
+    const user = await this.repository.findOne({
+      where: {
+        phoneNumber: phoneNumber,
+      },
+    });
+
+    if (user) return user;
+  }
+
+  public async findOneByTaxpayerNumber(
+    taxpayerNumber: string,
+  ): Promise<UserEntity> {
+    const user = await this.repository.findOne({
+      where: {
+        taxpayerNumber: taxpayerNumber,
+      },
+    });
+
+    if (user) return user;
+  }
+
+  public async findOneByWhatsappId(whatsappId: string): Promise<UserEntity> {
+    const user = await this.repository.findOne({
+      where: {
+        whatsappId: whatsappId,
+      },
+    });
+
+    if (user) return user;
+  }
+
+  public async save(data: Partial<UserEntity>) {
     return this.repository.save(data);
   }
 }

@@ -2,6 +2,8 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
+  HttpStatus,
   Logger,
   Post,
   Query,
@@ -12,15 +14,16 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { WebhookObject } from 'whatsapp/build/types/webhooks';
 import { WhatsappService } from './whatsapp.service';
-import { MessageDirection } from '../history/history.entity';
-import { ApiBody, ApiOperation, ApiParam } from '@nestjs/swagger';
 
 @Controller('whatsapp')
 export class WhatsappController {
+  private readonly logger = new Logger(WhatsappController.name);
+
   constructor(
-    private service: WhatsappService,
     private configService: ConfigService,
+    private service: WhatsappService,
   ) {}
+
   @Get('webhook')
   tokenCheck(@Req() req: RawBodyRequest<Request>, @Query() query): string {
     console.log('body:' + JSON.stringify(req.body));
@@ -37,9 +40,8 @@ export class WhatsappController {
   }
 
   @Post('webhook')
-  @ApiBody({ schema: { type: 'object' } })
-  async webhook(@Body() body: any): Promise<string> {
-    // console.log(JSON.stringify(body));
+  @HttpCode(HttpStatus.OK)
+  public async handleWebhook(@Body() body: WebhookObject): Promise<string> {
     return await this.service.handleWebhook(body);
   }
 }
