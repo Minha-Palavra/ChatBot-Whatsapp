@@ -9,11 +9,12 @@ import { ConfigService } from '@nestjs/config';
 import { InteractiveTypesEnum } from 'whatsapp/build/types/enums';
 import { InteractiveObject } from 'whatsapp/build/types/messages';
 import { ValueObject, WebhookObject } from 'whatsapp/build/types/webhooks';
+import { MessageDirection } from '../history/entities/message-direction';
+import { HistoryService } from '../history/history.service';
 import { TicketService } from '../ticket/ticket.service';
 import { getUserStateProcessor, UserState } from '../user/entities/user-state';
 import { UserRegistrationInitialState } from '../user/states/user-registration-initial-state';
 import { UserService } from '../user/user.service';
-import { messages } from './entities/messages';
 import { IMessageState } from './states/message-state.interface';
 import { MessagesProcessingContext } from './states/messages-processing-context';
 
@@ -29,7 +30,7 @@ export class WhatsappService {
 
   constructor(
     private configService: ConfigService,
-    // private historyService: HistoryService,
+    private historyService: HistoryService,
     public ticketService: TicketService,
     public userService: UserService,
   ) {}
@@ -46,7 +47,9 @@ export class WhatsappService {
   }
 
   public async handleWebhook(body: WebhookObject): Promise<string> {
-    // await this.historyService.create(body, MessageDirection.INCOMING);
+    this.logger.log('Message Arrived: ' + JSON.stringify(body));
+
+    await this.historyService.create(body, MessageDirection.INCOMING);
     await this.checkWebhookMinimumRequirements(body);
 
     let isMessage = false;
@@ -99,7 +102,7 @@ export class WhatsappService {
   ): Promise<void> {
     const messageSent = await this.whatsapp.messages.text(
       { body: message },
-      Number(phoneNumber),
+      phoneNumber,
     );
     this.logger.log(
       `${messageSent.statusCode()}: #${JSON.stringify(messageSent.responseBodyToJSON)}`,
@@ -120,7 +123,7 @@ export class WhatsappService {
 
     const messageSent = await this.whatsapp.messages.interactive(
       options,
-      Number(phoneNumber),
+      phoneNumber,
     );
 
     this.logger.log(
@@ -185,9 +188,7 @@ export class WhatsappService {
     if (!user) {
       // TODO: if user is not found, start user registration process.
       state = new UserRegistrationInitialState();
-    }
-
-    if (user.state !== UserState.REGISTRATION_COMPLETE) {
+    } else if (user.state !== UserState.REGISTRATION_COMPLETE) {
       //
       state = getUserStateProcessor[user.state];
       // // if (!user.acceptedDataPrivacyTerms) {
@@ -230,6 +231,7 @@ export class WhatsappService {
       this.logger,
       state,
     );
+
     await context.processMessages(value);
   }
 }

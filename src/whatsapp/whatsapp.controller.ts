@@ -12,6 +12,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { ApiBody } from '@nestjs/swagger';
 import { WebhookObject } from 'whatsapp/build/types/webhooks';
 import { WhatsappService } from './whatsapp.service';
 
@@ -40,6 +41,7 @@ export class WhatsappController {
   }
 
   @Post('webhook')
+  @ApiBody({ schema: { type: 'object' } })
   @HttpCode(HttpStatus.OK)
   public async handleWebhook(@Body() body: WebhookObject): Promise<string> {
     return await this.service.handleWebhook(body);

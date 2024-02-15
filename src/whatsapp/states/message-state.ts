@@ -22,6 +22,8 @@ export abstract class MessageState implements IMessageState {
 
     if ('list_reply' in interaction) {
       return interaction.list_reply.id;
+    } else if ('button_reply' in interaction) {
+      return interaction.button_reply.id;
     } else {
       return null;
     }

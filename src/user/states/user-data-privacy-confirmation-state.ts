@@ -17,6 +17,7 @@ export class UserDataPrivacyConfirmationState extends MessageState {
 
     // If the user is not registered, do nothing.
     if (!user) {
+      context.logger.error('User not found.');
       return;
     }
 
@@ -43,7 +44,6 @@ export class UserDataPrivacyConfirmationState extends MessageState {
       const selectedOption = this.getSelectedOptionFromMessage(message);
 
       if (!selectedOption) {
-        // this.context.logger.error('message.interactive.type is not ListReplyObject');
         context.logger.error('Failed to get selected option from message.');
         continue;
       }
@@ -70,11 +70,11 @@ export class UserDataPrivacyConfirmationState extends MessageState {
       }
 
       // TODO: Save the user data privacy confirmation.
-      await context.userService.save({
-        ...user,
-        //dataPrivacyConfirmation: true,
-        state: UserState.WAITING_NAME,
-      });
+      // await context.userService.save({
+      //   ...user,
+      //   //dataPrivacyConfirmation: true,
+      //   state: UserState.WAITING_NAME,
+      // });
 
       await context.whatsappService.sendMessage(
         phoneNumber,
