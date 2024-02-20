@@ -5,7 +5,7 @@ import { IMessageProcessingContext } from '../../whatsapp/states/message-process
 import { MessageState } from '../../whatsapp/states/message-state';
 import { UserState } from '../entities/user-state';
 
-export class UserDataPrivacyConfirmationState extends MessageState {
+export class UserNameInputState extends MessageState {
   public async processMessages(
     value: ValueObject,
     context: IMessageProcessingContext,
@@ -26,18 +26,22 @@ export class UserDataPrivacyConfirmationState extends MessageState {
       const phoneNumber = this.formatPhoneNumber(message.from);
 
       if (message.type === 'text') {
-        await context.whatsappService.sendMessage(
-          phoneNumber,
-          messages.invalidOption,
-        );
+        const fullName = message.text.body;
 
+        user.fullName = fullName;
+
+        // Update the user state.
+        await context.userService.save({
+          ...user,
+          state: UserState.WAITING_NAME_CONFIRMATION,
+        });
+
+        // Send the confirmation options.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.dataPrivacy,
-          prefix.dataPrivacy,
-          false,
+          `O seu nome completo é ${fullName}?`,
+          prefix.userFullName,
         );
-
         continue;
       }
 
@@ -54,16 +58,16 @@ export class UserDataPrivacyConfirmationState extends MessageState {
       }
 
       // Check if the selected option is valid.
-      if (!this.optionHasPrefix(selectedOption, prefix.dataPrivacy)) {
+      if (!this.optionHasPrefix(selectedOption, prefix.userFullName)) {
         context.logger.error(
-          `${selectedOption} is not a valid option for ${prefix.dataPrivacy}.`,
+          `${selectedOption} is not a valid option for ${prefix.userFullName}.`,
         );
 
+        // Send the confirmation options again.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.dataPrivacy,
-          prefix.dataPrivacy,
-          false,
+          `O seu nome completo é ${user.fullName}?`,
+          prefix.userFullName,
         );
 
         continue;
@@ -78,19 +82,13 @@ export class UserDataPrivacyConfirmationState extends MessageState {
       await context.userService.save({
         ...user,
         //dataPrivacyConfirmation: true,
-        state: UserState.WAITING_NAME,
+        state: UserState.WAITING_PHONE_NUMBER,
       });
-
-      // TODO: Send the data privacy confirmation success message.
-      await context.whatsappService.sendMessage(
-        phoneNumber,
-        messages.dataPrivacyConfirmationSuccess,
-      );
 
       // TODO: Go to next state.
       await context.whatsappService.sendMessage(
         phoneNumber,
-        messages.requestName,
+        messages.requestPhoneNumber,
       );
     }
   }
