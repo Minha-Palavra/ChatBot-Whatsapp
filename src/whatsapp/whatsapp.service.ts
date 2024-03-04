@@ -191,36 +191,15 @@ export class WhatsappService {
     } else if (user.state !== UserState.REGISTRATION_COMPLETE) {
       //
       state = getUserStateProcessor[user.state];
-      // // if (!user.acceptedDataPrivacyTerms) {
-      // //   // TODO: if user is found but data privacy is not confirmed, start data privacy confirmation process.
-      // //   state = new UserDataPrivacyConfirmationState();
-      // // }
-      //
-      // if (!user.fullName) {
-      //   // TODO: if user is found but full name is not confirmed, start full name confirmation process.
-      // }
-      //
-      // if (!user.phoneNumber) {
-      //   // TODO: if user is found but phone number is not confirmed, start phone number confirmation process.
-      // }
-      //
-      // if (!user.email) {
-      //   // TODO: if user is found but email is not confirmed, start email confirmation process.
-      // }
-      //
-      // if (!user.taxpayerNumber) {
-      //   // TODO: if user is found but taxpayer number is not confirmed, start taxpayer number confirmation process.
-      // }
+    } else {
+      // Conversation flow to select a ticket or create a new one.
+      const ticket = await this.ticketService.findUserNewestOpenTicket(user);
+
+      if (!ticket) {
+        // TODO: if user does not have any open ticket. Then I should redirect it to menu flow.
+        // TODO: Menu flow allows user to select a ticket or create a new one.
+      }
     }
-
-    // Conversation flow to select a ticket or create a new one.
-    const ticket = await this.ticketService.findUserNewestOpenTicket(user);
-
-    if (!ticket) {
-      // TODO: if user does not have any open ticket. Then I should redirect it to menu flow.
-      // TODO: Menu flow allows user to select a ticket or create a new one.
-    }
-
     // if(ticket.state !==) {
     //   // state = getTicketStateProcessor[ticket.state];
     // }

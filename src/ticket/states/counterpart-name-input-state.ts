@@ -1,11 +1,11 @@
 import { ValueObject } from 'whatsapp/build/types/webhooks';
+import { MessageState } from '../../whatsapp/states/message-state';
+import { IMessageProcessingContext } from '../../whatsapp/states/message-processing-context.interface';
+import { UserState } from '../../user/entities/user-state';
 import { messages } from '../../whatsapp/entities/messages';
 import { prefix } from '../../whatsapp/entities/prefix';
-import { IMessageProcessingContext } from '../../whatsapp/states/message-processing-context.interface';
-import { MessageState } from '../../whatsapp/states/message-state';
-import { UserState } from '../entities/user-state';
 
-export class UserDataPrivacyConfirmationState extends MessageState {
+export class CounterpartNameInputState extends MessageState {
   public async processMessages(
     value: ValueObject,
     context: IMessageProcessingContext,
@@ -26,18 +26,22 @@ export class UserDataPrivacyConfirmationState extends MessageState {
       const phoneNumber = this.formatPhoneNumber(message.from);
 
       if (message.type === 'text') {
-        await context.whatsappService.sendMessage(
-          phoneNumber,
-          messages.INVALID_OPTION(),
-        );
+        const fullName = message.text.body;
 
+        user.fullName = fullName;
+
+        // Update the user state.
+        await context.userService.save({
+          ...user,
+          state: UserState.WAITING_NAME_CONFIRMATION,
+        });
+
+        // Send the confirmation options.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.DATA_PRIVACY(),
-          prefix.DATA_PRIVACY,
-          false,
+          messages.USER_FULL_NAME_CONFIRMATION_REQUEST(fullName),
+          prefix.USER_FULL_NAME,
         );
-
         continue;
       }
 
@@ -54,16 +58,16 @@ export class UserDataPrivacyConfirmationState extends MessageState {
       }
 
       // Check if the selected option is valid.
-      if (!this.optionHasPrefix(selectedOption, prefix.DATA_PRIVACY)) {
+      if (!this.optionHasPrefix(selectedOption, prefix.USER_FULL_NAME)) {
         context.logger.error(
-          `${selectedOption} is not a valid option for ${prefix.DATA_PRIVACY}.`,
+          `${selectedOption} is not a valid option for ${prefix.USER_FULL_NAME}.`,
         );
 
+        // Send the confirmation options again.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.DATA_PRIVACY(),
-          prefix.DATA_PRIVACY,
-          false,
+          messages.USER_FULL_NAME_CONFIRMATION_REQUEST(user.fullName),
+          prefix.USER_FULL_NAME,
         );
 
         continue;
@@ -71,26 +75,36 @@ export class UserDataPrivacyConfirmationState extends MessageState {
 
       if (selectedOption === `${prefix.DATA_PRIVACY}-no`) {
         // TODO: Go to previous state.
+        user.fullName = null;
+
+        await context.userService.save({
+          ...user,
+          state: UserState.WAITING_NAME,
+        });
+
+        await context.whatsappService.sendMessage(
+          phoneNumber,
+          messages.USER_NAME_REQUEST(),
+        );
+
         continue;
       }
 
-      // TODO: Save the user data privacy confirmation.
+      // Save the user.
       await context.userService.save({
         ...user,
-        //dataPrivacyConfirmation: true,
-        state: UserState.WAITING_NAME,
+        state: UserState.WAITING_TAXPAYER_NUMBER,
       });
 
-      // TODO: Send the data privacy confirmation success message.
-      await context.whatsappService.sendMessage(
-        phoneNumber,
-        messages.DATA_PRIVACY_ACCEPTED(),
-      );
+      // TODO: Send the name confirmation success message.
+      // await context.whatsappService.sendMessage(
+      //   phoneNumber,
+      //   messages.userFullNameConfirmationSuccess,
+      // );
 
-      // TODO: Go to next state.
       await context.whatsappService.sendMessage(
         phoneNumber,
-        messages.USER_NAME_REQUEST(),
+        messages.USER_TAXPAYER_NUMBER_REQUEST(),
       );
     }
   }

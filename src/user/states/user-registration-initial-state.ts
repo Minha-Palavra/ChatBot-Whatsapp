@@ -30,13 +30,16 @@ export class UserRegistrationInitialState extends MessageState {
       }
 
       // Send the welcome message.
-      await context.whatsappService.sendMessage(phoneNumber, messages.welcome);
+      await context.whatsappService.sendMessage(
+        phoneNumber,
+        messages.WELCOME(),
+      );
 
       // Send the data privacy confirmation message.
       await context.whatsappService.sendConfirmationOptions(
         phoneNumber,
-        messages.dataPrivacy,
-        prefix.dataPrivacy,
+        messages.DATA_PRIVACY(),
+        prefix.DATA_PRIVACY,
         false,
       );
 
