@@ -87,7 +87,7 @@ export class UserEmailInputState extends MessageState {
         continue;
       }
 
-      if (selectedOption === `${prefix.DATA_PRIVACY}-no`) {
+      if (selectedOption === `${prefix.USER_EMAIL}-no`) {
         // TODO: Go to previous state.
         user.email = null;
 
