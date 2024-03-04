@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  Logger,
-  UnprocessableEntityException,
-} from '@nestjs/common';
+import { Injectable, Logger, UnprocessableEntityException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 // import WhatsApp from 'whatsapp';
@@ -17,6 +13,7 @@ import { UserRegistrationInitialState } from '../user/states/user-registration-i
 import { UserService } from '../user/user.service';
 import { IMessageState } from './states/message-state.interface';
 import { MessagesProcessingContext } from './states/messages-processing-context';
+import { getTicketStateProcessor, TicketState } from '../ticket/entities/ticket-state';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const WhatsApp = require('whatsapp');
@@ -33,7 +30,8 @@ export class WhatsappService {
     private historyService: HistoryService,
     public ticketService: TicketService,
     public userService: UserService,
-  ) {}
+  ) {
+  }
 
   public async checkWebhookMinimumRequirements(body: WebhookObject) {
     if (body.object !== 'whatsapp_business_account') {
@@ -192,17 +190,25 @@ export class WhatsappService {
       //
       state = getUserStateProcessor[user.state];
     } else {
+
       // Conversation flow to select a ticket or create a new one.
       const ticket = await this.ticketService.findUserNewestOpenTicket(user);
 
       if (!ticket) {
-        // TODO: if user does not have any open ticket. Then I should redirect it to menu flow.
-        // TODO: Menu flow allows user to select a ticket or create a new one.
+        let tickets = await this.ticketService.find({ where: { owner: user } });
+
+        if (tickets.length > 0) {
+          // TODO: if user does not have any open ticket. Then I should redirect it to menu flow.
+          // TODO: Menu flow allows user to select a ticket or create a new one.
+          state = getTicketStateProcessor[TicketState.SELECT_TICKET];
+        } else {
+        // TODO: If user doesn't have any ticket at all it should go to the first ticket flow.
+          state = getTicketStateProcessor[TicketState.FIRST_TICKET];
+        }
+      } else {
+        state = getTicketStateProcessor[ticket.state];
       }
     }
-    // if(ticket.state !==) {
-    //   // state = getTicketStateProcessor[ticket.state];
-    // }
 
     const context = new MessagesProcessingContext(
       this,

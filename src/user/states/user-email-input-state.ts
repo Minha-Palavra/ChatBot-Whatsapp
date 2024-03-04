@@ -108,7 +108,7 @@ export class UserEmailInputState extends MessageState {
       await context.userService.save({
         ...user,
         //dataPrivacyConfirmation: true,
-        state: UserState.WAITING_EMAIL,
+        state: UserState.WAITING_ADDRESS,
       });
 
       // TODO: Send the name confirmation success message.

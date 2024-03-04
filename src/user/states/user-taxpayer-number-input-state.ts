@@ -112,7 +112,7 @@ export class UserTaxpayerNumberInputState extends MessageState {
       await context.userService.save({
         ...user,
         //dataPrivacyConfirmation: true,
-        state: UserState.WAITING_PHONE_NUMBER,
+        state: UserState.WAITING_EMAIL,
       });
 
       // TODO: Send the name confirmation success message.

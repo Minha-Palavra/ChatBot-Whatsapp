@@ -27,4 +27,7 @@ export const messages = {
     'Este não é um número de telefone válido. Por favor, digite um número de telefone válido.',
   INVALID_EMAIL: () =>
     'Este não é um e-mail válido. Por favor, digite um e-mail válido.',
+  REGISTRATION_COMPLETE: () =>
+    'Obrigado por se registrar! Agora você pode começar a usar o Minha Palavra.',
+  FIRST_TICKET_CONFIRMATION: () => 'Deseja fazer o primeiro contrato?',
 };

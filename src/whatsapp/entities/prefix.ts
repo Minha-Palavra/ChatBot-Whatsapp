@@ -5,4 +5,5 @@ export const prefix = {
   USER_PHONE_NUMBER: 'user-phone-number',
   USER_ADDRESS: 'user-address',
   USER_EMAIL: 'user-email',
+  FIRST_TICKET_CONFIRMATION: 'first-contract-confirmation',
 };

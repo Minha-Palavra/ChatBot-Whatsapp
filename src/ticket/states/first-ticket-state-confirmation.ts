@@ -3,9 +3,9 @@ import { messages } from '../../whatsapp/entities/messages';
 import { prefix } from '../../whatsapp/entities/prefix';
 import { IMessageProcessingContext } from '../../whatsapp/states/message-processing-context.interface';
 import { MessageState } from '../../whatsapp/states/message-state';
-import { UserState } from '../entities/user-state';
+import { UserState } from '../../user/entities/user-state';
 
-export class UserAddressInputState extends MessageState {
+export class FirstTicketStateConfirmation extends MessageState {
   public async processMessages(
     value: ValueObject,
     context: IMessageProcessingContext,
@@ -26,22 +26,18 @@ export class UserAddressInputState extends MessageState {
       const phoneNumber = this.formatPhoneNumber(message.from);
 
       if (message.type === 'text') {
-        const address = message.text.body;
+        await context.whatsappService.sendMessage(
+          phoneNumber,
+          messages.INVALID_OPTION(),
+        );
 
-        user.address = address;
-
-        // Update the user state.
-        await context.userService.save({
-          ...user,
-          state: UserState.WAITING_ADDRESS_CONFIRMATION,
-        });
-
-        // Send the confirmation options.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.USER_ADDRESS_CONFIRMATION_REQUEST(address),
-          prefix.USER_ADDRESS,
+          messages.FIRST_TICKET_CONFIRMATION(),
+          prefix.FIRST_TICKET_CONFIRMATION,
+          false,
         );
+
         continue;
       }
 
@@ -58,60 +54,37 @@ export class UserAddressInputState extends MessageState {
       }
 
       // Check if the selected option is valid.
-      if (!this.optionHasPrefix(selectedOption, prefix.USER_ADDRESS)) {
+      if (!this.optionHasPrefix(selectedOption, prefix.FIRST_TICKET_CONFIRMATION)) {
         context.logger.error(
-          `${selectedOption} is not a valid option for ${prefix.USER_ADDRESS}.`,
+          `${selectedOption} is not a valid option for ${prefix.FIRST_TICKET_CONFIRMATION}.`,
         );
 
-        // Send the confirmation options again.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.USER_ADDRESS_CONFIRMATION_REQUEST(user.address),
-          prefix.USER_ADDRESS,
+          messages.DATA_PRIVACY(),
+          prefix.DATA_PRIVACY,
+          false,
         );
 
         continue;
       }
 
-      if (selectedOption === `${prefix.USER_ADDRESS}-no`) {
+      if (selectedOption === `${prefix.FIRST_TICKET_CONFIRMATION}-no`) {
         // TODO: Go to previous state.
-        user.address = null;
-
-        await context.userService.save({
-          ...user,
-          state: UserState.WAITING_ADDRESS,
-        });
-
-        await context.whatsappService.sendMessage(
-          phoneNumber,
-          messages.USER_ADDRESS_REQUEST(),
-        );
-
         continue;
       }
 
-      // Save the user.
-      await context.userService.save({
-        ...user,
-        state: UserState.REGISTRATION_COMPLETE,
-      });
-
-      // TODO: Send the address confirmation success message.
+      // TODO: Send the data privacy confirmation success message.
       // await context.whatsappService.sendMessage(
       //   phoneNumber,
-      //   messages.,
+      //   messages.DATA_PRIVACY_ACCEPTED(),
       // );
 
-      await context.whatsappService.sendMessage(
-        phoneNumber,
-        messages.REGISTRATION_COMPLETE(),
-      );
-
-      await context.whatsappService.sendConfirmationOptions(
-        phoneNumber,
-        messages.FIRST_TICKET_CONFIRMATION(),
-        prefix.FIRST_TICKET_CONFIRMATION,
-      );
+      // TODO: Go to next state.
+      // await context.whatsappService.sendMessage(
+      //   phoneNumber,
+      //   messages.USER_NAME_REQUEST(),
+      // );
     }
   }
 }

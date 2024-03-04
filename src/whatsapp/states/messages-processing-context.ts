@@ -6,16 +6,12 @@ import { IMessageProcessingContext } from './message-processing-context.interfac
 import { IMessageState } from './message-state.interface';
 
 export class MessagesProcessingContext implements IMessageProcessingContext {
-  private state: IMessageState;
-
   constructor(
     public whatsappService: WhatsappService,
     public userService: UserService,
     public logger: Logger,
-    initialState: IMessageState,
-  ) {
-    this.state = initialState;
-  }
+    public state: IMessageState,
+  ) {}
 
   public async processMessages(value: ValueObject): Promise<void> {
     await this.state.processMessages(value, this);
