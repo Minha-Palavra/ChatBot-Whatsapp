@@ -53,7 +53,9 @@ export class UserTaxpayerNumberInputState extends MessageState {
         // Send the confirmation options.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.USER_TAXPAYER_NUMBER_CONFIRMATION_REQUEST(user.taxpayerNumber),
+          messages.USER_TAXPAYER_NUMBER_CONFIRMATION_REQUEST(
+            user.taxpayerNumber,
+          ),
           prefix.USER_TAXPAYER_NUMBER,
         );
         continue;
@@ -80,14 +82,16 @@ export class UserTaxpayerNumberInputState extends MessageState {
         // Send the confirmation options again.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.USER_TAXPAYER_NUMBER_CONFIRMATION_REQUEST(user.taxpayerNumber),
+          messages.USER_TAXPAYER_NUMBER_CONFIRMATION_REQUEST(
+            user.taxpayerNumber,
+          ),
           prefix.USER_TAXPAYER_NUMBER,
         );
 
         continue;
       }
 
-      if (selectedOption === `${prefix.DATA_PRIVACY}-no`) {
+      if (selectedOption === `${prefix.USER_TAXPAYER_NUMBER}-no`) {
         // TODO: Go to previous state.
         user.taxpayerNumber = null;
 

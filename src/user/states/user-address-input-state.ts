@@ -73,7 +73,7 @@ export class UserAddressInputState extends MessageState {
         continue;
       }
 
-      if (selectedOption === `${prefix.DATA_PRIVACY}-no`) {
+      if (selectedOption === `${prefix.USER_ADDRESS}-no`) {
         // TODO: Go to previous state.
         user.address = null;
 

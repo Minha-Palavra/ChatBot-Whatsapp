@@ -26,7 +26,7 @@ export class UserEmailInputState extends MessageState {
       const phoneNumber = this.formatPhoneNumber(message.from);
 
       if (message.type === 'text') {
-        const email = message.text.body.replace(/\D/g, '');
+        const email = message.text.body;
 
         if (!this.isValidEmail(email)) {
           await context.whatsappService.sendMessage(
@@ -87,7 +87,7 @@ export class UserEmailInputState extends MessageState {
         continue;
       }
 
-      if (selectedOption === `${prefix.DATA_PRIVACY}-no`) {
+      if (selectedOption === `${prefix.USER_EMAIL}-no`) {
         // TODO: Go to previous state.
         user.email = null;
 

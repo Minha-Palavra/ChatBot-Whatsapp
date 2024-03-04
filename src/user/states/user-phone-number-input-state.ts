@@ -87,7 +87,7 @@ export class UserPhoneNumberInputState extends MessageState {
         continue;
       }
 
-      if (selectedOption === `${prefix.DATA_PRIVACY}-no`) {
+      if (selectedOption === `${prefix.USER_PHONE_NUMBER}-no`) {
         // TODO: Go to previous state.
         user.phoneNumber = null;
 
