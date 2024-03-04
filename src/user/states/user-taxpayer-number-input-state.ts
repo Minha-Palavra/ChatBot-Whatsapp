@@ -5,7 +5,7 @@ import { IMessageProcessingContext } from '../../whatsapp/states/message-process
 import { MessageState } from '../../whatsapp/states/message-state';
 import { UserState } from '../entities/user-state';
 
-export class UserDataPrivacyConfirmationState extends MessageState {
+export class UserTaxpayerNumberInputState extends MessageState {
   public async processMessages(
     value: ValueObject,
     context: IMessageProcessingContext,
@@ -26,18 +26,36 @@ export class UserDataPrivacyConfirmationState extends MessageState {
       const phoneNumber = this.formatPhoneNumber(message.from);
 
       if (message.type === 'text') {
-        await context.whatsappService.sendMessage(
-          phoneNumber,
-          messages.INVALID_OPTION(),
-        );
+        const taxpayerNumber = message.text.body.replace(/\D/g, '');
 
+        if (!this.isValidTaxpayerNumber(taxpayerNumber)) {
+          await context.whatsappService.sendMessage(
+            phoneNumber,
+            messages.INVALID_TAXPAYER_NUMBER(),
+          );
+
+          await context.whatsappService.sendMessage(
+            phoneNumber,
+            messages.USER_TAXPAYER_NUMBER_REQUEST(),
+          );
+
+          continue;
+        }
+
+        user.taxpayerNumber = this.formatTaxpayerNumber(taxpayerNumber);
+
+        // Update the user state.
+        await context.userService.save({
+          ...user,
+          state: UserState.WAITING_TAXPAYER_NUMBER_CONFIRMATION,
+        });
+
+        // Send the confirmation options.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.DATA_PRIVACY(),
-          prefix.DATA_PRIVACY,
-          false,
+          messages.USER_TAXPAYER_NUMBER_CONFIRMATION_REQUEST(user.taxpayerNumber),
+          prefix.USER_TAXPAYER_NUMBER,
         );
-
         continue;
       }
 
@@ -54,16 +72,16 @@ export class UserDataPrivacyConfirmationState extends MessageState {
       }
 
       // Check if the selected option is valid.
-      if (!this.optionHasPrefix(selectedOption, prefix.DATA_PRIVACY)) {
+      if (!this.optionHasPrefix(selectedOption, prefix.USER_TAXPAYER_NUMBER)) {
         context.logger.error(
-          `${selectedOption} is not a valid option for ${prefix.DATA_PRIVACY}.`,
+          `${selectedOption} is not a valid option for ${prefix.USER_TAXPAYER_NUMBER}.`,
         );
 
+        // Send the confirmation options again.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.DATA_PRIVACY(),
-          prefix.DATA_PRIVACY,
-          false,
+          messages.USER_TAXPAYER_NUMBER_CONFIRMATION_REQUEST(user.taxpayerNumber),
+          prefix.USER_TAXPAYER_NUMBER,
         );
 
         continue;
@@ -71,26 +89,37 @@ export class UserDataPrivacyConfirmationState extends MessageState {
 
       if (selectedOption === `${prefix.DATA_PRIVACY}-no`) {
         // TODO: Go to previous state.
+        user.taxpayerNumber = null;
+
+        await context.userService.save({
+          ...user,
+          state: UserState.WAITING_TAXPAYER_NUMBER,
+        });
+
+        await context.whatsappService.sendMessage(
+          phoneNumber,
+          messages.USER_TAXPAYER_NUMBER_REQUEST(),
+        );
+
         continue;
       }
 
-      // TODO: Save the user data privacy confirmation.
+      // Save the user.
       await context.userService.save({
         ...user,
         //dataPrivacyConfirmation: true,
-        state: UserState.WAITING_NAME,
+        state: UserState.WAITING_PHONE_NUMBER,
       });
 
-      // TODO: Send the data privacy confirmation success message.
-      await context.whatsappService.sendMessage(
-        phoneNumber,
-        messages.DATA_PRIVACY_ACCEPTED(),
-      );
+      // TODO: Send the name confirmation success message.
+      // await context.whatsappService.sendMessage(
+      //   phoneNumber,
+      //   messages.userTaxpayerNumberConfirmationSuccess,
+      // );
 
-      // TODO: Go to next state.
       await context.whatsappService.sendMessage(
         phoneNumber,
-        messages.USER_NAME_REQUEST(),
+        messages.USER_EMAIL_REQUEST(),
       );
     }
   }

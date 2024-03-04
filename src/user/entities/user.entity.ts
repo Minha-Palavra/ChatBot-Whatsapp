@@ -4,7 +4,6 @@ import { AbstractEntity } from '../../shared/entities/abstract.entity';
 import { TicketEntity } from '../../ticket/entities/ticket.entity';
 import { UserState } from './user-state';
 
-
 @Entity({ name: 'user' })
 export class UserEntity extends AbstractEntity {
   @ApiProperty()
@@ -17,6 +16,10 @@ export class UserEntity extends AbstractEntity {
 
   @ApiProperty()
   @Column({ nullable: true, unique: true })
+  taxpayerNumber: string;
+
+  @ApiProperty()
+  @Column({ nullable: true, unique: true })
   email: string;
 
   @ApiProperty()
@@ -24,8 +27,8 @@ export class UserEntity extends AbstractEntity {
   phoneNumber: string;
 
   @ApiProperty()
-  @Column({ nullable: true, unique: true })
-  taxpayerNumber: string;
+  @Column({ nullable: true })
+  address: string;
 
   @ApiProperty()
   @OneToMany(() => TicketEntity, (ticket) => ticket.owner)

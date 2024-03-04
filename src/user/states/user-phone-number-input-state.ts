@@ -24,82 +24,103 @@ export class UserPhoneNumberInputState extends MessageState {
     // Iterate over the messages.
     for (const message of value.messages) {
       const phoneNumber = this.formatPhoneNumber(message.from);
-      if (user.state === UserState.WAITING_NAME) {
-        if (message.type === 'text') {
-          const fullName = message.text.body;
 
-          user.fullName = fullName;
+      if (message.type === 'text') {
+        const phoneNumber = message.text.body.replace(/\D/g, '');
 
-          // Update the user state.
-          await context.userService.save({
-            ...user,
-            state: UserState.WAITING_NAME_CONFIRMATION,
-          });
-
-          // Send the confirmation options.
-          await context.whatsappService.sendConfirmationOptions(
+        if (!this.isValidPhoneNumber(phoneNumber)) {
+          await context.whatsappService.sendMessage(
             phoneNumber,
-            `O seu nome completo é ${fullName}?`,
-            prefix.userFullName,
+            messages.INVALID_PHONE_NUMBER(),
           );
-          continue;
-        }
-      }
 
-      if (user.state === UserState.WAITING_NAME_CONFIRMATION) {
-        // If the message is not interactive, do nothing.
-        if (message.type !== 'interactive') {
-          // Send the confirmation options again.
-          await context.whatsappService.sendConfirmationOptions(
+          await context.whatsappService.sendMessage(
             phoneNumber,
-            `O seu nome completo é ${user.fullName}?`,
-            prefix.userFullName,
+            messages.USER_PHONE_NUMBER_REQUEST(),
           );
 
           continue;
         }
 
-        const selectedOption = this.getSelectedOptionFromMessage(message);
+        user.phoneNumber = this.formatPhoneNumber(phoneNumber);
 
-        if (!selectedOption) {
-          context.logger.error('Failed to get selected option from message.');
-          continue;
-        }
-
-        // Check if the selected option is valid.
-        if (!this.optionHasPrefix(selectedOption, prefix.userFullName)) {
-          context.logger.error(
-            `${selectedOption} is not a valid option for ${prefix.userFullName}.`,
-          );
-
-          // Send the confirmation options again.
-          await context.whatsappService.sendConfirmationOptions(
-            phoneNumber,
-            `O seu nome completo é ${user.fullName}?`,
-            prefix.userFullName,
-          );
-
-          continue;
-        }
-
-        if (selectedOption === `${prefix.dataPrivacy}-no`) {
-          // TODO: Go to previous state.
-          continue;
-        }
-
-        // TODO: Save the user data privacy confirmation.
+        // Update the user state.
         await context.userService.save({
           ...user,
-          //dataPrivacyConfirmation: true,
+          state: UserState.WAITING_PHONE_NUMBER_CONFIRMATION,
+        });
+
+        // Send the confirmation options.
+        await context.whatsappService.sendConfirmationOptions(
+          phoneNumber,
+          messages.USER_PHONE_NUMBER_CONFIRMATION_REQUEST(user.phoneNumber),
+          prefix.USER_PHONE_NUMBER,
+        );
+        continue;
+      }
+
+      // If the message is not interactive, do nothing.
+      if (message.type !== 'interactive') {
+        continue;
+      }
+
+      const selectedOption = this.getSelectedOptionFromMessage(message);
+
+      if (!selectedOption) {
+        context.logger.error('Failed to get selected option from message.');
+        continue;
+      }
+
+      // Check if the selected option is valid.
+      if (!this.optionHasPrefix(selectedOption, prefix.USER_PHONE_NUMBER)) {
+        context.logger.error(
+          `${selectedOption} is not a valid option for ${prefix.USER_PHONE_NUMBER}.`,
+        );
+
+        // Send the confirmation options again.
+        await context.whatsappService.sendConfirmationOptions(
+          phoneNumber,
+          messages.USER_PHONE_NUMBER_CONFIRMATION_REQUEST(user.phoneNumber),
+          prefix.USER_PHONE_NUMBER,
+        );
+
+        continue;
+      }
+
+      if (selectedOption === `${prefix.DATA_PRIVACY}-no`) {
+        // TODO: Go to previous state.
+        user.phoneNumber = null;
+
+        await context.userService.save({
+          ...user,
           state: UserState.WAITING_PHONE_NUMBER,
         });
 
-        // TODO: Go to next state.
         await context.whatsappService.sendMessage(
           phoneNumber,
-          messages.requestPhoneNumber,
+          messages.USER_PHONE_NUMBER_REQUEST(),
         );
+
+        continue;
       }
+
+      // Save the user.
+      await context.userService.save({
+        ...user,
+        //dataPrivacyConfirmation: true,
+        state: UserState.WAITING_PHONE_NUMBER,
+      });
+
+      // TODO: Send the name confirmation success message.
+      // await context.whatsappService.sendMessage(
+      //   phoneNumber,
+      //   messages.userPhoneNumberConfirmationSuccess,
+      // );
+
+      await context.whatsappService.sendMessage(
+        phoneNumber,
+        messages.USER_ADDRESS_REQUEST(),
+      );
     }
   }
 }
