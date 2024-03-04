@@ -73,7 +73,7 @@ export class UserNameInputState extends MessageState {
         continue;
       }
 
-      if (selectedOption === `${prefix.DATA_PRIVACY}-no`) {
+      if (selectedOption === `${prefix.USER_FULL_NAME}-no`) {
         // TODO: Go to previous state.
         user.fullName = null;
 
