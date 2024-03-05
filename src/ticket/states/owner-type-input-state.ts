@@ -83,18 +83,11 @@ export class OwnerTypeInputState extends MessageState {
       } else {
 
       }
-
       await context.whatsappService.ticketService.save({
           ...ticket,
-          state: TicketState.COUNTERPART_NAME_INPUT,
+          state: TicketState.WAITING_COUNTERPART_NAME,
         },
       );
-
-      // Save the user.
-      await context.userService.save({
-        ...user,
-        state: UserState.REGISTRATION_COMPLETE,
-      });
 
       // TODO: Send the address confirmation success message.
       // await context.whatsappService.sendMessage(

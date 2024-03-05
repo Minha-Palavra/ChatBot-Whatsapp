@@ -89,7 +89,6 @@ export class FirstTicketConfirmationState extends MessageState {
         messages.TICKET_START(),
       );
 
-
       // TODO: Go to next state.
       await context.whatsappService.sendContextOptions(
         phoneNumber,
