@@ -1,3 +1,5 @@
+import { OwnerType } from '../../ticket/entities/owner-type';
+
 export const messages = {
   WELCOME: () => '*Bem-vindo ao Minha Palavra!*',
   DATA_PRIVACY: () =>
@@ -30,4 +32,7 @@ export const messages = {
   REGISTRATION_COMPLETE: () =>
     'Obrigado por se registrar! Agora você pode começar a usar o Minha Palavra.',
   FIRST_TICKET_CONFIRMATION: () => 'Deseja fazer o primeiro contrato?',
+  TICKET_START: () => 'Certo, precisaremos de algumas informações para gerar o contrato.',
+  TICKET_OWNER_TYPE_REQUEST: () => 'Você é o contratante ou o contratado?',
+  COUNTERPART_NAME_REQUEST: (owner:OwnerType) => `Qual é o nome do ${owner === OwnerType.CUSTOMER ? 'contratante' : 'contratado'}?`,
 };

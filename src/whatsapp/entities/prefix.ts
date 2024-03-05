@@ -6,4 +6,5 @@ export const prefix = {
   USER_ADDRESS: 'user-address',
   USER_EMAIL: 'user-email',
   FIRST_TICKET_CONFIRMATION: 'first-contract-confirmation',
+  TICKET_OWNER_TYPE_REQUEST: 'ticket-owner-type-request',
 };

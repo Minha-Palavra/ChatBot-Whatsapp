@@ -1,4 +1,8 @@
-import { Injectable, Logger, UnprocessableEntityException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 // import WhatsApp from 'whatsapp';
@@ -13,7 +17,11 @@ import { UserRegistrationInitialState } from '../user/states/user-registration-i
 import { UserService } from '../user/user.service';
 import { IMessageState } from './states/message-state.interface';
 import { MessagesProcessingContext } from './states/messages-processing-context';
-import { getTicketStateProcessor, TicketState } from '../ticket/entities/ticket-state';
+import {
+  getTicketStateProcessor,
+  TicketState,
+} from '../ticket/entities/ticket-state';
+import { TicketEntity } from '../ticket/entities/ticket.entity';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const WhatsApp = require('whatsapp');
@@ -30,8 +38,7 @@ export class WhatsappService {
     private historyService: HistoryService,
     public ticketService: TicketService,
     public userService: UserService,
-  ) {
-  }
+  ) {}
 
   public async checkWebhookMinimumRequirements(body: WebhookObject) {
     if (body.object !== 'whatsapp_business_account') {
@@ -131,6 +138,31 @@ export class WhatsappService {
     return true;
   }
 
+  public async sendContextOptions(
+    phoneNumber: string,
+    message: string,
+    prefix: string,
+    cancelable = true,
+  ) {
+    // Generate the confirmation options using the prefix.
+    const options = await this.generateContextOptions(
+      message,
+      prefix,
+      cancelable,
+    );
+
+    const messageSent = await this.whatsapp.messages.interactive(
+      options,
+      phoneNumber,
+    );
+
+    this.logger.log(
+      `${messageSent.statusCode()} ${messageSent.responseBodyToJSON()}`,
+    );
+
+    return true;
+  }
+
   private async generateConfirmationOptions(
     message: string,
     prefix: string,
@@ -175,6 +207,49 @@ export class WhatsappService {
     return interactive;
   }
 
+  private async generateContextOptions(
+    message: string,
+    prefix: string,
+    cancelable = true,
+  ): Promise<InteractiveObject> {
+    const interactive: InteractiveObject = {
+      action: {
+        buttons: [],
+      },
+      type: InteractiveTypesEnum.Button,
+      body: {
+        text: message,
+      },
+    };
+
+    interactive.action.buttons.push({
+      type: 'reply',
+      reply: {
+        id: `${prefix}-service-provider`,
+        title: 'Sou o prestador de serviço',
+      },
+    });
+
+    interactive.action.buttons.push({
+      type: 'reply',
+      reply: {
+        id: `${prefix}-customer`,
+        title: 'Sou o contratante do serviço',
+      },
+    });
+
+    if (cancelable) {
+      interactive.action.buttons.push({
+        type: 'reply',
+        reply: {
+          id: `${prefix}-cancel`,
+          title: 'Cancelar',
+        },
+      });
+    }
+    return interactive;
+  }
+
   private async processReceivedMessages(value: ValueObject) {
     const contact = value.contacts[0];
 
@@ -182,7 +257,7 @@ export class WhatsappService {
     const user = await this.userService.findOneByWhatsappId(contact.wa_id);
 
     let state: IMessageState;
-
+    let ticket: TicketEntity;
     if (!user) {
       // TODO: if user is not found, start user registration process.
       state = new UserRegistrationInitialState();
@@ -190,19 +265,20 @@ export class WhatsappService {
       //
       state = getUserStateProcessor[user.state];
     } else {
-
       // Conversation flow to select a ticket or create a new one.
-      const ticket = await this.ticketService.findUserNewestOpenTicket(user);
+      ticket = await this.ticketService.findUserNewestTicket(user);
 
-      if (!ticket) {
-        let tickets = await this.ticketService.find({ where: { owner: user } });
+      if (!ticket || ticket.state !== TicketState.CLOSED) {
+        const tickets = await this.ticketService.find({
+          where: { owner: user },
+        });
 
         if (tickets.length > 0) {
           // TODO: if user does not have any open ticket. Then I should redirect it to menu flow.
           // TODO: Menu flow allows user to select a ticket or create a new one.
           state = getTicketStateProcessor[TicketState.SELECT_TICKET];
         } else {
-        // TODO: If user doesn't have any ticket at all it should go to the first ticket flow.
+          // TODO: If user doesn't have any ticket at all it should go to the first ticket flow.
           state = getTicketStateProcessor[TicketState.FIRST_TICKET];
         }
       } else {
@@ -215,6 +291,7 @@ export class WhatsappService {
       this.userService,
       this.logger,
       state,
+      ticket
     );
 
     await context.processMessages(value);

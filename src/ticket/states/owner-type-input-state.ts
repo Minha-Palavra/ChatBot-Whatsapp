@@ -4,8 +4,11 @@ import { ValueObject } from 'whatsapp/build/types/webhooks';
 import { UserState } from '../../user/entities/user-state';
 import { messages } from '../../whatsapp/entities/messages';
 import { prefix } from '../../whatsapp/entities/prefix';
+import { TicketEntity } from '../entities/ticket.entity';
+import { OwnerType } from '../entities/owner-type';
+import { TicketState } from '../entities/ticket-state';
 
-export class CounterpartAddressInputState extends MessageState {
+export class OwnerTypeInputState extends MessageState {
   public async processMessages(
     value: ValueObject,
     context: IMessageProcessingContext,
@@ -14,6 +17,8 @@ export class CounterpartAddressInputState extends MessageState {
 
     // Get the user from the database.
     const user = await context.userService.findOneByWhatsappId(contact.wa_id);
+    const ticket: TicketEntity =
+      await context.whatsappService.ticketService.findUserNewestTicket(user);
 
     // If the user is not registered, do nothing.
     if (!user) {
@@ -26,22 +31,18 @@ export class CounterpartAddressInputState extends MessageState {
       const phoneNumber = this.formatPhoneNumber(message.from);
 
       if (message.type === 'text') {
-        const address = message.text.body;
+        await context.whatsappService.sendMessage(
+          phoneNumber,
+          messages.INVALID_OPTION(),
+        );
 
-        user.address = address;
-
-        // Update the user state.
-        await context.userService.save({
-          ...user,
-          state: UserState.WAITING_ADDRESS_CONFIRMATION,
-        });
-
-        // Send the confirmation options.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.USER_ADDRESS_CONFIRMATION_REQUEST(address),
-          prefix.USER_ADDRESS,
+          messages.TICKET_OWNER_TYPE_REQUEST(),
+          prefix.TICKET_OWNER_TYPE_REQUEST,
+          false,
         );
+
         continue;
       }
 
@@ -58,37 +59,36 @@ export class CounterpartAddressInputState extends MessageState {
       }
 
       // Check if the selected option is valid.
-      if (!this.optionHasPrefix(selectedOption, prefix.USER_ADDRESS)) {
+      if (!this.optionHasPrefix(selectedOption, prefix.TICKET_OWNER_TYPE_REQUEST)) {
         context.logger.error(
-          `${selectedOption} is not a valid option for ${prefix.USER_ADDRESS}.`,
+          `${selectedOption} is not a valid option for ${prefix.TICKET_OWNER_TYPE_REQUEST}.`,
         );
 
         // Send the confirmation options again.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.USER_ADDRESS_CONFIRMATION_REQUEST(user.address),
-          prefix.USER_ADDRESS,
+          messages.TICKET_OWNER_TYPE_REQUEST(),
+          prefix.TICKET_OWNER_TYPE_REQUEST,
         );
 
         continue;
       }
 
-      if (selectedOption === `${prefix.DATA_PRIVACY}-no`) {
-        // TODO: Go to previous state.
-        user.address = null;
+      if (selectedOption === `${prefix.DATA_PRIVACY}-service-provider`) {
+        //
+        ticket.ownerType = OwnerType.SERVICE_PROVIDER;
+      } else if (selectedOption === `${prefix.DATA_PRIVACY}-customer`) {
+        //
+        ticket.ownerType = OwnerType.CUSTOMER;
+      } else {
 
-        await context.userService.save({
-          ...user,
-          state: UserState.WAITING_ADDRESS,
-        });
-
-        await context.whatsappService.sendMessage(
-          phoneNumber,
-          messages.USER_ADDRESS_REQUEST(),
-        );
-
-        continue;
       }
+
+      await context.whatsappService.ticketService.save({
+          ...ticket,
+          state: TicketState.COUNTERPART_NAME_INPUT,
+        },
+      );
 
       // Save the user.
       await context.userService.save({
@@ -104,7 +104,7 @@ export class CounterpartAddressInputState extends MessageState {
 
       await context.whatsappService.sendMessage(
         phoneNumber,
-        messages.USER_TAXPAYER_NUMBER_REQUEST(),
+        messages.COUNTERPART_NAME_REQUEST(ticket.ownerType),
       );
     }
   }

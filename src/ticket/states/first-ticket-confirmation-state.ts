@@ -3,9 +3,9 @@ import { messages } from '../../whatsapp/entities/messages';
 import { prefix } from '../../whatsapp/entities/prefix';
 import { IMessageProcessingContext } from '../../whatsapp/states/message-processing-context.interface';
 import { MessageState } from '../../whatsapp/states/message-state';
-import { UserState } from '../../user/entities/user-state';
+import { TicketState } from '../entities/ticket-state';
 
-export class FirstTicketStateConfirmation extends MessageState {
+export class FirstTicketConfirmationState extends MessageState {
   public async processMessages(
     value: ValueObject,
     context: IMessageProcessingContext,
@@ -54,15 +54,17 @@ export class FirstTicketStateConfirmation extends MessageState {
       }
 
       // Check if the selected option is valid.
-      if (!this.optionHasPrefix(selectedOption, prefix.FIRST_TICKET_CONFIRMATION)) {
+      if (
+        !this.optionHasPrefix(selectedOption, prefix.FIRST_TICKET_CONFIRMATION)
+      ) {
         context.logger.error(
           `${selectedOption} is not a valid option for ${prefix.FIRST_TICKET_CONFIRMATION}.`,
         );
 
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.DATA_PRIVACY(),
-          prefix.DATA_PRIVACY,
+          messages.FIRST_TICKET_CONFIRMATION(),
+          prefix.FIRST_TICKET_CONFIRMATION,
           false,
         );
 
@@ -75,16 +77,25 @@ export class FirstTicketStateConfirmation extends MessageState {
       }
 
       // TODO: Send the data privacy confirmation success message.
-      // await context.whatsappService.sendMessage(
-      //   phoneNumber,
-      //   messages.DATA_PRIVACY_ACCEPTED(),
-      // );
+
+      // Create a new ticket for the user.
+      await context.whatsappService.ticketService.create({
+        owner: user,
+        state: TicketState.WAITING_OWNER_TYPE,
+      });
+
+      await context.whatsappService.sendMessage(
+        phoneNumber,
+        messages.TICKET_START(),
+      );
+
 
       // TODO: Go to next state.
-      // await context.whatsappService.sendMessage(
-      //   phoneNumber,
-      //   messages.USER_NAME_REQUEST(),
-      // );
+      await context.whatsappService.sendContextOptions(
+        phoneNumber,
+        messages.TICKET_OWNER_TYPE_REQUEST(),
+        prefix.TICKET_OWNER_TYPE_REQUEST,
+      );
     }
   }
 }

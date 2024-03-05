@@ -16,17 +16,16 @@ export class TicketService extends TypeOrmCrudService<TicketEntity> {
     super(repository);
   }
 
-  public async findUserNewestOpenTicket(
+  public async findUserNewestTicket(
     user: Partial<UserEntity>,
   ): Promise<TicketEntity | null> {
     return await this.findOne({
       where: {
-        // user,
+        owner: { id: user.id },
         // status: 'open',
       },
-      order: {
-        createdAt: 'DESC',
-      },
+      order: { updatedAt: 'DESC' },
+      relations: { owner: true },
     });
   }
 
