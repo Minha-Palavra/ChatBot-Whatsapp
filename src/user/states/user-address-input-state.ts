@@ -41,6 +41,7 @@ export class UserAddressInputState extends MessageState {
           phoneNumber,
           messages.USER_ADDRESS_CONFIRMATION_REQUEST(address),
           prefix.USER_ADDRESS,
+          false
         );
         continue;
       }
@@ -68,6 +69,7 @@ export class UserAddressInputState extends MessageState {
           phoneNumber,
           messages.USER_ADDRESS_CONFIRMATION_REQUEST(user.address),
           prefix.USER_ADDRESS,
+          false
         );
 
         continue;
@@ -110,7 +112,8 @@ export class UserAddressInputState extends MessageState {
       await context.whatsappService.sendConfirmationOptions(
         phoneNumber,
         messages.FIRST_TICKET_CONFIRMATION(),
-        prefix.FIRST_TICKET_CONFIRMATION,
+        prefix.FIRST_TICKET,
+        false
       );
     }
   }

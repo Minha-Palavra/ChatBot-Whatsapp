@@ -1,9 +1,10 @@
 import { ValueObject } from 'whatsapp/build/types/webhooks';
 import { MessageState } from '../../whatsapp/states/message-state';
 import { IMessageProcessingContext } from '../../whatsapp/states/message-processing-context.interface';
-import { UserState } from '../../user/entities/user-state';
 import { messages } from '../../whatsapp/entities/messages';
 import { prefix } from '../../whatsapp/entities/prefix';
+import { TicketEntity } from '../entities/ticket.entity';
+import { TicketState } from '../entities/ticket-state';
 
 export class CounterpartNameInputState extends MessageState {
   public async processMessages(
@@ -14,6 +15,8 @@ export class CounterpartNameInputState extends MessageState {
 
     // Get the user from the database.
     const user = await context.userService.findOneByWhatsappId(contact.wa_id);
+    const ticket: TicketEntity =
+      await context.whatsappService.ticketService.findUserNewestTicket(user);
 
     // If the user is not registered, do nothing.
     if (!user) {
@@ -26,21 +29,24 @@ export class CounterpartNameInputState extends MessageState {
       const phoneNumber = this.formatPhoneNumber(message.from);
 
       if (message.type === 'text') {
-        const fullName = message.text.body;
+        const counterpartName = message.text.body;
 
-        user.fullName = fullName;
+        ticket.counterpartName = counterpartName;
 
         // Update the user state.
-        await context.userService.save({
-          ...user,
-          state: UserState.WAITING_NAME_CONFIRMATION,
+        await context.whatsappService.ticketService.save({
+          ...ticket,
+          state: TicketState.WAITING_COUNTERPART_NAME_CONFIRMATION,
         });
 
         // Send the confirmation options.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.USER_FULL_NAME_CONFIRMATION_REQUEST(fullName),
-          prefix.USER_FULL_NAME,
+          messages.COUNTERPART_NAME_CONFIRMATION_REQUEST(
+            ticket.ownerType,
+            counterpartName,
+          ),
+          prefix.COUNTERPART_NAME,
         );
         continue;
       }
@@ -58,42 +64,44 @@ export class CounterpartNameInputState extends MessageState {
       }
 
       // Check if the selected option is valid.
-      if (!this.optionHasPrefix(selectedOption, prefix.USER_FULL_NAME)) {
+      if (!this.optionHasPrefix(selectedOption, prefix.COUNTERPART_NAME)) {
         context.logger.error(
-          `${selectedOption} is not a valid option for ${prefix.USER_FULL_NAME}.`,
+          `${selectedOption} is not a valid option for ${prefix.COUNTERPART_NAME}.`,
         );
 
         // Send the confirmation options again.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.USER_FULL_NAME_CONFIRMATION_REQUEST(user.fullName),
-          prefix.USER_FULL_NAME,
+          messages.COUNTERPART_NAME_CONFIRMATION_REQUEST(
+            ticket.ownerType,
+            ticket.counterpartName,
+          ),
+          prefix.COUNTERPART_NAME,
         );
 
         continue;
       }
 
-      if (selectedOption === `${prefix.DATA_PRIVACY}-no`) {
+      if (selectedOption === `${prefix.COUNTERPART_NAME}-no`) {
         // TODO: Go to previous state.
-        user.fullName = null;
+        ticket.counterpartName = null;
 
-        await context.userService.save({
-          ...user,
-          state: UserState.WAITING_NAME,
+        await context.whatsappService.ticketService.save({
+          ...ticket,
+          state: TicketState.WAITING_COUNTERPART_NAME,
         });
 
         await context.whatsappService.sendMessage(
           phoneNumber,
-          messages.USER_NAME_REQUEST(),
+          messages.COUNTERPART_NAME_REQUEST(ticket.ownerType),
         );
 
         continue;
       }
 
-      // Save the user.
-      await context.userService.save({
-        ...user,
-        state: UserState.WAITING_TAXPAYER_NUMBER,
+      await context.whatsappService.ticketService.save({
+        ...ticket,
+        state: TicketState.WAITING_COUNTERPART_PHONE_NUMBER,
       });
 
       // TODO: Send the name confirmation success message.
@@ -104,7 +112,7 @@ export class CounterpartNameInputState extends MessageState {
 
       await context.whatsappService.sendMessage(
         phoneNumber,
-        messages.USER_TAXPAYER_NUMBER_REQUEST(),
+        messages.COUNTERPART_TAXPAYER_NUMBER_REQUEST(ticket.ownerType),
       );
     }
   }
