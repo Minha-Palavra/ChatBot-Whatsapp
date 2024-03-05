@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  Logger,
-  UnprocessableEntityException,
-} from '@nestjs/common';
+import { Injectable, Logger, UnprocessableEntityException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 // import WhatsApp from 'whatsapp';
@@ -17,10 +13,7 @@ import { UserRegistrationInitialState } from '../user/states/user-registration-i
 import { UserService } from '../user/user.service';
 import { IMessageState } from './states/message-state.interface';
 import { MessagesProcessingContext } from './states/messages-processing-context';
-import {
-  getTicketStateProcessor,
-  TicketState,
-} from '../ticket/entities/ticket-state';
+import { getTicketStateProcessor, TicketState } from '../ticket/entities/ticket-state';
 import { TicketEntity } from '../ticket/entities/ticket.entity';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -38,7 +31,8 @@ export class WhatsappService {
     private historyService: HistoryService,
     public ticketService: TicketService,
     public userService: UserService,
-  ) {}
+  ) {
+  }
 
   public async checkWebhookMinimumRequirements(body: WebhookObject) {
     if (body.object !== 'whatsapp_business_account') {
@@ -225,8 +219,8 @@ export class WhatsappService {
     interactive.action.buttons.push({
       type: 'reply',
       reply: {
-        id: `${prefix}-service-provider`,
-        title: 'Sou o prestador de serviço',
+        id: `${prefix}-provider`,
+        title: 'Contratado',
       },
     });
 
@@ -234,7 +228,7 @@ export class WhatsappService {
       type: 'reply',
       reply: {
         id: `${prefix}-customer`,
-        title: 'Sou o contratante do serviço',
+        title: 'Contratante',
       },
     });
 
@@ -268,9 +262,13 @@ export class WhatsappService {
       // Conversation flow to select a ticket or create a new one.
       ticket = await this.ticketService.findUserNewestTicket(user);
 
-      if (!ticket || ticket.state !== TicketState.CLOSED) {
+      if (!ticket || ticket.state === TicketState.CLOSED) {
         const tickets = await this.ticketService.find({
-          where: { owner: user },
+          where: {
+            owner: { id: user.id },
+          },
+          order: { updatedAt: 'DESC' },
+          relations: { owner: true },
         });
 
         if (tickets.length > 0) {
@@ -291,7 +289,7 @@ export class WhatsappService {
       this.userService,
       this.logger,
       state,
-      ticket
+      ticket,
     );
 
     await context.processMessages(value);

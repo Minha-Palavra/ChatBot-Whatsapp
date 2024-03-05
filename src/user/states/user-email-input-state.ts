@@ -55,6 +55,7 @@ export class UserEmailInputState extends MessageState {
           phoneNumber,
           messages.USER_EMAIL_CONFIRMATION_REQUEST(user.email),
           prefix.USER_EMAIL,
+          false
         );
         continue;
       }
@@ -82,6 +83,7 @@ export class UserEmailInputState extends MessageState {
           phoneNumber,
           messages.USER_EMAIL_CONFIRMATION_REQUEST(user.email),
           prefix.USER_EMAIL,
+          false
         );
 
         continue;

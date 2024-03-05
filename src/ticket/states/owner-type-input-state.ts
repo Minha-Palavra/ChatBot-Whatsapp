@@ -1,7 +1,6 @@
 import { MessageState } from '../../whatsapp/states/message-state';
 import { IMessageProcessingContext } from '../../whatsapp/states/message-processing-context.interface';
 import { ValueObject } from 'whatsapp/build/types/webhooks';
-import { UserState } from '../../user/entities/user-state';
 import { messages } from '../../whatsapp/entities/messages';
 import { prefix } from '../../whatsapp/entities/prefix';
 import { TicketEntity } from '../entities/ticket.entity';
@@ -39,7 +38,7 @@ export class OwnerTypeInputState extends MessageState {
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
           messages.TICKET_OWNER_TYPE_REQUEST(),
-          prefix.TICKET_OWNER_TYPE_REQUEST,
+          prefix.TICKET_OWNER_TYPE,
           false,
         );
 
@@ -59,35 +58,34 @@ export class OwnerTypeInputState extends MessageState {
       }
 
       // Check if the selected option is valid.
-      if (!this.optionHasPrefix(selectedOption, prefix.TICKET_OWNER_TYPE_REQUEST)) {
+      if (!this.optionHasPrefix(selectedOption, prefix.TICKET_OWNER_TYPE)) {
         context.logger.error(
-          `${selectedOption} is not a valid option for ${prefix.TICKET_OWNER_TYPE_REQUEST}.`,
+          `${selectedOption} is not a valid option for ${prefix.TICKET_OWNER_TYPE}.`,
         );
 
         // Send the confirmation options again.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
           messages.TICKET_OWNER_TYPE_REQUEST(),
-          prefix.TICKET_OWNER_TYPE_REQUEST,
+          prefix.TICKET_OWNER_TYPE,
+          false,
         );
 
         continue;
       }
 
-      if (selectedOption === `${prefix.DATA_PRIVACY}-service-provider`) {
+      if (selectedOption === `${prefix.DATA_PRIVACY}-provider`) {
         //
         ticket.ownerType = OwnerType.SERVICE_PROVIDER;
       } else if (selectedOption === `${prefix.DATA_PRIVACY}-customer`) {
         //
         ticket.ownerType = OwnerType.CUSTOMER;
       } else {
-
       }
       await context.whatsappService.ticketService.save({
-          ...ticket,
-          state: TicketState.WAITING_COUNTERPART_NAME,
-        },
-      );
+        ...ticket,
+        state: TicketState.WAITING_COUNTERPART_NAME,
+      });
 
       // TODO: Send the address confirmation success message.
       // await context.whatsappService.sendMessage(

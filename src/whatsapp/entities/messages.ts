@@ -34,5 +34,7 @@ export const messages = {
   FIRST_TICKET_CONFIRMATION: () => 'Deseja fazer o primeiro contrato?',
   TICKET_START: () => 'Certo, precisaremos de algumas informações para gerar o contrato.',
   TICKET_OWNER_TYPE_REQUEST: () => 'Você é o contratante ou o contratado?',
-  COUNTERPART_NAME_REQUEST: (owner:OwnerType) => `Qual é o nome do ${owner === OwnerType.CUSTOMER ? 'contratante' : 'contratado'}?`,
+  COUNTERPART_NAME_REQUEST: (owner: OwnerType) => `Qual é o nome do ${owner === OwnerType.CUSTOMER ? 'contratado' : 'contratante'}?`,
+  COUNTERPART_NAME_CONFIRMATION_REQUEST: (owner: OwnerType, counterpartName) => `O nome do ${owner === OwnerType.CUSTOMER ? 'contratado' : 'contratante'}, ${counterpartName} está correto?`,
+  COUNTERPART_TAXPAYER_NUMBER_REQUEST: (owner: OwnerType) => `Qual é o CPF/CPNJ do ${owner === OwnerType.CUSTOMER ? 'contratado' : 'contratante'}?`,
 };

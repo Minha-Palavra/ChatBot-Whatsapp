@@ -41,6 +41,7 @@ export class UserNameInputState extends MessageState {
           phoneNumber,
           messages.USER_FULL_NAME_CONFIRMATION_REQUEST(fullName),
           prefix.USER_FULL_NAME,
+          false
         );
         continue;
       }
@@ -68,6 +69,7 @@ export class UserNameInputState extends MessageState {
           phoneNumber,
           messages.USER_FULL_NAME_CONFIRMATION_REQUEST(user.fullName),
           prefix.USER_FULL_NAME,
+          false
         );
 
         continue;

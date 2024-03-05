@@ -34,7 +34,7 @@ export class FirstTicketConfirmationState extends MessageState {
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
           messages.FIRST_TICKET_CONFIRMATION(),
-          prefix.FIRST_TICKET_CONFIRMATION,
+          prefix.FIRST_TICKET,
           false,
         );
 
@@ -55,23 +55,23 @@ export class FirstTicketConfirmationState extends MessageState {
 
       // Check if the selected option is valid.
       if (
-        !this.optionHasPrefix(selectedOption, prefix.FIRST_TICKET_CONFIRMATION)
+        !this.optionHasPrefix(selectedOption, prefix.FIRST_TICKET)
       ) {
         context.logger.error(
-          `${selectedOption} is not a valid option for ${prefix.FIRST_TICKET_CONFIRMATION}.`,
+          `${selectedOption} is not a valid option for ${prefix.FIRST_TICKET}.`,
         );
 
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
           messages.FIRST_TICKET_CONFIRMATION(),
-          prefix.FIRST_TICKET_CONFIRMATION,
+          prefix.FIRST_TICKET,
           false,
         );
 
         continue;
       }
 
-      if (selectedOption === `${prefix.FIRST_TICKET_CONFIRMATION}-no`) {
+      if (selectedOption === `${prefix.FIRST_TICKET}-no`) {
         // TODO: Go to previous state.
         continue;
       }
@@ -93,7 +93,7 @@ export class FirstTicketConfirmationState extends MessageState {
       await context.whatsappService.sendContextOptions(
         phoneNumber,
         messages.TICKET_OWNER_TYPE_REQUEST(),
-        prefix.TICKET_OWNER_TYPE_REQUEST,
+        prefix.TICKET_OWNER_TYPE,
       );
     }
   }

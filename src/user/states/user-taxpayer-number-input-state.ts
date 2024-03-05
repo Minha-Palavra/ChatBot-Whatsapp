@@ -57,6 +57,7 @@ export class UserTaxpayerNumberInputState extends MessageState {
             user.taxpayerNumber,
           ),
           prefix.USER_TAXPAYER_NUMBER,
+          false
         );
         continue;
       }
@@ -86,6 +87,7 @@ export class UserTaxpayerNumberInputState extends MessageState {
             user.taxpayerNumber,
           ),
           prefix.USER_TAXPAYER_NUMBER,
+          false
         );
 
         continue;

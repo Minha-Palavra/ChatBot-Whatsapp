@@ -11,12 +11,16 @@ export class TicketEntity extends AbstractEntity {
   @ManyToOne(() => UserEntity, (user) => user.tickets)
   owner: UserEntity;
 
-  @ApiProperty({enum: OwnerType})
-  @Column({type: 'enum', enum: OwnerType, default : OwnerType.NONE})
+  @ApiProperty({ enum: OwnerType })
+  @Column({ type: 'enum', enum: OwnerType, default: OwnerType.NONE })
   ownerType: OwnerType;
 
   @ApiProperty({ enum: TicketState })
   @Column({ type: 'enum', enum: TicketState, default: TicketState.NONE })
   state: TicketState;
+
+  @ApiProperty()
+  @Column({ nullable: true })
+  counterpartName: string;
 
 }

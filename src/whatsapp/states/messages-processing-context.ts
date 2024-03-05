@@ -15,7 +15,7 @@ export class MessagesProcessingContext implements IMessageProcessingContext {
     public userService: UserService,
     public logger: Logger,
     public state: IMessageState,
-    public ticket?: TicketEntity
+    public ticket?: TicketEntity,
   ) {
     this.ticketService = whatsappService.ticketService;
   }
