@@ -10,9 +10,8 @@ import { SharedModule } from './shared/shared.module';
 import { TicketModule } from './ticket/ticket.module';
 import { UserModule } from './user/user.module';
 import { WhatsappModule } from './whatsapp/whatsapp.module';
-import { PaymentController } from './payment/payment.controller';
-import { PaymentService } from './payment/payment.service';
 import { PaymentModule } from './payment/payment.module';
+
 
 @Module({
   imports: [
@@ -37,7 +36,7 @@ import { PaymentModule } from './payment/payment.module';
     HistoryModule,
     PaymentModule,
   ],
-  controllers: [AppController, PaymentController],
-  providers: [PaymentService],
+  controllers: [AppController],
+  providers: [],
 })
 export class AppModule {}
