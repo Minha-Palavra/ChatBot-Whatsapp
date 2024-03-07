@@ -32,9 +32,33 @@ export const messages = {
   REGISTRATION_COMPLETE: () =>
     'Obrigado por se registrar! Agora você pode começar a usar o Minha Palavra.',
   FIRST_TICKET_CONFIRMATION: () => 'Deseja fazer o primeiro contrato?',
-  TICKET_START: () => 'Certo, precisaremos de algumas informações para gerar o contrato.',
+  TICKET_START: () =>
+    'Certo, precisaremos de algumas informações para gerar o contrato.',
   TICKET_OWNER_TYPE_REQUEST: () => 'Você é o contratante ou o contratado?',
-  COUNTERPART_NAME_REQUEST: (owner: OwnerType) => `Qual é o nome do ${owner === OwnerType.CUSTOMER ? 'contratado' : 'contratante'}?`,
-  COUNTERPART_NAME_CONFIRMATION_REQUEST: (owner: OwnerType, counterpartName) => `O nome do ${owner === OwnerType.CUSTOMER ? 'contratado' : 'contratante'}, ${counterpartName} está correto?`,
-  COUNTERPART_TAXPAYER_NUMBER_REQUEST: (owner: OwnerType) => `Qual é o CPF/CPNJ do ${owner === OwnerType.CUSTOMER ? 'contratado' : 'contratante'}?`,
+  COUNTERPART_NAME_REQUEST: (owner: OwnerType) =>
+    `Qual é o nome do ${owner === OwnerType.CUSTOMER ? 'contratado' : 'contratante'}?`,
+  COUNTERPART_NAME_CONFIRMATION_REQUEST: (owner: OwnerType, counterpartName) =>
+    `O nome do ${owner === OwnerType.CUSTOMER ? 'contratado' : 'contratante'}, ${counterpartName} está correto?`,
+  COUNTERPART_TAXPAYER_NUMBER_REQUEST: (owner: OwnerType) =>
+    `Qual é o CPF/CPNJ do ${owner === OwnerType.CUSTOMER ? 'contratado' : 'contratante'}?`,
+  COUNTERPART_TAXPAYER_NUMBER_CONFIRMATION_REQUEST: (
+    owner: OwnerType,
+    taxpayerNumber: string,
+  ) =>
+    `O ${taxpayerNumber.length === 14 ? 'CPF' : 'CPNJ'} ${taxpayerNumber} do ${owner === OwnerType.CUSTOMER ? 'contratado' : 'contratante'}, está correto?`,
+  COUNTERPART_PHONE_NUMBER_REQUEST: (owner: OwnerType) =>
+    `Qual é o telefone do ${owner === OwnerType.CUSTOMER ? 'contratado' : 'contratante'}?`,
+  COUNTERPART_PHONE_NUMBER_CONFIRMATION_REQUEST: (
+    owner: OwnerType,
+    phoneNumber,
+  ) =>
+    `O telefone ${phoneNumber} do ${owner === OwnerType.CUSTOMER ? 'contratado' : 'contratante'}, está correto?`,
+  COUNTERPART_EMAIL_REQUEST: (owner: OwnerType) =>
+    `Qual é o e-mail do ${owner === OwnerType.CUSTOMER ? 'contratado' : 'contratante'}?`,
+  COUNTERPART_EMAIL_CONFIRMATION_REQUEST: (owner: OwnerType, email) =>
+    `O e-mail ${email} do ${owner === OwnerType.CUSTOMER ? 'contratado' : 'contratante'}, está correto?`,
+  COUNTERPART_ADDRESS_REQUEST: (owner: OwnerType) =>
+    `Qual é o endereço do ${owner === OwnerType.CUSTOMER ? 'contratado' : 'contratante'}?`,
+  COUNTERPART_ADDRESS_CONFIRMATION_REQUEST: (owner: OwnerType, address) =>
+    `O endereço ${address} do ${owner === OwnerType.CUSTOMER ? 'contratado' : 'contratante'}, está correto?`,
 };

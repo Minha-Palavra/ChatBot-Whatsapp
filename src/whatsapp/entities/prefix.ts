@@ -8,4 +8,7 @@ export const prefix = {
   FIRST_TICKET: 'first-contract-confirmation',
   TICKET_OWNER_TYPE: 'owner-type',
   COUNTERPART_NAME: 'counterpart-name',
+  COUNTERPART_TAXPAYER_NUMBER: 'counterpart-taxpayer-number',
+  COUNTERPART_PHONE_NUMBER: 'counterpart-phone-number',
+  COUNTERPART_EMAIL: 'counterpart-email',
 };

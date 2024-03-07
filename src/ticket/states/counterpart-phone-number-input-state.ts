@@ -2,8 +2,9 @@ import { MessageState } from '../../whatsapp/states/message-state';
 import { IMessageProcessingContext } from '../../whatsapp/states/message-processing-context.interface';
 import { ValueObject } from 'whatsapp/build/types/webhooks';
 import { messages } from '../../whatsapp/entities/messages';
-import { UserState } from '../../user/entities/user-state';
 import { prefix } from '../../whatsapp/entities/prefix';
+import { TicketEntity } from '../entities/ticket.entity';
+import { TicketState } from '../entities/ticket-state';
 
 export class CounterpartPhoneNumberInputState extends MessageState {
   public async processMessages(
@@ -14,6 +15,8 @@ export class CounterpartPhoneNumberInputState extends MessageState {
 
     // Get the user from the database.
     const user = await context.userService.findOneByWhatsappId(contact.wa_id);
+    const ticket: TicketEntity =
+      await context.whatsappService.ticketService.findUserNewestTicket(user);
 
     // If the user is not registered, do nothing.
     if (!user) {
@@ -26,9 +29,9 @@ export class CounterpartPhoneNumberInputState extends MessageState {
       const phoneNumber = this.formatPhoneNumber(message.from);
 
       if (message.type === 'text') {
-        const phoneNumber = message.text.body.replace(/\D/g, '');
+        const counterpartPhoneNumber = message.text.body.replace(/\D/g, '');
 
-        if (!this.isValidPhoneNumber(phoneNumber)) {
+        if (!this.isValidPhoneNumber(counterpartPhoneNumber)) {
           await context.whatsappService.sendMessage(
             phoneNumber,
             messages.INVALID_PHONE_NUMBER(),
@@ -36,25 +39,31 @@ export class CounterpartPhoneNumberInputState extends MessageState {
 
           await context.whatsappService.sendMessage(
             phoneNumber,
-            messages.USER_PHONE_NUMBER_REQUEST(),
+            messages.COUNTERPART_PHONE_NUMBER_REQUEST(ticket.ownerType),
           );
 
           continue;
         }
 
-        user.phoneNumber = this.formatPhoneNumber(phoneNumber);
+        ticket.counterpartPhoneNumber = this.formatPhoneNumber(
+          counterpartPhoneNumber,
+        );
 
         // Update the user state.
-        await context.userService.save({
-          ...user,
-          state: UserState.WAITING_PHONE_NUMBER_CONFIRMATION,
+        await context.whatsappService.ticketService.save({
+          ...ticket,
+          state: TicketState.WAITING_COUNTERPART_PHONE_NUMBER_CONFIRMATION,
         });
 
         // Send the confirmation options.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.USER_PHONE_NUMBER_CONFIRMATION_REQUEST(user.phoneNumber),
-          prefix.USER_PHONE_NUMBER,
+          messages.COUNTERPART_PHONE_NUMBER_CONFIRMATION_REQUEST(
+            ticket.ownerType,
+            ticket.counterpartPhoneNumber,
+          ),
+          prefix.COUNTERPART_PHONE_NUMBER,
+          false,
         );
         continue;
       }
@@ -72,43 +81,48 @@ export class CounterpartPhoneNumberInputState extends MessageState {
       }
 
       // Check if the selected option is valid.
-      if (!this.optionHasPrefix(selectedOption, prefix.USER_PHONE_NUMBER)) {
+      if (
+        !this.optionHasPrefix(selectedOption, prefix.COUNTERPART_PHONE_NUMBER)
+      ) {
         context.logger.error(
-          `${selectedOption} is not a valid option for ${prefix.USER_PHONE_NUMBER}.`,
+          `${selectedOption} is not a valid option for ${prefix.COUNTERPART_PHONE_NUMBER}.`,
         );
 
         // Send the confirmation options again.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.USER_PHONE_NUMBER_CONFIRMATION_REQUEST(user.phoneNumber),
-          prefix.USER_PHONE_NUMBER,
+          messages.COUNTERPART_PHONE_NUMBER_CONFIRMATION_REQUEST(
+            ticket.ownerType,
+            ticket.counterpartPhoneNumber,
+          ),
+          prefix.COUNTERPART_PHONE_NUMBER,
+          false,
         );
 
         continue;
       }
 
-      if (selectedOption === `${prefix.DATA_PRIVACY}-no`) {
+      if (selectedOption === `${prefix.COUNTERPART_PHONE_NUMBER}-no`) {
         // TODO: Go to previous state.
-        user.phoneNumber = null;
+        ticket.counterpartPhoneNumber = null;
 
-        await context.userService.save({
-          ...user,
-          state: UserState.WAITING_PHONE_NUMBER,
+        await context.whatsappService.ticketService.save({
+          ...ticket,
+          state: TicketState.WAITING_COUNTERPART_PHONE_NUMBER,
         });
 
         await context.whatsappService.sendMessage(
           phoneNumber,
-          messages.USER_PHONE_NUMBER_REQUEST(),
+          messages.COUNTERPART_PHONE_NUMBER_REQUEST(ticket.ownerType),
         );
 
         continue;
       }
 
       // Save the user.
-      await context.userService.save({
-        ...user,
-        //dataPrivacyConfirmation: true,
-        state: UserState.WAITING_PHONE_NUMBER,
+      await context.whatsappService.ticketService.save({
+        ...ticket,
+        state: TicketState.WAITING_COUNTERPART_EMAIL,
       });
 
       // TODO: Send the name confirmation success message.
@@ -119,7 +133,7 @@ export class CounterpartPhoneNumberInputState extends MessageState {
 
       await context.whatsappService.sendMessage(
         phoneNumber,
-        messages.USER_ADDRESS_REQUEST(),
+        messages.COUNTERPART_EMAIL_REQUEST(ticket.ownerType),
       );
     }
   }

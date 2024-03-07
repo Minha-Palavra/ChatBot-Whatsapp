@@ -2,8 +2,9 @@ import { MessageState } from '../../whatsapp/states/message-state';
 import { ValueObject } from 'whatsapp/build/types/webhooks';
 import { IMessageProcessingContext } from '../../whatsapp/states/message-processing-context.interface';
 import { messages } from '../../whatsapp/entities/messages';
-import { UserState } from '../../user/entities/user-state';
 import { prefix } from '../../whatsapp/entities/prefix';
+import { TicketEntity } from '../entities/ticket.entity';
+import { TicketState } from '../entities/ticket-state';
 
 export class CounterpartEmailInputState extends MessageState {
   public async processMessages(
@@ -14,6 +15,8 @@ export class CounterpartEmailInputState extends MessageState {
 
     // Get the user from the database.
     const user = await context.userService.findOneByWhatsappId(contact.wa_id);
+    const ticket: TicketEntity =
+      await context.whatsappService.ticketService.findUserNewestTicket(user);
 
     // If the user is not registered, do nothing.
     if (!user) {
@@ -26,9 +29,9 @@ export class CounterpartEmailInputState extends MessageState {
       const phoneNumber = this.formatPhoneNumber(message.from);
 
       if (message.type === 'text') {
-        const email = message.text.body.replace(/\D/g, '');
+        const counterpartEmail = message.text.body;
 
-        if (!this.isValidEmail(email)) {
+        if (!this.isValidEmail(counterpartEmail)) {
           await context.whatsappService.sendMessage(
             phoneNumber,
             messages.INVALID_EMAIL(),
@@ -36,25 +39,29 @@ export class CounterpartEmailInputState extends MessageState {
 
           await context.whatsappService.sendMessage(
             phoneNumber,
-            messages.USER_EMAIL_REQUEST(),
+            messages.COUNTERPART_EMAIL_REQUEST(ticket.ownerType),
           );
 
           continue;
         }
 
-        user.email = email;
+        ticket.counterpartEmail = counterpartEmail;
 
         // Update the user state.
-        await context.userService.save({
-          ...user,
-          state: UserState.WAITING_EMAIL_CONFIRMATION,
+        await context.whatsappService.ticketService.save({
+          ...ticket,
+          state: TicketState.WAITING_COUNTERPART_EMAIL_CONFIRMATION,
         });
 
         // Send the confirmation options.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.USER_EMAIL_CONFIRMATION_REQUEST(user.email),
-          prefix.USER_EMAIL,
+          messages.COUNTERPART_EMAIL_CONFIRMATION_REQUEST(
+            ticket.ownerType,
+            ticket.counterpartEmail,
+          ),
+          prefix.COUNTERPART_EMAIL,
+          false,
         );
         continue;
       }
@@ -72,54 +79,57 @@ export class CounterpartEmailInputState extends MessageState {
       }
 
       // Check if the selected option is valid.
-      if (!this.optionHasPrefix(selectedOption, prefix.USER_EMAIL)) {
+      if (!this.optionHasPrefix(selectedOption, prefix.COUNTERPART_EMAIL)) {
         context.logger.error(
-          `${selectedOption} is not a valid option for ${prefix.USER_EMAIL}.`,
+          `${selectedOption} is not a valid option for ${prefix.COUNTERPART_EMAIL}.`,
         );
 
         // Send the confirmation options again.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.USER_EMAIL_CONFIRMATION_REQUEST(user.email),
-          prefix.USER_EMAIL,
+          messages.COUNTERPART_EMAIL_CONFIRMATION_REQUEST(
+            ticket.ownerType,
+            ticket.counterpartEmail,
+          ),
+          prefix.COUNTERPART_EMAIL,
+          false,
         );
 
         continue;
       }
 
-      if (selectedOption === `${prefix.DATA_PRIVACY}-no`) {
+      if (selectedOption === `${prefix.COUNTERPART_EMAIL}-no`) {
         // TODO: Go to previous state.
-        user.email = null;
+        ticket.counterpartEmail = null;
 
-        await context.userService.save({
-          ...user,
-          state: UserState.WAITING_EMAIL,
+        await context.whatsappService.ticketService.save({
+          ...ticket,
+          state: TicketState.WAITING_COUNTERPART_EMAIL,
         });
 
         await context.whatsappService.sendMessage(
           phoneNumber,
-          messages.USER_EMAIL_REQUEST(),
+          messages.COUNTERPART_EMAIL_REQUEST(ticket.ownerType),
         );
 
         continue;
       }
 
       // Save the user.
-      await context.userService.save({
-        ...user,
-        //dataPrivacyConfirmation: true,
-        state: UserState.WAITING_EMAIL,
+      await context.whatsappService.ticketService.save({
+        ...ticket,
+        state: TicketState.WAITING_COUNTERPART_ADDRESS,
       });
 
       // TODO: Send the name confirmation success message.
       // await context.whatsappService.sendMessage(
       //   phoneNumber,
-      //   messages.userEmailConfirmationSuccess,
+      //   messages.userPhoneNumberConfirmationSuccess,
       // );
 
       await context.whatsappService.sendMessage(
         phoneNumber,
-        messages.USER_ADDRESS_REQUEST(),
+        messages.COUNTERPART_ADDRESS_REQUEST(ticket.ownerType),
       );
     }
   }

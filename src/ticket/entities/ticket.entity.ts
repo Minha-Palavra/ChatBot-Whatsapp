@@ -23,4 +23,19 @@ export class TicketEntity extends AbstractEntity {
   @Column({ nullable: true })
   counterpartName: string;
 
+  @ApiProperty()
+  @Column({ nullable: true })
+  counterpartTaxpayerNumber: string;
+
+  @ApiProperty()
+  @Column({ nullable: true })
+  counterpartPhoneNumber: string;
+
+  @ApiProperty()
+  @Column({ nullable: true })
+  counterpartEmail: string;
+
+  @ApiProperty()
+  @Column({ nullable: true })
+  counterpartAddress: string;
 }
