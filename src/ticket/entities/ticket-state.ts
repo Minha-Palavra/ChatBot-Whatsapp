@@ -5,6 +5,9 @@ import { CounterpartNameInputState } from '../states/counterpart-name-input-stat
 import { CounterpartPhoneNumberInputState } from '../states/counterpart-phone-number-input-state';
 import { CounterpartEmailInputState } from '../states/counterpart-email-input-state';
 import { CounterpartAddressInputState } from '../states/counterpart-address-input-state';
+import {
+  CounterpartTaxpayerNumberInputState
+} from '../states/counterpart-taxpayer-number-input-state';
 
 export enum TicketState {
   NONE = 'NONE',
@@ -43,8 +46,8 @@ export const getTicketStateProcessor: Record<TicketState, IMessageState> = {
   [TicketState.WAITING_COUNTERPART_ADDRESS_CONFIRMATION]:
     new CounterpartAddressInputState(),
   [TicketState.WAITING_COUNTERPART_TAXPAYER_NUMBER]:
-    new CounterpartAddressInputState(),
+    new CounterpartTaxpayerNumberInputState(),
   [TicketState.WAITING_COUNTERPART_TAXPAYER_NUMBER_CONFIRMATION]:
-    new CounterpartAddressInputState(),
+    new CounterpartTaxpayerNumberInputState(),
   [TicketState.CLOSED]: null,
 };

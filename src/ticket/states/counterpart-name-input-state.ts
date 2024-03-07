@@ -101,7 +101,7 @@ export class CounterpartNameInputState extends MessageState {
 
       await context.whatsappService.ticketService.save({
         ...ticket,
-        state: TicketState.WAITING_COUNTERPART_PHONE_NUMBER,
+        state: TicketState.WAITING_COUNTERPART_TAXPAYER_NUMBER,
       });
 
       // TODO: Send the name confirmation success message.
