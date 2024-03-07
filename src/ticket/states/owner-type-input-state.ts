@@ -37,7 +37,7 @@ export class OwnerTypeInputState extends MessageState {
 
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.TICKET_OWNER_TYPE_REQUEST(),
+          messages.TICKET_OWNER_TYPE_REQUEST(ticket.ownerType),
           prefix.TICKET_OWNER_TYPE,
           false,
         );
@@ -66,7 +66,7 @@ export class OwnerTypeInputState extends MessageState {
         // Send the confirmation options again.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.TICKET_OWNER_TYPE_REQUEST(),
+          messages.TICKET_OWNER_TYPE_REQUEST(ticket.ownerType),
           prefix.TICKET_OWNER_TYPE,
           false,
         );
