@@ -19,8 +19,14 @@ export class PaymentService {
       payment_type: 'pix',
     };
 
+    const headersRequest = {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    };
+
     try {
-      const response = await lastValueFrom(this.httpService.post(apiURL, data));
+      const response = await lastValueFrom(this.httpService.post(apiURL, data, headersRequest));
       return response.data;
     } catch (error) {
       throw new Error('Falha ao criar pagamento PIX: ' + error.message);
