@@ -15,7 +15,7 @@ export class PaymentService {
       payer_email: orderInfo.payer_email,
       payer_name: orderInfo.payer_name,
       payer_cpf_cnpj: orderInfo.payer_cpf_cnpj,
-      payer_days_due_date: 1,
+      days_due_date: 1,
       payment_type: 'pix',
     };
 
