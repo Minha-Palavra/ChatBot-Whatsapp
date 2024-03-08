@@ -62,4 +62,5 @@ export const messages = {
     `Qual é o endereço do ${owner === OwnerType.CUSTOMER ? 'contratado' : 'contratante'}?`,
   COUNTERPART_ADDRESS_CONFIRMATION_REQUEST: (owner: OwnerType, address) =>
     `O endereço ${address} do ${owner === OwnerType.CUSTOMER ? 'contratado' : 'contratante'}, está correto?`,
+  SERVICE_CATEGORY_REQUEST: () => 'Qual é a categoria do serviço?',
 };

@@ -4,6 +4,7 @@ import { AbstractEntity } from '../../shared/entities/abstract.entity';
 import { UserEntity } from '../../user/entities/user.entity';
 import { TicketState } from './ticket-state';
 import { OwnerType } from './owner-type';
+import { CategoryEntity } from '../../category/category.entity';
 
 @Entity({ name: 'ticket' })
 export class TicketEntity extends AbstractEntity {
@@ -38,4 +39,8 @@ export class TicketEntity extends AbstractEntity {
   @ApiProperty()
   @Column({ nullable: true })
   counterpartAddress: string;
+
+  @ApiProperty()
+  @ManyToOne(() => CategoryEntity, (category) => category.tickets)
+  category: string | ((object: TicketEntity) => any);
 }

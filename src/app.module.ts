@@ -11,7 +11,7 @@ import { TicketModule } from './ticket/ticket.module';
 import { UserModule } from './user/user.module';
 import { WhatsappModule } from './whatsapp/whatsapp.module';
 import { PaymentModule } from './payment/payment.module';
-
+import { CategoryModule } from './category/category.module';
 
 @Module({
   imports: [
@@ -35,6 +35,7 @@ import { PaymentModule } from './payment/payment.module';
     UserModule,
     HistoryModule,
     PaymentModule,
+    CategoryModule,
   ],
   controllers: [AppController],
   providers: [],

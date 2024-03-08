@@ -5,12 +5,14 @@ import { TicketModule } from '../ticket/ticket.module';
 import { UserModule } from '../user/user.module';
 import { WhatsappController } from './whatsapp.controller';
 import { WhatsappService } from './whatsapp.service';
+import { CategoryModule } from '../category/category.module';
 
 @Module({
   imports: [
     ConfigModule,
     HistoryModule,
     TicketModule,
+    CategoryModule,
     UserModule,
     WhatsappModule,
   ],

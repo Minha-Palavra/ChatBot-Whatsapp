@@ -7,7 +7,7 @@ import { TicketEntity } from '../entities/ticket.entity';
 import { OwnerType } from '../entities/owner-type';
 import { TicketState } from '../entities/ticket-state';
 
-export class OwnerTypeInputState extends MessageState {
+export class TicketOwnerTypeInputState extends MessageState {
   public async processMessages(
     value: ValueObject,
     context: IMessageProcessingContext,

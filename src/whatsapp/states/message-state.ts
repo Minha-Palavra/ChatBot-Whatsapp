@@ -2,12 +2,16 @@ import phone from 'phone';
 import { MessagesObject, ValueObject } from 'whatsapp/build/types/webhooks';
 import { IMessageProcessingContext } from './message-processing-context.interface';
 import { IMessageState } from './message-state.interface';
+import { CategoryEntity } from '../../category/category.entity';
+import { InteractiveObject } from 'whatsapp/build/types/messages';
+import { InteractiveTypesEnum } from 'whatsapp/build/types/enums';
 
 export abstract class MessageState implements IMessageState {
   public abstract processMessages(
     value: ValueObject,
     context: IMessageProcessingContext,
   ): Promise<void>;
+
   protected optionHasPrefix(option: string, prefix: string): boolean {
     return (
       option === `${prefix}-yes` ||
@@ -15,6 +19,15 @@ export abstract class MessageState implements IMessageState {
       option === `${prefix}-cancel`
     );
   }
+
+  protected contextOptionHasPrefix(option: string, prefix: string): boolean {
+    return (
+      option === `${prefix}-provider` ||
+      option === `${prefix}-customer` ||
+      option === `${prefix}-cancel`
+    );
+  }
+
   protected getSelectedOptionFromMessage(
     message: MessagesObject,
   ): string | null {
@@ -29,43 +42,24 @@ export abstract class MessageState implements IMessageState {
     }
   }
 
+  protected async isValidCategory(
+    selectedOption: string,
+    options: CategoryEntity,
+  ): Promise<boolean> {
+    return !!options.children.find((child) => child.slug === selectedOption);
+  }
+
+  protected isValidEmail(email: string): boolean {
+    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+    return emailRegex.test(email);
+  }
+
   protected isValidPhoneNumber(phoneNumber: string): boolean {
     if (!phone(phoneNumber, { country: 'BR' }).isValid) {
       return phone(`+55${phoneNumber}`, { country: 'BR' }).isValid;
     }
 
     return true;
-  }
-
-  protected formatPhoneNumber(phoneNumber: string): string | null {
-    const options = {
-      country: 'BR',
-      validateMobilePrefix: true,
-    };
-    let number = phone(phoneNumber, options);
-
-    if (number.isValid) {
-      if (number.isValid && number.phoneNumber.length === 13) {
-        number = phone(
-          number.phoneNumber.slice(0, 5) + '9' + number.phoneNumber.slice(5),
-          options,
-        );
-      }
-      return number.phoneNumber.replace(/\D/g, '');
-    }
-
-    if (!number.isValid) {
-      number = phone(phoneNumber); // try without country code
-      if (number.isValid) {
-        return number.phoneNumber.replace(/\D/g, '');
-      }
-    }
-    return null;
-  }
-
-  protected isValidEmail(email: string): boolean {
-    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-    return emailRegex.test(email);
   }
 
   protected isValidTaxpayerNumber(taxpayerNumber: string): boolean {
@@ -136,6 +130,32 @@ export abstract class MessageState implements IMessageState {
     return false;
   }
 
+  protected formatPhoneNumber(phoneNumber: string): string | null {
+    const options = {
+      country: 'BR',
+      validateMobilePrefix: true,
+    };
+    let number = phone(phoneNumber, options);
+
+    if (number.isValid) {
+      if (number.isValid && number.phoneNumber.length === 13) {
+        number = phone(
+          number.phoneNumber.slice(0, 5) + '9' + number.phoneNumber.slice(5),
+          options,
+        );
+      }
+      return number.phoneNumber.replace(/\D/g, '');
+    }
+
+    if (!number.isValid) {
+      number = phone(phoneNumber); // try without country code
+      if (number.isValid) {
+        return number.phoneNumber.replace(/\D/g, '');
+      }
+    }
+    return null;
+  }
+
   protected formatTaxpayerNumber(taxpayerNumber: string): string {
     if (taxpayerNumber.length === 11) {
       return taxpayerNumber.replace(
@@ -149,4 +169,5 @@ export abstract class MessageState implements IMessageState {
       );
     }
   }
+
 }

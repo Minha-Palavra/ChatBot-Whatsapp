@@ -4,9 +4,10 @@ import { ValueObject } from 'whatsapp/build/types/webhooks';
 import { messages } from '../../whatsapp/entities/messages';
 import { prefix } from '../../whatsapp/entities/prefix';
 import { TicketEntity } from '../entities/ticket.entity';
+import { OwnerType } from '../entities/owner-type';
 import { TicketState } from '../entities/ticket-state';
 
-export class CounterpartAddressInputState extends MessageState {
+export class TicketServiceCategoryState extends MessageState {
   public async processMessages(
     value: ValueObject,
     context: IMessageProcessingContext,
@@ -29,26 +30,18 @@ export class CounterpartAddressInputState extends MessageState {
       const phoneNumber = this.formatPhoneNumber(message.from);
 
       if (message.type === 'text') {
-        const counterpartAddress = message.text.body;
+        await context.whatsappService.sendMessage(
+          phoneNumber,
+          messages.INVALID_OPTION(),
+        );
 
-        ticket.counterpartAddress = counterpartAddress;
-
-        // Update the user state.
-        await context.whatsappService.ticketService.save({
-          ...ticket,
-          state: TicketState.WAITING_COUNTERPART_ADDRESS_CONFIRMATION,
-        });
-
-        // Send the confirmation options.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.COUNTERPART_ADDRESS_CONFIRMATION_REQUEST(
-            ticket.ownerType,
-            ticket.counterpartAddress,
-          ),
-          prefix.COUNTERPART_EMAIL,
+          messages.TICKET_OWNER_TYPE_CONFIRMATION_REQUEST(ticket.ownerType),
+          prefix.TICKET_OWNER_TYPE,
           false,
         );
+
         continue;
       }
 
@@ -65,62 +58,44 @@ export class CounterpartAddressInputState extends MessageState {
       }
 
       // Check if the selected option is valid.
-      if (!this.optionHasPrefix(selectedOption, prefix.COUNTERPART_EMAIL)) {
+      if (!this.optionHasPrefix(selectedOption, prefix.TICKET_OWNER_TYPE)) {
         context.logger.error(
-          `${selectedOption} is not a valid option for ${prefix.COUNTERPART_EMAIL}.`,
+          `${selectedOption} is not a valid option for ${prefix.TICKET_OWNER_TYPE}.`,
         );
 
         // Send the confirmation options again.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.COUNTERPART_ADDRESS_CONFIRMATION_REQUEST(
-            ticket.ownerType,
-            ticket.counterpartAddress,
-          ),
-          prefix.COUNTERPART_EMAIL,
+          messages.TICKET_OWNER_TYPE_CONFIRMATION_REQUEST(ticket.ownerType),
+          prefix.TICKET_OWNER_TYPE,
           false,
         );
 
         continue;
       }
 
-      if (selectedOption === `${prefix.COUNTERPART_EMAIL}-no`) {
-        // TODO: Go to previous state.
-        ticket.counterpartAddress = null;
-
-        await context.whatsappService.ticketService.save({
-          ...ticket,
-          state: TicketState.WAITING_COUNTERPART_EMAIL,
-        });
-
-        await context.whatsappService.sendMessage(
-          phoneNumber,
-          messages.COUNTERPART_ADDRESS_REQUEST(ticket.ownerType),
-        );
-
-        continue;
+      if (selectedOption === `${prefix.DATA_PRIVACY}-provider`) {
+        //
+        ticket.ownerType = OwnerType.SERVICE_PROVIDER;
+      } else if (selectedOption === `${prefix.DATA_PRIVACY}-customer`) {
+        //
+        ticket.ownerType = OwnerType.CUSTOMER;
+      } else {
       }
-
-      // Save the user.
       await context.whatsappService.ticketService.save({
         ...ticket,
-        state: TicketState.WAITING_SERVICE_CATEGORY,
+        state: TicketState.WAITING_COUNTERPART_NAME,
       });
 
-      // TODO: Send the name confirmation success message.
+      // TODO: Send the address confirmation success message.
       // await context.whatsappService.sendMessage(
       //   phoneNumber,
-      //   messages.userPhoneNumberConfirmationSuccess,
+      //   messages.,
       // );
 
-      const initialCategory =
-        await context.whatsappService.categoryService.findOne({
-          where: { slug: 'root' },
-        });
-
-      await context.whatsappService.sendCategoryOptions(
+      await context.whatsappService.sendMessage(
         phoneNumber,
-        initialCategory,
+        messages.COUNTERPART_NAME_REQUEST(ticket.ownerType),
       );
     }
   }
