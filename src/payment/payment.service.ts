@@ -7,7 +7,7 @@ export class PaymentService {
   constructor(private httpService: HttpService) {}
 
   async createPixPayment(orderInfo: any): Promise<any> {
-    const apiURL = 'https://api.paghiper.com/transaction/create/';
+    const apiURL = 'https://pix.paghiper.com/invoice/create/';
     const apiKey = process.env.PAGHIPER_API_KEY;
     const data = {
       apiKey,
@@ -16,7 +16,6 @@ export class PaymentService {
       payer_name: orderInfo.payer_name,
       payer_cpf_cnpj: orderInfo.payer_cpf_cnpj,
       days_due_date: 1,
-      payment_type: 'pix',
     };
 
     const headersRequest = {
