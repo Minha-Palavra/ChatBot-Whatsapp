@@ -3,8 +3,6 @@ import { MessagesObject, ValueObject } from 'whatsapp/build/types/webhooks';
 import { IMessageProcessingContext } from './message-processing-context.interface';
 import { IMessageState } from './message-state.interface';
 import { CategoryEntity } from '../../category/category.entity';
-import { InteractiveObject } from 'whatsapp/build/types/messages';
-import { InteractiveTypesEnum } from 'whatsapp/build/types/enums';
 
 export abstract class MessageState implements IMessageState {
   public abstract processMessages(

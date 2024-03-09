@@ -4,8 +4,6 @@ import { ValueObject } from 'whatsapp/build/types/webhooks';
 import { messages } from '../../whatsapp/entities/messages';
 import { prefix } from '../../whatsapp/entities/prefix';
 import { TicketEntity } from '../entities/ticket.entity';
-import { OwnerType } from '../entities/owner-type';
-import { TicketState } from '../entities/ticket-state';
 
 export class TicketServiceCategoryState extends MessageState {
   public async processMessages(
@@ -50,6 +48,10 @@ export class TicketServiceCategoryState extends MessageState {
         continue;
       }
 
+      const availableOptions = await context.whatsappService.categoryService.fillChildren(
+        ticket.category,
+      );
+
       const selectedOption = this.getSelectedOptionFromMessage(message);
 
       if (!selectedOption) {
@@ -57,35 +59,71 @@ export class TicketServiceCategoryState extends MessageState {
         continue;
       }
 
-      // Check if the selected option is valid.
-      if (!this.optionHasPrefix(selectedOption, prefix.TICKET_OWNER_TYPE)) {
-        context.logger.error(
-          `${selectedOption} is not a valid option for ${prefix.TICKET_OWNER_TYPE}.`,
-        );
+      if (selectedOption === 'previous-category') {
+        ticket.category = await context.whatsappService.categoryService.findOne({
+          where: { id: ticket.category.id },
+          relations: ['parent'],
+        });
 
-        // Send the confirmation options again.
-        await context.whatsappService.sendConfirmationOptions(
-          phoneNumber,
-          messages.TICKET_OWNER_TYPE_CONFIRMATION_REQUEST(ticket.ownerType),
-          prefix.TICKET_OWNER_TYPE,
-          false,
-        );
+        if (!ticket.category.parent) {
+          context.logger.error(
+            `${ticket.category.slug} has no parent category.`,
+          );
+          await context.whatsappService.sendMessage(
+            phoneNumber,
+            'Esta não é uma opção válida neste momento. Por favor, selecione uma opção válida.',
+          );
+
+          await context.whatsappService.sendCategoryOptions(phoneNumber, ticket.category);
+          continue;
+        }
+
+        ticket.category = await context.whatsappService.categoryService.findOne({
+          where: { id: ticket.category.parent.id },
+        });
+
+        await context.whatsappService.ticketService.save(ticket);
+        //await this.sendCategoryOptions(phoneNumber, ticket.category());
 
         continue;
       }
 
-      if (selectedOption === `${prefix.DATA_PRIVACY}-provider`) {
-        //
-        ticket.ownerType = OwnerType.SERVICE_PROVIDER;
-      } else if (selectedOption === `${prefix.DATA_PRIVACY}-customer`) {
-        //
-        ticket.ownerType = OwnerType.CUSTOMER;
-      } else {
+      const isValid = await this.isValidCategory(
+        selectedOption,
+        availableOptions,
+      );
+
+      if (!isValid) {
+        context.logger.error(
+          `${selectedOption} is not a valid option. of ${ticket.category.slug}.`,
+        );
+
+        await context.whatsappService.sendMessage(
+          phoneNumber,
+          'Esta não é uma opção válida neste momento. Por favor, selecione uma opção válida.',
+        );
+        await context.whatsappService.sendCategoryOptions(phoneNumber, ticket.category);
+        continue;
       }
-      await context.whatsappService.ticketService.save({
-        ...ticket,
-        state: TicketState.WAITING_COUNTERPART_NAME,
-      });
+
+      const category = availableOptions.children.find(
+        (child) => child.slug === selectedOption,
+      );
+
+      ticket.category = category;
+      await context.whatsappService.ticketService.save(ticket);
+
+      const wasOptionsSent = await context.whatsappService.sendCategoryOptions(
+        phoneNumber,
+        ticket.category,
+      );
+
+      // If the user reached the end of the decision tree, then send a message. and move to the next state.
+      if (wasOptionsSent) {
+        continue;
+      }
+
+      //await this.requestContext(phoneNumber, ticket);
 
       // TODO: Send the address confirmation success message.
       // await context.whatsappService.sendMessage(
@@ -93,10 +131,10 @@ export class TicketServiceCategoryState extends MessageState {
       //   messages.,
       // );
 
-      await context.whatsappService.sendMessage(
-        phoneNumber,
-        messages.COUNTERPART_NAME_REQUEST(ticket.ownerType),
-      );
+      // await context.whatsappService.sendMessage(
+      //   phoneNumber,
+      //   messages.COUNTERPART_NAME_REQUEST(ticket.ownerType),
+      // );
     }
   }
 }

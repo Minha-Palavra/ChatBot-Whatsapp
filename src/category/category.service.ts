@@ -2,10 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { CategoryEntity } from './category.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOneOptions, Repository } from 'typeorm';
-import {
-  minhaPalavraSeedData,
-  MinhaPalavraSeedType,
-} from './minhapalavra.seed';
+import { minhaPalavraSeedData, MinhaPalavraSeedType } from './minhapalavra.seed';
 import slugify from 'slugify';
 
 @Injectable()
@@ -42,48 +39,21 @@ export class CategoryService {
     if (!seed.slug) {
       seed.slug = slugify(seed.title, { lower: true });
     }
+    const entity = await this.repository.save({
+      title: seed.title,
+      slug: seed.slug,
+      description: seed.description,
+      parent: parent,
+    });
 
-    let entity = new CategoryEntity();
-    entity.title = seed.title;
-    entity.slug = seed.slug;
-    entity.description = seed.description;
-
-    {
-      const node = await this.repository.findOne({
-        where: { slug: seed.slug },
-      });
-      if (node) {
-        entity = node;
-      }
-    }
-
-    if (parent) {
-      entity.parent = entity.parent || [];
-      parent.children = parent.children || [];
-
-      // check if parent already exists
-      if (entity.parent.find((p) => p.id === parent.id) === undefined)
-        entity.parent.push(parent);
-
-      // check if child already exists
-      if (parent.children.find((c) => c.id === entity.id) === undefined)
-        parent.children.push(entity);
-
-      // check circular reference
-      if (entity.parent.find((p) => p.id === entity.id) !== undefined)
-        entity.parent = entity.parent.filter((p) => p.id !== entity.id);
-      if (parent.children.find((c) => c.id === parent.id) !== undefined)
-        parent.children = parent.children.filter((c) => c.id !== parent.id);
-
-      await this.repository.save(parent);
-    }
-    await this.repository.save(entity);
-
+    entity.children = [];
     if (seed.children) {
       for (const child of seed.children) {
-        this.logger.log(`Added the ${child.title} category.`);
-        await this.seedRecursive(child, entity);
+        const childEntity = await this.seedRecursive(child, entity);
+        entity.children.push(childEntity);
       }
+
+      await this.repository.save(entity);
     }
 
     return entity;

@@ -42,5 +42,5 @@ export class TicketEntity extends AbstractEntity {
 
   @ApiProperty()
   @ManyToOne(() => CategoryEntity, (category) => category.tickets)
-  category: string | ((object: TicketEntity) => any);
+  category: CategoryEntity;
 }

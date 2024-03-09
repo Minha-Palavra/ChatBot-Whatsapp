@@ -10,7 +10,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { AbstractEntity } from '../shared/entities/abstract.entity';
 import { TicketEntity } from '../ticket/entities/ticket.entity';
 
-@Entity({ name: 'decision' })
+@Entity({ name: 'category' })
 export class CategoryEntity extends AbstractEntity {
   @ApiProperty()
   @Column()
@@ -26,12 +26,12 @@ export class CategoryEntity extends AbstractEntity {
   description: string;
 
   @ApiProperty({ type: () => CategoryEntity })
-  @ManyToMany(() => CategoryEntity, (decision) => decision.children)
+  @ManyToMany(() => CategoryEntity, (category) => category.children)
   @JoinTable()
-  parent: CategoryEntity[];
+  parent: CategoryEntity;
 
   @ApiProperty({ type: () => [CategoryEntity] })
-  @ManyToMany(() => CategoryEntity, (decision) => decision.parent)
+  @ManyToMany(() => CategoryEntity, (category) => category.parent)
   children: CategoryEntity[];
 
   // reference to ticket
