@@ -25,7 +25,7 @@ export class TicketService extends TypeOrmCrudService<TicketEntity> {
         // status: 'open',
       },
       order: { updatedAt: 'DESC' },
-      relations: { owner: true },
+      relations: { owner: true, category: true },
     });
   }
 

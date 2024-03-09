@@ -66,16 +66,16 @@ export class CategoryService {
   }
 
   public async fillChildren(
-    decision: Partial<CategoryEntity>,
+    category: Partial<CategoryEntity>,
   ): Promise<CategoryEntity> {
     let decisionEntity: CategoryEntity;
 
-    if (decision.slug && (decision.id === undefined || decision.id === null)) {
+    if (category.slug && (category.id === undefined || category.id === null)) {
       decisionEntity = await this.repository.findOne({
-        where: [{ slug: decision.slug }],
+        where: [{ slug: category.slug }],
       });
     } else {
-      decisionEntity = decision as CategoryEntity;
+      decisionEntity = category as CategoryEntity;
     }
 
     decisionEntity.children = await this.repository.find({

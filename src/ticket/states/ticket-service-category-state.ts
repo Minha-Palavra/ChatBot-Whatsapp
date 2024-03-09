@@ -2,8 +2,8 @@ import { MessageState } from '../../whatsapp/states/message-state';
 import { IMessageProcessingContext } from '../../whatsapp/states/message-processing-context.interface';
 import { ValueObject } from 'whatsapp/build/types/webhooks';
 import { messages } from '../../whatsapp/entities/messages';
-import { prefix } from '../../whatsapp/entities/prefix';
 import { TicketEntity } from '../entities/ticket.entity';
+import { TicketState } from '../entities/ticket-state';
 
 export class TicketServiceCategoryState extends MessageState {
   public async processMessages(
@@ -33,11 +33,9 @@ export class TicketServiceCategoryState extends MessageState {
           messages.INVALID_OPTION(),
         );
 
-        await context.whatsappService.sendConfirmationOptions(
+        await context.whatsappService.sendCategoryOptions(
           phoneNumber,
-          messages.TICKET_OWNER_TYPE_CONFIRMATION_REQUEST(ticket.ownerType),
-          prefix.TICKET_OWNER_TYPE,
-          false,
+          ticket.category,
         );
 
         continue;
@@ -48,9 +46,10 @@ export class TicketServiceCategoryState extends MessageState {
         continue;
       }
 
-      const availableOptions = await context.whatsappService.categoryService.fillChildren(
-        ticket.category,
-      );
+      const availableOptions =
+        await context.whatsappService.categoryService.fillChildren(
+          ticket.category,
+        );
 
       const selectedOption = this.getSelectedOptionFromMessage(message);
 
@@ -60,10 +59,12 @@ export class TicketServiceCategoryState extends MessageState {
       }
 
       if (selectedOption === 'previous-category') {
-        ticket.category = await context.whatsappService.categoryService.findOne({
-          where: { id: ticket.category.id },
-          relations: ['parent'],
-        });
+        ticket.category = await context.whatsappService.categoryService.findOne(
+          {
+            where: { id: ticket.category.id },
+            relations: ['parent'],
+          },
+        );
 
         if (!ticket.category.parent) {
           context.logger.error(
@@ -74,13 +75,18 @@ export class TicketServiceCategoryState extends MessageState {
             'Esta não é uma opção válida neste momento. Por favor, selecione uma opção válida.',
           );
 
-          await context.whatsappService.sendCategoryOptions(phoneNumber, ticket.category);
+          await context.whatsappService.sendCategoryOptions(
+            phoneNumber,
+            ticket.category,
+          );
           continue;
         }
 
-        ticket.category = await context.whatsappService.categoryService.findOne({
-          where: { id: ticket.category.parent.id },
-        });
+        ticket.category = await context.whatsappService.categoryService.findOne(
+          {
+            where: { id: ticket.category.parent.id },
+          },
+        );
 
         await context.whatsappService.ticketService.save(ticket);
         //await this.sendCategoryOptions(phoneNumber, ticket.category());
@@ -102,7 +108,10 @@ export class TicketServiceCategoryState extends MessageState {
           phoneNumber,
           'Esta não é uma opção válida neste momento. Por favor, selecione uma opção válida.',
         );
-        await context.whatsappService.sendCategoryOptions(phoneNumber, ticket.category);
+        await context.whatsappService.sendCategoryOptions(
+          phoneNumber,
+          ticket.category,
+        );
         continue;
       }
 
@@ -111,7 +120,11 @@ export class TicketServiceCategoryState extends MessageState {
       );
 
       ticket.category = category;
-      await context.whatsappService.ticketService.save(ticket);
+
+      await context.whatsappService.ticketService.save({
+        ...ticket,
+        state: TicketState.WAITING_SERVICE_CATEGORY,
+      });
 
       const wasOptionsSent = await context.whatsappService.sendCategoryOptions(
         phoneNumber,
@@ -123,7 +136,7 @@ export class TicketServiceCategoryState extends MessageState {
         continue;
       }
 
-      //await this.requestContext(phoneNumber, ticket);
+      //await this.requestContext(phoneNumber, tickçet);
 
       // TODO: Send the address confirmation success message.
       // await context.whatsappService.sendMessage(

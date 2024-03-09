@@ -7,16 +7,26 @@ export class PaymentService {
   constructor(private httpService: HttpService) {}
 
   async createPixPayment(orderInfo: any): Promise<any> {
-    const apiURL = 'https://api.paghiper.com/transaction/create/';
+    const apiURL = 'https://pix.paghiper.com/invoice/create/';
     const apiKey = process.env.PAGHIPER_API_KEY;
+
     const data = {
       apiKey,
       order_id: orderInfo.order_id,
       payer_email: orderInfo.payer_email,
       payer_name: orderInfo.payer_name,
       payer_cpf_cnpj: orderInfo.payer_cpf_cnpj,
+      payer_phone: orderInfo.payer_phone,
+      notification_url: 'https://wp.tolstenko.net/payment/feedback',
       days_due_date: 1,
-      payment_type: 'pix',
+      items: [
+        {
+          description: 'Minha Palavra Bot',
+          quantity: '1',
+          item_id: '1',
+          price_cents: '499'
+        }
+      ],
     };
 
     const headersRequest = {

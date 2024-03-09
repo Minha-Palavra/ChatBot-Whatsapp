@@ -118,6 +118,13 @@ export class CounterpartAddressInputState extends MessageState {
           where: { slug: 'root' },
         });
 
+      ticket.category = initialCategory;
+
+      await context.whatsappService.ticketService.save({
+        ...ticket,
+        state: TicketState.WAITING_SERVICE_CATEGORY,
+      });
+
       await context.whatsappService.sendCategoryOptions(
         phoneNumber,
         initialCategory,
