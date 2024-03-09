@@ -63,7 +63,7 @@ export class ApiConfigService {
       database: this.getString('DB_DATABASE') || 'postgres',
       username: this.getString('DB_USERNAME') || 'postgres',
       password: this.getString('DB_PASSWORD') || 'postgres',
-      dropSchema: this.isTest,
+      //dropSchema: this.isTest,
       keepConnectionAlive: !this.isTest,
       logging: this.getBoolean('ENABLE_ORM_LOGS', false),
       migrationsRun: true,

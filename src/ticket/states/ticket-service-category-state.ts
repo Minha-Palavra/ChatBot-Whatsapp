@@ -89,7 +89,7 @@ export class TicketServiceCategoryState extends MessageState {
         );
 
         await context.whatsappService.ticketService.save(ticket);
-        //await this.sendCategoryOptions(phoneNumber, ticket.category());
+        await context.whatsappService.sendCategoryOptions(phoneNumber, ticket.category);
 
         continue;
       }

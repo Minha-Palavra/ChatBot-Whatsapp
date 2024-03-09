@@ -6,7 +6,7 @@ import { prefix } from '../../whatsapp/entities/prefix';
 import { TicketEntity } from '../entities/ticket.entity';
 import { TicketState } from '../entities/ticket-state';
 
-export class CounterpartAddressInputState extends MessageState {
+export class ServiceMaterialWhereInputState extends MessageState {
   public async processMessages(
     value: ValueObject,
     context: IMessageProcessingContext,
@@ -29,24 +29,23 @@ export class CounterpartAddressInputState extends MessageState {
       const phoneNumber = this.formatPhoneNumber(message.from);
 
       if (message.type === 'text') {
-        const counterpartAddress = message.text.body;
+        const serviceMaterialWhere = message.text.body;
 
-        ticket.counterpartAddress = counterpartAddress;
+        ticket.serviceMaterialWhere = serviceMaterialWhere;
 
         // Update the user state.
         await context.whatsappService.ticketService.save({
           ...ticket,
-          state: TicketState.WAITING_COUNTERPART_ADDRESS_CONFIRMATION,
+          state: TicketState.WAITING_SERVICE_MATERIAL_WHERE_CONFIRMATION,
         });
 
         // Send the confirmation options.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.COUNTERPART_ADDRESS_CONFIRMATION_REQUEST(
-            ticket.ownerType,
-            ticket.counterpartAddress,
+          messages.SERVICE_MATERIAL_WHERE_CONFIRMATION_REQUEST(
+            ticket.serviceMaterialWhere,
           ),
-          prefix.COUNTERPART_ADDRESS,
+          prefix.SERVICE_MATERIAL_WHERE,
           false,
         );
         continue;
@@ -65,37 +64,36 @@ export class CounterpartAddressInputState extends MessageState {
       }
 
       // Check if the selected option is valid.
-      if (!this.optionHasPrefix(selectedOption, prefix.COUNTERPART_ADDRESS)) {
+      if (!this.optionHasPrefix(selectedOption, prefix.SERVICE_MATERIAL_WHERE)) {
         context.logger.error(
-          `${selectedOption} is not a valid option for ${prefix.COUNTERPART_ADDRESS}.`,
+          `${selectedOption} is not a valid option for ${prefix.SERVICE_MATERIAL_WHERE}.`,
         );
 
         // Send the confirmation options again.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.COUNTERPART_ADDRESS_CONFIRMATION_REQUEST(
-            ticket.ownerType,
-            ticket.counterpartAddress,
+          messages.SERVICE_MATERIAL_WHERE_CONFIRMATION_REQUEST(
+            ticket.serviceMaterialWhere,
           ),
-          prefix.COUNTERPART_ADDRESS,
+          prefix.SERVICE_MATERIAL_WHERE,
           false,
         );
 
         continue;
       }
 
-      if (selectedOption === `${prefix.COUNTERPART_ADDRESS}-no`) {
+      if (selectedOption === `${prefix.SERVICE_MATERIAL_WHERE}-no`) {
         // TODO: Go to previous state.
-        ticket.counterpartAddress = null;
+        ticket.serviceMaterialWhere = null;
 
         await context.whatsappService.ticketService.save({
           ...ticket,
-          state: TicketState.WAITING_COUNTERPART_ADDRESS,
+          state: TicketState.WAITING_SERVICE_MATERIAL_WHERE,
         });
 
         await context.whatsappService.sendMessage(
           phoneNumber,
-          messages.COUNTERPART_ADDRESS_REQUEST(ticket.ownerType),
+          messages.SERVICE_MATERIAL_WHERE_REQUEST(),
         );
 
         continue;

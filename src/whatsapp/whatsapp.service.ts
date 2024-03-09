@@ -222,17 +222,25 @@ export class WhatsappService {
     category: CategoryEntity,
   ): Promise<boolean> {
     const optionList =
-      await this.generateInteractiveObjectFromDecision(category);
+      await this.generateInteractiveObjectFromCategory(category);
 
     if (!optionList) {
       return false;
     }
+
     this.logger.log(JSON.stringify(optionList));
+    this.logger.log('erro é aqui');
     const messageSent = await this.whatsapp.messages.interactive(
       optionList,
       phoneNumber,
     );
 
+    if(messageSent.statusCode() !== 200) {
+      this.logger.error(
+        `${messageSent.statusCode()} ${messageSent.responseBodyToJSON()}`,
+      );
+      return false;
+    }
     this.logger.log(
       `${messageSent.statusCode()} ${messageSent.responseBodyToJSON()}`,
     );
@@ -327,17 +335,17 @@ export class WhatsappService {
     return interactive;
   }
 
-  protected async generateInteractiveObjectFromDecision(
+  protected async generateInteractiveObjectFromCategory(
     root: Partial<CategoryEntity>,
   ): Promise<InteractiveObject> {
-    let decision = await this.categoryService.findOne({
+    let category = await this.categoryService.findOne({
       where: [{ slug: root.slug }, { id: root.id }],
       relations: ['parent'],
     });
 
-    decision = await this.categoryService.fillChildren(decision);
+    category = await this.categoryService.fillChildren(category);
 
-    if (!decision.children || decision.children.length === 0) return null;
+    if (!category.children || category.children.length === 0) return null;
 
     const interactive: InteractiveObject = {
       action: {
@@ -348,18 +356,21 @@ export class WhatsappService {
       },
       type: InteractiveTypesEnum.List,
       body: {
-        text: this.clampString(decision.description, 1024),
+        text: this.clampString(category.description, 1024),
       },
       header: {
         type: 'text',
-        text: this.clampString(decision.title, 60),
+        text: this.clampString(category.title, 60),
       },
       footer: {
         text: this.clampString('Escolha uma opção', 60),
       },
     };
-    if (decision.children.length > 0) {
-      for (const child of decision.children) {
+    if (category.children.length > 0) {
+      if(category.children.length> 9){
+        category.children = category.children.slice(0,8);
+      }
+      for (const child of category.children) {
         interactive.action.sections[0].rows.push({
           title: this.clampString(child.title, 24),
           id: this.clampString(child.slug, 200),
@@ -367,18 +378,19 @@ export class WhatsappService {
         });
       }
 
-      if (decision.parent) {
-        if (interactive.action.sections[0].rows.length < 9) {
-          interactive.action.sections[0].rows.push({
-            title: this.clampString('Voltar', 24),
-            id: 'previous-category',
-            description: this.clampString(
-              'Voltar para a categoria anterior',
-              72,
-            ),
-          });
-        }
-      }
+      //
+      // if (category.parent) {
+      //   if (interactive.action.sections[0].rows.length < 9) {
+      //     interactive.action.sections[0].rows.push({
+      //       title: this.clampString('Voltar', 24),
+      //       id: 'previous-category',
+      //       description: this.clampString(
+      //         'Voltar para a categoria anterior',
+      //         72,
+      //       ),
+      //     });
+      //   }
+      // }
     }
     return interactive;
   }

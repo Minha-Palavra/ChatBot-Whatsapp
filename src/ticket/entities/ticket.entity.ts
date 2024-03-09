@@ -9,6 +9,10 @@ import { CategoryEntity } from '../../category/category.entity';
 @Entity({ name: 'ticket' })
 export class TicketEntity extends AbstractEntity {
   @ApiProperty()
+  @ManyToOne(() => CategoryEntity, (category) => category.tickets)
+  category: CategoryEntity;
+
+  @ApiProperty()
   @ManyToOne(() => UserEntity, (user) => user.tickets)
   owner: UserEntity;
 
@@ -41,6 +45,58 @@ export class TicketEntity extends AbstractEntity {
   counterpartAddress: string;
 
   @ApiProperty()
-  @ManyToOne(() => CategoryEntity, (category) => category.tickets)
-  category: CategoryEntity;
+  @Column({ nullable: true })
+  serviceAddress: string;
+
+  @ApiProperty()
+  @Column({ nullable: true })
+  serviceDetails: string;
+
+  @ApiProperty()
+  @Column({ nullable: true })
+  serviceStartDate: string;
+
+  @ApiProperty()
+  @Column({ nullable: true })
+  serviceEndDate: string;
+
+  @ApiProperty()
+  @Column({ nullable: true })
+  servicePaymentAmount: string;
+
+  @ApiProperty()
+  @Column({ nullable: true })
+  servicePaymentDates: string;
+
+  @ApiProperty()
+  @Column({ nullable: true })
+  serviceMaterialDate: string;
+
+  @ApiProperty()
+  @Column({ nullable: true })
+  serviceMaterialHowBuy: string;
+
+  @ApiProperty()
+  @Column({ nullable: true })
+  serviceMaterialPayback: string;
+
+  @ApiProperty()
+  @Column({ nullable: true })
+  serviceMaterialHowMuchBudgets: string;
+
+  @ApiProperty()
+  @Column({ nullable: true })
+  serviceMaterialWhere: string;
+
+  @ApiProperty()
+  @Column({ nullable: true })
+  serviceContractCancel: string;
+
+  @ApiProperty()
+  @Column({ nullable: true })
+  serviceContractCancelDetails: string;
+
+  @ApiProperty()
+  @Column({ nullable: true })
+  serviceMaterialHowMuch: string;
 }

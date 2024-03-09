@@ -6,7 +6,7 @@ import { prefix } from '../../whatsapp/entities/prefix';
 import { TicketEntity } from '../entities/ticket.entity';
 import { TicketState } from '../entities/ticket-state';
 
-export class CounterpartAddressInputState extends MessageState {
+export class ServiceDetailsInputState extends MessageState {
   public async processMessages(
     value: ValueObject,
     context: IMessageProcessingContext,
@@ -29,24 +29,21 @@ export class CounterpartAddressInputState extends MessageState {
       const phoneNumber = this.formatPhoneNumber(message.from);
 
       if (message.type === 'text') {
-        const counterpartAddress = message.text.body;
+        const serviceDetails = message.text.body;
 
-        ticket.counterpartAddress = counterpartAddress;
+        ticket.serviceDetails = serviceDetails;
 
         // Update the user state.
         await context.whatsappService.ticketService.save({
           ...ticket,
-          state: TicketState.WAITING_COUNTERPART_ADDRESS_CONFIRMATION,
+          state: TicketState.WAITING_SERVICE_DETAILS_CONFIRMATION,
         });
 
         // Send the confirmation options.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.COUNTERPART_ADDRESS_CONFIRMATION_REQUEST(
-            ticket.ownerType,
-            ticket.counterpartAddress,
-          ),
-          prefix.COUNTERPART_ADDRESS,
+          messages.SERVICE_DETAILS_CONFIRMATION_REQUEST(),
+          prefix.SERVICE_DETAILS,
           false,
         );
         continue;
@@ -65,37 +62,34 @@ export class CounterpartAddressInputState extends MessageState {
       }
 
       // Check if the selected option is valid.
-      if (!this.optionHasPrefix(selectedOption, prefix.COUNTERPART_ADDRESS)) {
+      if (!this.optionHasPrefix(selectedOption, prefix.SERVICE_DETAILS)) {
         context.logger.error(
-          `${selectedOption} is not a valid option for ${prefix.COUNTERPART_ADDRESS}.`,
+          `${selectedOption} is not a valid option for ${prefix.SERVICE_DETAILS}.`,
         );
 
         // Send the confirmation options again.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.COUNTERPART_ADDRESS_CONFIRMATION_REQUEST(
-            ticket.ownerType,
-            ticket.counterpartAddress,
-          ),
-          prefix.COUNTERPART_ADDRESS,
+          messages.SERVICE_DETAILS_CONFIRMATION_REQUEST(),
+          prefix.SERVICE_DETAILS,
           false,
         );
 
         continue;
       }
 
-      if (selectedOption === `${prefix.COUNTERPART_ADDRESS}-no`) {
+      if (selectedOption === `${prefix.SERVICE_DETAILS}-no`) {
         // TODO: Go to previous state.
-        ticket.counterpartAddress = null;
+        ticket.serviceDetails = null;
 
         await context.whatsappService.ticketService.save({
           ...ticket,
-          state: TicketState.WAITING_COUNTERPART_ADDRESS,
+          state: TicketState.WAITING_SERVICE_DETAILS,
         });
 
         await context.whatsappService.sendMessage(
           phoneNumber,
-          messages.COUNTERPART_ADDRESS_REQUEST(ticket.ownerType),
+          messages.SERVICE_DETAILS_REQUEST(),
         );
 
         continue;

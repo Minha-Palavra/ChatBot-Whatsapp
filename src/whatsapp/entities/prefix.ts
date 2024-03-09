@@ -11,4 +11,21 @@ export const prefix = {
   COUNTERPART_TAXPAYER_NUMBER: 'counterpart-taxpayer-number',
   COUNTERPART_PHONE_NUMBER: 'counterpart-phone-number',
   COUNTERPART_EMAIL: 'counterpart-email',
+  COUNTERPART_ADDRESS: 'counterpart-address',
+  SERVICE_ADDRESS: 'service-address',
+  SERVICE_DETAILS: 'service-details',
+  SERVICE_START_DATE: 'service-start-date',
+  SERVICE_END_DATE: 'service-end-date',
+  SERVICE_PAYMENT_AMOUNT: 'service-payment-amount',
+  SERVICE_PAYMENT_DATES: '',
+  SERVICE_MATERIAL_DATE: '',
+  SERVICE_MATERIAL_HOW_BUY: '',
+  SERVICE_MATERIAL_HOW_MUCH_BUDGETS: '',
+  SERVICE_MATERIAL_WHERE: '',
+  SERVICE_MATERIAL_PAYBACK: '',
+  SERVICE_CONTRACT_CANCEL: '',
+  SERVICE_CONTRACT_CANCEL_DETAILS: '',
+  SERVICE_MATERIAL_HOW_MUCH: '',
+
+
 };

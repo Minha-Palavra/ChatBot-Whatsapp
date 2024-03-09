@@ -1,4 +1,5 @@
 import { OwnerType } from '../../ticket/entities/owner-type';
+import { startWith } from 'rxjs';
 
 export const messages = {
   WELCOME: () => '*Bem-vindo ao Minha Palavra!*',
@@ -63,4 +64,32 @@ export const messages = {
   COUNTERPART_ADDRESS_CONFIRMATION_REQUEST: (owner: OwnerType, address) =>
     `O endereço ${address} do ${owner === OwnerType.CUSTOMER ? 'contratado' : 'contratante'}, está correto?`,
   SERVICE_CATEGORY_REQUEST: () => 'Qual é a categoria do serviço?',
-};
+  SERVICE_ADDRESS_REQUEST: () => 'Qual é o endereço para a prestação do serviço?',
+  SERVICE_ADDRESS_CONFIRMATION_REQUEST: (serviceAddress: string) => `O endereço, ${serviceAddress}, para a prestação do serviço está correto?`,
+  SERVICE_DETAILS_REQUEST: () => 'Descreva o serviço que está sendo oferecido. Escreva todos os detalhes do serviço a ser prestado.',
+  SERVICE_DETAILS_CONFIRMATION_REQUEST: () => 'A descrição do serviço está correta?',
+  SERVICE_START_DATE_REQUEST: () => 'Quando será iniciado o serviço?',
+  SERVICE_START_DATE_CONFIRMATION_REQUEST: (serviceStartDate: string) => `A data ${startWith()}, para início do serviço está correta?`,
+  SERVICE_END_DATE_REQUEST: () => 'Quando será terminado do serviço?',
+  SERVICE_END_DATE_CONFIRMATION_REQUEST: (serviceStartDate: string) => `A data ${startWith()}, para término do serviço está correta?`,
+  SERVICE_PAYMENT_AMOUNT_REQUEST: () => 'Qual o valor total do pagamento?',
+  SERVICE_PAYMENT_AMOUNT_CONFIRMATION_REQUEST: (servicePaymentAmount: string) => `O valor total ${servicePaymentAmount}, está correto?`,
+  SERVICE_PAYMENT_DATES_REQUEST: () => '',
+  SERVICE_PAYMENT_DATES_CONFIRMATION_REQUEST: (servicePaymentDates: string) => ``,
+  SERVICE_MATERIAL_DATE_REQUEST: () => ``,
+  SERVICE_MATERIAL_DATE_CONFIRMATION_REQUEST: (serviceMaterialDate: string) => ``,
+  SERVICE_MATERIAL_HOW_BUY_REQUEST: () => ``,
+  SERVICE_MATERIAL_HOW_BUY_CONFIRMATION_REQUEST: (serviceMaterialHowBuy: string) => ``,
+  SERVICE_MATERIAL_WHERE_REQUEST: () => ``,
+  SERVICE_MATERIAL_WHERE_CONFIRMATION_REQUEST: (serviceMaterialWhere: string) => ``,
+  SERVICE_MATERIAL_PAYBACK_REQUEST: () => ``,
+  SERVICE_MATERIAL_PAYBACK_CONFIRMATION_REQUEST: (serviceMaterialPayback: string) => ``,
+  SERVICE_MATERIAL_HOW_MUCH_BUDGETS_REQUEST: () => ``,
+  SERVICE_MATERIAL_HOW_MUCH_BUDGETS_CONFIRMATION_REQUEST: (serviceMaterialHowMuchBudgets: string) => ``,
+  SERVICE_CONTRACT_CANCEL_REQUEST: () => ``,
+  SERVICE_CONTRACT_CANCEL_CONFIRMATION_REQUEST: (serviceContractCancel: string) => ``,
+  SERVICE_CONTRACT_CANCEL_DETAILS_REQUEST: () => ``,
+  SERVICE_CONTRACT_CANCEL_DETAILS_CONFIRMATION_REQUEST: (serviceContractCancelDetails: string) => ``,
+  SERVICE_MATERIAL_HOW_MUCH_REQUEST: () => ``,
+  SERVICE_MATERIAL_HOW_MUCH_CONFIRMATION_REQUEST: (serviceMaterialHowMuch: any) => ``
+}
