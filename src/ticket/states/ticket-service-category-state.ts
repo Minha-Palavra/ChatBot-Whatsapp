@@ -89,7 +89,10 @@ export class TicketServiceCategoryState extends MessageState {
         );
 
         await context.whatsappService.ticketService.save(ticket);
-        await context.whatsappService.sendCategoryOptions(phoneNumber, ticket.category);
+        await context.whatsappService.sendCategoryOptions(
+          phoneNumber,
+          ticket.category,
+        );
 
         continue;
       }
@@ -136,7 +139,10 @@ export class TicketServiceCategoryState extends MessageState {
         continue;
       }
 
-      //await this.requestContext(phoneNumber, tickçet);
+      await context.whatsappService.ticketService.save({
+        ...ticket,
+        state: TicketState.WAITING_SERVICE_DETAILS,
+      });
 
       // TODO: Send the address confirmation success message.
       // await context.whatsappService.sendMessage(
@@ -144,10 +150,10 @@ export class TicketServiceCategoryState extends MessageState {
       //   messages.,
       // );
 
-      // await context.whatsappService.sendMessage(
-      //   phoneNumber,
-      //   messages.COUNTERPART_NAME_REQUEST(ticket.ownerType),
-      // );
+      await context.whatsappService.sendMessage(
+        phoneNumber,
+        messages.SERVICE_DETAILS_REQUEST(),
+      );
     }
   }
 }

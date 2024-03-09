@@ -102,7 +102,7 @@ export class ServiceStartDateInputState extends MessageState {
       // Save the user.
       await context.whatsappService.ticketService.save({
         ...ticket,
-        state: TicketState.WAITING_SERVICE_CATEGORY,
+        state: TicketState.WAITING_SERVICE_END_DATE,
       });
 
       // TODO: Send the name confirmation success message.
@@ -111,21 +111,10 @@ export class ServiceStartDateInputState extends MessageState {
       //   messages.userPhoneNumberConfirmationSuccess,
       // );
 
-      const initialCategory =
-        await context.whatsappService.categoryService.findOne({
-          where: { slug: 'root' },
-        });
-
-      ticket.category = initialCategory;
-
-      await context.whatsappService.ticketService.save({
-        ...ticket,
-        state: TicketState.WAITING_SERVICE_CATEGORY,
-      });
-
-      await context.whatsappService.sendCategoryOptions(
+      // TODO: Go to next state.
+      await context.whatsappService.sendMessage(
         phoneNumber,
-        initialCategory,
+        messages.SERVICE_END_DATE_REQUEST(),
       );
     }
   }

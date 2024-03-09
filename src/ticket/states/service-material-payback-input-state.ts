@@ -40,14 +40,14 @@ export class ServiceMaterialPaybackInputState extends MessageState {
         });
 
         // Send the confirmation options.
-        await context.whatsappService.sendConfirmationOptions(
-          phoneNumber,
-          messages.SERVICE_MATERIAL_PAYBACK_CONFIRMATION_REQUEST(
-            ticket.serviceMaterialPayback,
-          ),
-          prefix.SERVICE_MATERIAL_PAYBACK,
-          false,
-        );
+        // await context.whatsappService.sendConfirmationOptions(
+        //   phoneNumber,
+        //   messages.SERVICE_MATERIAL_PAYBACK_CONFIRMATION_REQUEST(
+        //     ticket.serviceMaterialPayback,
+        //   ),
+        //   prefix.SERVICE_MATERIAL_PAYBACK,
+        //   false,
+        // );
         continue;
       }
 
@@ -70,14 +70,14 @@ export class ServiceMaterialPaybackInputState extends MessageState {
         );
 
         // Send the confirmation options again.
-        await context.whatsappService.sendConfirmationOptions(
-          phoneNumber,
-          messages.SERVICE_MATERIAL_PAYBACK_CONFIRMATION_REQUEST(
-            ticket.serviceMaterialPayback,
-          ),
-          prefix.SERVICE_MATERIAL_PAYBACK,
-          false,
-        );
+        // await context.whatsappService.sendConfirmationOptions(
+        //   phoneNumber,
+        //   messages.SERVICE_MATERIAL_PAYBACK_CONFIRMATION_REQUEST(
+        //     ticket.serviceMaterialPayback,
+        //   ),
+        //   prefix.SERVICE_MATERIAL_PAYBACK,
+        //   false,
+        // );
 
         continue;
       }
@@ -91,10 +91,10 @@ export class ServiceMaterialPaybackInputState extends MessageState {
           state: TicketState.WAITING_SERVICE_MATERIAL_PAYBACK,
         });
 
-        await context.whatsappService.sendMessage(
-          phoneNumber,
-          messages.SERVICE_MATERIAL_PAYBACK_REQUEST(),
-        );
+        // await context.whatsappService.sendMessage(
+        //   phoneNumber,
+        //   messages.SERVICE_MATERIAL_PAYBACK_REQUEST(),
+        // );
 
         continue;
       }

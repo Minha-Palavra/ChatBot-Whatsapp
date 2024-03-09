@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  Logger,
-  UnprocessableEntityException,
-} from '@nestjs/common';
+import { Injectable, Logger, UnprocessableEntityException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 // import WhatsApp from 'whatsapp';
@@ -17,10 +13,7 @@ import { UserRegistrationInitialState } from '../user/states/user-registration-i
 import { UserService } from '../user/user.service';
 import { IMessageState } from './states/message-state.interface';
 import { MessagesProcessingContext } from './states/messages-processing-context';
-import {
-  getTicketStateProcessor,
-  TicketState,
-} from '../ticket/entities/ticket-state';
+import { getTicketStateProcessor, TicketState } from '../ticket/entities/ticket-state';
 import { TicketEntity } from '../ticket/entities/ticket.entity';
 import { CategoryEntity } from '../category/category.entity';
 import { CategoryService } from '../category/category.service';
@@ -41,7 +34,8 @@ export class WhatsappService {
     private historyService: HistoryService,
     public ticketService: TicketService,
     public userService: UserService,
-  ) {}
+  ) {
+  }
 
   public async checkWebhookMinimumRequirements(body: WebhookObject) {
     if (body.object !== 'whatsapp_business_account') {
@@ -159,13 +153,16 @@ export class WhatsappService {
     phoneNumber: string,
     message: string,
   ): Promise<void> {
-    const messageSent = await this.whatsapp.messages.text(
-      { body: message },
-      phoneNumber,
-    );
-    this.logger.log(
-      `${messageSent.statusCode()}: #${JSON.stringify(messageSent.responseBodyToJSON)}`,
-    );
+    try {
+      const messageSent = await this.whatsapp.messages.text(
+        { body: message },
+        phoneNumber,
+      );
+      this.logger.log(`${await messageSent.rawResponse()}`,
+      );
+    } catch (e) {
+      this.logger.log(JSON.stringify(e));
+    }
   }
 
   public async sendConfirmationOptions(
@@ -235,7 +232,7 @@ export class WhatsappService {
       phoneNumber,
     );
 
-    if(messageSent.statusCode() !== 200) {
+    if (messageSent.statusCode() !== 200) {
       this.logger.error(
         `${messageSent.statusCode()} ${messageSent.responseBodyToJSON()}`,
       );
@@ -367,8 +364,8 @@ export class WhatsappService {
       },
     };
     if (category.children.length > 0) {
-      if(category.children.length> 9){
-        category.children = category.children.slice(0,8);
+      if (category.children.length > 9) {
+        category.children = category.children.slice(0, 8);
       }
       for (const child of category.children) {
         interactive.action.sections[0].rows.push({

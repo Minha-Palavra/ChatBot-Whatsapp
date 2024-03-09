@@ -4,10 +4,9 @@ import { ValueObject } from 'whatsapp/build/types/webhooks';
 import { messages } from '../../whatsapp/entities/messages';
 import { prefix } from '../../whatsapp/entities/prefix';
 import { TicketEntity } from '../entities/ticket.entity';
-import { OwnerType } from '../entities/owner-type';
 import { TicketState } from '../entities/ticket-state';
 
-export class TicketOwnerTypeInputState extends MessageState {
+export class ServiceHoursState extends MessageState {
   public async processMessages(
     value: ValueObject,
     context: IMessageProcessingContext,
@@ -35,11 +34,11 @@ export class TicketOwnerTypeInputState extends MessageState {
           messages.INVALID_OPTION(),
         );
 
+        // Update the user state.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.TICKET_OWNER_TYPE_REQUEST(),
-          prefix.TICKET_OWNER_TYPE,
-          false,
+          messages.SERVICE_HOURS_REQUEST(),
+          prefix.SERVICE_HOURS,
         );
 
         continue;
@@ -58,44 +57,55 @@ export class TicketOwnerTypeInputState extends MessageState {
       }
 
       // Check if the selected option is valid.
-      if (!this.optionHasPrefix(selectedOption, prefix.TICKET_OWNER_TYPE)) {
+      if (!this.optionHasPrefix(selectedOption, prefix.SERVICE_HOURS)) {
         context.logger.error(
-          `${selectedOption} is not a valid option for ${prefix.TICKET_OWNER_TYPE}.`,
+          `${selectedOption} is not a valid option for ${prefix.SERVICE_HOURS}.`,
         );
 
         // Send the confirmation options again.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.TICKET_OWNER_TYPE_CONFIRMATION_REQUEST(ticket.ownerType),
-          prefix.TICKET_OWNER_TYPE,
+          messages.SERVICE_HOURS_REQUEST(),
+          prefix.SERVICE_HOURS,
           false,
         );
 
         continue;
       }
 
-      if (selectedOption === `${prefix.DATA_PRIVACY}-provider`) {
-        //
-        ticket.ownerType = OwnerType.SERVICE_PROVIDER;
-      } else if (selectedOption === `${prefix.DATA_PRIVACY}-customer`) {
-        //
-        ticket.ownerType = OwnerType.CUSTOMER;
-      } else {
+      if (selectedOption === `${prefix.SERVICE_HOURS}-no`) {
+        // TODO: Go to previous state.
+        ticket.serviceDetails = null;
+
+        await context.whatsappService.ticketService.save({
+          ...ticket,
+          state: TicketState.WAITING_SERVICE_PAYMENT_AMOUNT,
+        });
+
+        await context.whatsappService.sendMessage(
+          phoneNumber,
+          messages.SERVICE_PAYMENT_AMOUNT_REQUEST(),
+        );
+
+        continue;
       }
+
+      // Save the user.
       await context.whatsappService.ticketService.save({
         ...ticket,
-        state: TicketState.WAITING_COUNTERPART_NAME,
+        state: TicketState.WAITING_SERVICE_HOURS_DESCRIPTION,
       });
 
-      // TODO: Send the address confirmation success message.
+      // // TODO: Send the data privacy confirmation success message.
       // await context.whatsappService.sendMessage(
       //   phoneNumber,
-      //   messages.,
+      //   messages.DATA_PRIVACY_ACCEPTED(),
       // );
 
+      // TODO: Go to next state.
       await context.whatsappService.sendMessage(
         phoneNumber,
-        messages.COUNTERPART_NAME_REQUEST(ticket.ownerType),
+        messages.SERVICE_HOURS_DESCRIPTION_REQUEST(),
       );
     }
   }

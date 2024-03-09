@@ -102,30 +102,19 @@ export class ServiceAddressInputState extends MessageState {
       // Save the user.
       await context.whatsappService.ticketService.save({
         ...ticket,
-        state: TicketState.WAITING_SERVICE_CATEGORY,
+        state: TicketState.WAITING_SERVICE_START_DATE,
       });
 
-      // TODO: Send the name confirmation success message.
+      // // TODO: Send the data privacy confirmation success message.
       // await context.whatsappService.sendMessage(
       //   phoneNumber,
-      //   messages.userPhoneNumberConfirmationSuccess,
+      //   messages.DATA_PRIVACY_ACCEPTED(),
       // );
 
-      const initialCategory =
-        await context.whatsappService.categoryService.findOne({
-          where: { slug: 'root' },
-        });
-
-      ticket.category = initialCategory;
-
-      await context.whatsappService.ticketService.save({
-        ...ticket,
-        state: TicketState.WAITING_SERVICE_CATEGORY,
-      });
-
-      await context.whatsappService.sendCategoryOptions(
+      // TODO: Go to next state.
+      await context.whatsappService.sendMessage(
         phoneNumber,
-        initialCategory,
+        messages.SERVICE_START_DATE_REQUEST(),
       );
     }
   }

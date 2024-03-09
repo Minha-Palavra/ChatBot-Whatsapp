@@ -29,9 +29,9 @@ export class ServiceEndDateInputState extends MessageState {
       const phoneNumber = this.formatPhoneNumber(message.from);
 
       if (message.type === 'text') {
-        const serviceStartDate = message.text.body;
+        const serviceEndDate = message.text.body;
 
-        ticket.serviceStartDate = serviceStartDate;
+        ticket.serviceEndDate = serviceEndDate;
 
         // Update the user state.
         await context.whatsappService.ticketService.save({
@@ -43,7 +43,7 @@ export class ServiceEndDateInputState extends MessageState {
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
           messages.SERVICE_END_DATE_CONFIRMATION_REQUEST(
-            ticket.serviceStartDate,
+            ticket.serviceEndDate,
           ),
           prefix.SERVICE_END_DATE,
           false,
@@ -73,7 +73,7 @@ export class ServiceEndDateInputState extends MessageState {
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
           messages.SERVICE_END_DATE_CONFIRMATION_REQUEST(
-            ticket.serviceStartDate,
+            ticket.serviceEndDate,
           ),
           prefix.SERVICE_END_DATE,
           false,
@@ -84,7 +84,7 @@ export class ServiceEndDateInputState extends MessageState {
 
       if (selectedOption === `${prefix.SERVICE_END_DATE}-no`) {
         // TODO: Go to previous state.
-        ticket.serviceStartDate = null;
+        ticket.serviceEndDate = null;
 
         await context.whatsappService.ticketService.save({
           ...ticket,
@@ -102,7 +102,7 @@ export class ServiceEndDateInputState extends MessageState {
       // Save the user.
       await context.whatsappService.ticketService.save({
         ...ticket,
-        state: TicketState.WAITING_SERVICE_CATEGORY,
+        state: TicketState.WAITING_SERVICE_HOURS,
       });
 
       // TODO: Send the name confirmation success message.
@@ -111,21 +111,10 @@ export class ServiceEndDateInputState extends MessageState {
       //   messages.userPhoneNumberConfirmationSuccess,
       // );
 
-      const initialCategory =
-        await context.whatsappService.categoryService.findOne({
-          where: { slug: 'root' },
-        });
-
-      ticket.category = initialCategory;
-
-      await context.whatsappService.ticketService.save({
-        ...ticket,
-        state: TicketState.WAITING_SERVICE_CATEGORY,
-      });
-
-      await context.whatsappService.sendCategoryOptions(
+      await context.whatsappService.sendConfirmationOptions(
         phoneNumber,
-        initialCategory,
+        messages.SERVICE_HOURS_REQUEST(),
+        prefix.SERVICE_HOURS,
       );
     }
   }
