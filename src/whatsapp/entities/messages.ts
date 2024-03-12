@@ -127,4 +127,5 @@ são necessários?`,
   SERVICE_HOURS_DESCRIPTION_REQUEST: () => `Descreva os horários`,
   SERVICE_HOURS_DESCRIPTION_CONFIRMATION_REQUEST: () =>
     `Os horários estão corretos?`,
+  SERVICE_PAYMENT_METHOD_REQUEST: () => `Qual a forma de pagamento?`,
 };

@@ -26,6 +26,17 @@ export abstract class MessageState implements IMessageState {
     );
   }
 
+  protected paymentMethodOptionHasPrefix(
+    option: string,
+    prefix: string,
+  ): boolean {
+    return (
+      option === `${prefix}-in-cash` ||
+      option === `${prefix}-in-installments` ||
+      option === `${prefix}-others`
+    );
+  }
+
   protected getSelectedOptionFromMessage(
     message: MessagesObject,
   ): string | null {
@@ -167,5 +178,4 @@ export abstract class MessageState implements IMessageState {
       );
     }
   }
-
 }

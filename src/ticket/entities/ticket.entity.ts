@@ -107,4 +107,8 @@ export class TicketEntity extends AbstractEntity {
   @ApiProperty()
   @Column({ nullable: true })
   serviceHoursDescription: string;
+
+  @ApiProperty()
+  @Column({ nullable: true })
+  servicePaymentMethodDescription: string;
 }

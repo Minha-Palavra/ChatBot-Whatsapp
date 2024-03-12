@@ -51,9 +51,7 @@ export class ApiConfigService {
       path.join(__dirname, '/../database/migrations/*{.ts,.js}'),
     ];
 
-    const subscribers = [
-      path.join(__dirname, '/src/**/*.subscriber{.ts,.js}'),
-    ];
+    const subscribers = [path.join(__dirname, '/src/**/*.subscriber{.ts,.js}')];
 
     return {
       type: 'postgres',

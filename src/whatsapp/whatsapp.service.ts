@@ -1,4 +1,8 @@
-import { Injectable, Logger, UnprocessableEntityException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 // import WhatsApp from 'whatsapp';
@@ -13,7 +17,10 @@ import { UserRegistrationInitialState } from '../user/states/user-registration-i
 import { UserService } from '../user/user.service';
 import { IMessageState } from './states/message-state.interface';
 import { MessagesProcessingContext } from './states/messages-processing-context';
-import { getTicketStateProcessor, TicketState } from '../ticket/entities/ticket-state';
+import {
+  getTicketStateProcessor,
+  TicketState,
+} from '../ticket/entities/ticket-state';
 import { TicketEntity } from '../ticket/entities/ticket.entity';
 import { CategoryEntity } from '../category/category.entity';
 import { CategoryService } from '../category/category.service';
@@ -34,8 +41,7 @@ export class WhatsappService {
     private historyService: HistoryService,
     public ticketService: TicketService,
     public userService: UserService,
-  ) {
-  }
+  ) {}
 
   public async checkWebhookMinimumRequirements(body: WebhookObject) {
     if (body.object !== 'whatsapp_business_account') {
@@ -158,8 +164,7 @@ export class WhatsappService {
         { body: message },
         phoneNumber,
       );
-      this.logger.log(`${await messageSent.rawResponse()}`,
-      );
+      this.logger.log(`${await messageSent.rawResponse()}`);
     } catch (e) {
       this.logger.log(JSON.stringify(e));
     }
@@ -225,8 +230,6 @@ export class WhatsappService {
       return false;
     }
 
-    this.logger.log(JSON.stringify(optionList));
-    this.logger.log('erro é aqui');
     const messageSent = await this.whatsapp.messages.interactive(
       optionList,
       phoneNumber,
@@ -238,6 +241,81 @@ export class WhatsappService {
       );
       return false;
     }
+    this.logger.log(
+      `${messageSent.statusCode()} ${messageSent.responseBodyToJSON()}`,
+    );
+
+    return true;
+  }
+
+  public async sendPaymentMethodsOptions(
+    phoneNumber: string,
+    message: string,
+    prefix: string,
+    cancelable = true,
+  ) {
+    // Generate the confirmation options using the prefix.
+    const options = await this.generatePaymentMethodsOptions(
+      message,
+      prefix,
+      cancelable,
+    );
+
+    const messageSent = await this.whatsapp.messages.interactive(
+      options,
+      phoneNumber,
+    );
+
+    this.logger.log(
+      `${messageSent.statusCode()} ${messageSent.responseBodyToJSON()}`,
+    );
+
+    return true;
+  }
+
+  public async sendPaymentInInstallmentsOptions(
+    phoneNumber: string,
+    message: string,
+    prefix: string,
+    cancelable = true,
+  ) {
+    // Generate the confirmation options using the prefix.
+    const options = await this.generatePaymentInInstallmentsOptions(
+      message,
+      prefix,
+      cancelable,
+    );
+
+    const messageSent = await this.whatsapp.messages.interactive(
+      options,
+      phoneNumber,
+    );
+
+    this.logger.log(
+      `${messageSent.statusCode()} ${messageSent.responseBodyToJSON()}`,
+    );
+
+    return true;
+  }
+
+  public async sendPaymentInCashOptions(
+    phoneNumber: string,
+    message: string,
+    prefix: string,
+    cancelable = true,
+  ) {
+    // Generate the confirmation options using the prefix.
+    const options = await this.generatePaymentInCashOptions(
+      message,
+      prefix,
+      cancelable,
+    );
+
+    const messageSent = await this.whatsapp.messages.interactive(
+      options,
+      phoneNumber,
+    );
+
     this.logger.log(
       `${messageSent.statusCode()} ${messageSent.responseBodyToJSON()}`,
     );
@@ -317,6 +395,159 @@ export class WhatsappService {
       reply: {
         id: `${prefix}-customer`,
         title: 'Contratante',
+      },
+    });
+
+    if (cancelable) {
+      interactive.action.buttons.push({
+        type: 'reply',
+        reply: {
+          id: `${prefix}-cancel`,
+          title: 'Cancelar',
+        },
+      });
+    }
+    return interactive;
+  }
+
+  private async generatePaymentMethodsOptions(
+    message: string,
+    prefix: string,
+    cancelable = true,
+  ): Promise<InteractiveObject> {
+    const interactive: InteractiveObject = {
+      action: {
+        buttons: [],
+      },
+      type: InteractiveTypesEnum.Button,
+      body: {
+        text: message,
+      },
+    };
+
+    interactive.action.buttons.push({
+      type: 'reply',
+      reply: {
+        id: `${prefix}-in-cash`,
+        title: 'A vista',
+      },
+    });
+
+    interactive.action.buttons.push({
+      type: 'reply',
+      reply: {
+        id: `${prefix}-in-installments`,
+        title: 'Parcelado',
+      },
+    });
+
+    interactive.action.buttons.push({
+      type: 'reply',
+      reply: {
+        id: `${prefix}-others`,
+        title: 'Outros',
+      },
+    });
+
+    if (cancelable) {
+      interactive.action.buttons.push({
+        type: 'reply',
+        reply: {
+          id: `${prefix}-cancel`,
+          title: 'Cancelar',
+        },
+      });
+    }
+    return interactive;
+  }
+
+  private async generatePaymentInCashOptions(
+    message: string,
+    prefix: string,
+    cancelable = true,
+  ): Promise<InteractiveObject> {
+    const interactive: InteractiveObject = {
+      action: {
+        buttons: [],
+      },
+      type: InteractiveTypesEnum.Button,
+      body: {
+        text: message,
+      },
+    };
+
+    interactive.action.buttons.push({
+      type: 'reply',
+      reply: {
+        id: `${prefix}-money`,
+        title: 'Dinheiro',
+      },
+    });
+
+    interactive.action.buttons.push({
+      type: 'reply',
+      reply: {
+        id: `${prefix}-pix`,
+        title: 'PIX',
+      },
+    });
+
+    interactive.action.buttons.push({
+      type: 'reply',
+      reply: {
+        id: `${prefix}-others`,
+        title: 'Outros',
+      },
+    });
+
+    if (cancelable) {
+      interactive.action.buttons.push({
+        type: 'reply',
+        reply: {
+          id: `${prefix}-cancel`,
+          title: 'Cancelar',
+        },
+      });
+    }
+    return interactive;
+  }
+
+  private async generatePaymentInInstallmentsOptions(
+    message: string,
+    prefix: string,
+    cancelable = true,
+  ): Promise<InteractiveObject> {
+    const interactive: InteractiveObject = {
+      action: {
+        buttons: [],
+      },
+      type: InteractiveTypesEnum.Button,
+      body: {
+        text: message,
+      },
+    };
+
+    interactive.action.buttons.push({
+      type: 'reply',
+      reply: {
+        id: `${prefix}-credit-card`,
+        title: 'Cartão',
+      },
+    });
+
+    interactive.action.buttons.push({
+      type: 'reply',
+      reply: {
+        id: `${prefix}-bank-slip`,
+        title: 'Boleto',
+      },
+    });
+
+    interactive.action.buttons.push({
+      type: 'reply',
+      reply: {
+        id: `${prefix}-others`,
+        title: 'Outros',
       },
     });
 

@@ -19,6 +19,7 @@ import { ServiceStepsState } from '../states/service-steps-state';
 import { ServiceStepsDescriptionState } from '../states/service-steps-description-state';
 import { ServiceHoursState } from '../states/service-hours-state';
 import { ServiceHoursDescriptionState } from '../states/service-hours-description-state';
+import { ServicePaymentMethodState } from '../states/service-payment-method-state';
 
 export enum TicketState {
   NONE = 'NONE',
@@ -69,6 +70,10 @@ export enum TicketState {
   WAITING_SERVICE_STEPS_DESCRIPTION = 'WAITING_SERVICE_STEPS_DESCRIPTION',
   WAITING_SERVICE_HOURS = 'WAITING_SERVICE_HOURS',
   WAITING_SERVICE_HOURS_DESCRIPTION = 'WAITING_SERVICE_HOURS_DESCRIPTION',
+  WAITING_SERVICE_PAYMENT_METHOD = 'WAITING_SERVICE_PAYMENT_METHOD',
+  WAITING_SERVICE_PAYMENT_IN_INSTALLMENTS_METHOD = 'WAITING_SERVICE_PAYMENT_IN_INSTALLMENTS_METHOD',
+  WAITING_SERVICE_PAYMENT_IN_CASH_METHOD = 'WAITING_SERVICE_PAYMENT_IN_CASH_METHOD',
+  WAITING_SERVICE_PAYMENT_OTHERS_METHOD = 'WAITING_SERVICE_PAYMENT_OTHERS_METHOD',
 }
 
 export const getTicketStateProcessor: Record<TicketState, IMessageState> = {
@@ -110,11 +115,16 @@ export const getTicketStateProcessor: Record<TicketState, IMessageState> = {
   [TicketState.WAITING_SERVICE_END_DATE_CONFIRMATION]:
     new ServiceEndDateInputState(),
   [TicketState.WAITING_SERVICE_HOURS]: new ServiceHoursState(),
-  [TicketState.WAITING_SERVICE_HOURS_DESCRIPTION]: new ServiceHoursDescriptionState(),
+  [TicketState.WAITING_SERVICE_HOURS_DESCRIPTION]:
+    new ServiceHoursDescriptionState(),
   [TicketState.WAITING_SERVICE_PAYMENT_AMOUNT]:
     new ServicePaymentAmountInputState(),
   [TicketState.WAITING_SERVICE_PAYMENT_AMOUNT_CONFIRMATION]:
     new ServicePaymentAmountInputState(),
+  [TicketState.WAITING_SERVICE_PAYMENT_METHOD]: new ServicePaymentMethodState(),
+  [TicketState.WAITING_SERVICE_PAYMENT_IN_INSTALLMENTS_METHOD]: null,
+  [TicketState.WAITING_SERVICE_PAYMENT_IN_CASH_METHOD]: null,
+  [TicketState.WAITING_SERVICE_PAYMENT_OTHERS_METHOD]: null,
   [TicketState.WAITING_SERVICE_PAYMENT_DATES]:
     new ServicePaymentDatesInputState(),
   [TicketState.WAITING_SERVICE_PAYMENT_DATES_CONFIRMATION]:

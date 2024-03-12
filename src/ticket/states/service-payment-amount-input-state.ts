@@ -102,7 +102,7 @@ export class ServicePaymentAmountInputState extends MessageState {
       // Save the user.
       await context.whatsappService.ticketService.save({
         ...ticket,
-        state: TicketState.WAITING_SERVICE_CATEGORY,
+        state: TicketState.WAITING_SERVICE_PAYMENT_METHOD,
       });
 
       // TODO: Send the name confirmation success message.
@@ -111,21 +111,11 @@ export class ServicePaymentAmountInputState extends MessageState {
       //   messages.userPhoneNumberConfirmationSuccess,
       // );
 
-      const initialCategory =
-        await context.whatsappService.categoryService.findOne({
-          where: { slug: 'root' },
-        });
-
-      ticket.category = initialCategory;
-
-      await context.whatsappService.ticketService.save({
-        ...ticket,
-        state: TicketState.WAITING_SERVICE_CATEGORY,
-      });
-
-      await context.whatsappService.sendCategoryOptions(
+      await context.whatsappService.sendPaymentMethodsOptions(
         phoneNumber,
-        initialCategory,
+        messages.SERVICE_PAYMENT_METHOD_REQUEST(),
+        prefix.SERVICE_PAYMENT_METHOD,
+        false,
       );
     }
   }
