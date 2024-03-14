@@ -6,7 +6,7 @@ import { prefix } from '../../whatsapp/entities/prefix';
 import { TicketEntity } from '../entities/ticket.entity';
 import { TicketState } from '../entities/ticket-state';
 
-export class ServicePaymentMethodState extends MessageState {
+export class ServiceInCashPaymentMethodState extends MessageState {
   public async processMessages(
     value: ValueObject,
     context: IMessageProcessingContext,
@@ -34,10 +34,10 @@ export class ServicePaymentMethodState extends MessageState {
           messages.INVALID_OPTION(),
         );
 
-        await context.whatsappService.sendPaymentMethodsOptions(
+        await context.whatsappService.sendPaymentInCashOptions(
           phoneNumber,
-          messages.SERVICE_PAYMENT_METHOD_REQUEST(),
-          prefix.SERVICE_PAYMENT_METHOD,
+          messages.SERVICE_PAYMENT_METHOD_IN_CASH_REQUEST(),
+          prefix.SERVICE_PAYMENT_IN_CASH_METHOD,
           false,
         );
 
@@ -58,13 +58,13 @@ export class ServicePaymentMethodState extends MessageState {
 
       // Check if the selected option is valid.
       if (
-        !this.paymentMethodOptionHasPrefix(
+        !this.paymentInCashMethodOptionHasPrefix(
           selectedOption,
-          prefix.SERVICE_PAYMENT_METHOD,
+          prefix.SERVICE_PAYMENT_IN_CASH_METHOD,
         )
       ) {
         context.logger.error(
-          `${selectedOption} is not a valid option for ${prefix.SERVICE_PAYMENT_METHOD}.`,
+          `${selectedOption} is not a valid option for ${prefix.SERVICE_PAYMENT_IN_CASH_METHOD}.`,
         );
 
         await context.whatsappService.sendMessage(
@@ -72,73 +72,46 @@ export class ServicePaymentMethodState extends MessageState {
           messages.INVALID_OPTION(),
         );
 
-        await context.whatsappService.sendPaymentMethodsOptions(
-          phoneNumber,
-          messages.SERVICE_PAYMENT_METHOD_REQUEST(),
-          prefix.SERVICE_PAYMENT_METHOD,
-          false,
-        );
-
-        continue;
-      }
-
-      if (selectedOption === `${prefix.SERVICE_PAYMENT_METHOD}-in-cash`) {
-        await context.whatsappService.ticketService.save({
-          ...ticket,
-          state: TicketState.WAITING_SERVICE_PAYMENT_IN_CASH_METHOD,
-        });
-
         await context.whatsappService.sendPaymentInCashOptions(
           phoneNumber,
-          messages.SERVICE_PAYMENT_METHOD_IN_CASH_REQUEST(),
+          messages.SERVICE_PAYMENT_METHOD_REQUEST(),
           prefix.SERVICE_PAYMENT_IN_CASH_METHOD,
           false,
         );
 
         continue;
+      }
+
+      if (selectedOption === `${prefix.SERVICE_PAYMENT_IN_CASH_METHOD}-money`) {
+        await context.whatsappService.ticketService.save({
+          ...ticket,
+          servicePaymentMethodDescription: 'Dinheiro',
+          state: TicketState.WAITING_SERVICE_PAYMENT_DATES,
+        });
       } else if (
         //
-        selectedOption === `${prefix.SERVICE_PAYMENT_METHOD}-in-installments`
+        selectedOption === `${prefix.SERVICE_PAYMENT_IN_CASH_METHOD}-pix`
       ) {
         await context.whatsappService.ticketService.save({
           ...ticket,
-          state: TicketState.WAITING_SERVICE_PAYMENT_IN_INSTALLMENTS_METHOD,
+          servicePaymentMethodDescription: 'PIX',
+          state: TicketState.WAITING_SERVICE_PAYMENT_DATES,
         });
-
-        await context.whatsappService.sendPaymentInInstallmentsOptions(
-          phoneNumber,
-          messages.SERVICE_PAYMENT_METHOD_IN_INSTALLMENTS_REQUEST(),
-          prefix.SERVICE_PAYMENT_IN_INSTALLMENTS_METHOD,
-          false,
-        );
-        continue;
-      } else if (selectedOption === `${prefix.SERVICE_PAYMENT_METHOD}-others`) {
+      } else if (
+        selectedOption === `${prefix.SERVICE_PAYMENT_IN_CASH_METHOD}-others`
+      ) {
         await context.whatsappService.ticketService.save({
           ...ticket,
+          servicePaymentMethodDescription: 'Outros',
           state: TicketState.WAITING_SERVICE_PAYMENT_OTHERS_METHOD,
         });
 
-        await context.whatsappService.ticketService.save({
-          ...ticket,
-          state: TicketState.WAITING_SERVICE_PAYMENT_METHOD,
-        });
-
-        continue;
-      } else {
-        await context.whatsappService.sendMessage(
-          phoneNumber,
-          messages.INVALID_OPTION(),
-        );
-
-        await context.whatsappService.sendPaymentMethodsOptions(
-          phoneNumber,
-          messages.SERVICE_PAYMENT_METHOD_REQUEST(),
-          prefix.SERVICE_PAYMENT_METHOD,
-          false,
-        );
-
         continue;
       }
+      await context.whatsappService.sendMessage(
+        phoneNumber,
+        messages.SERVICE_PAYMENT_DATES_REQUEST(),
+      );
     }
   }
 }

@@ -5,7 +5,7 @@ import { messages } from '../../whatsapp/entities/messages';
 import { TicketEntity } from '../entities/ticket.entity';
 import { TicketState } from '../entities/ticket-state';
 
-export class TicketServiceCategoryState extends MessageState {
+export class ServiceCategoryState extends MessageState {
   public async processMessages(
     value: ValueObject,
     context: IMessageProcessingContext,

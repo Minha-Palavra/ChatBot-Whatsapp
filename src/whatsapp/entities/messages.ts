@@ -128,4 +128,8 @@ são necessários?`,
   SERVICE_HOURS_DESCRIPTION_CONFIRMATION_REQUEST: () =>
     `Os horários estão corretos?`,
   SERVICE_PAYMENT_METHOD_REQUEST: () => `Qual a forma de pagamento?`,
+  SERVICE_PAYMENT_METHOD_IN_CASH_REQUEST: () =>
+    `Qual a forma de pagamento a vista?`,
+  SERVICE_PAYMENT_METHOD_IN_INSTALLMENTS_REQUEST: () =>
+    `Qual a forma de pagamento parcelado?`,
 };

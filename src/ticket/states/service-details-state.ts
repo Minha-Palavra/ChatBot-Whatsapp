@@ -1,12 +1,12 @@
 import { MessageState } from '../../whatsapp/states/message-state';
-import { ValueObject } from 'whatsapp/build/types/webhooks';
 import { IMessageProcessingContext } from '../../whatsapp/states/message-processing-context.interface';
+import { ValueObject } from 'whatsapp/build/types/webhooks';
 import { messages } from '../../whatsapp/entities/messages';
 import { prefix } from '../../whatsapp/entities/prefix';
 import { TicketEntity } from '../entities/ticket.entity';
 import { TicketState } from '../entities/ticket-state';
 
-export class CounterpartTaxpayerNumberInputState extends MessageState {
+export class ServiceDetailsState extends MessageState {
   public async processMessages(
     value: ValueObject,
     context: IMessageProcessingContext,
@@ -29,39 +29,21 @@ export class CounterpartTaxpayerNumberInputState extends MessageState {
       const phoneNumber = this.formatPhoneNumber(message.from);
 
       if (message.type === 'text') {
-        const taxpayerNumber = message.text.body.replace(/\D/g, '');
+        const serviceDetails = message.text.body;
 
-        if (!this.isValidTaxpayerNumber(taxpayerNumber)) {
-          await context.whatsappService.sendMessage(
-            phoneNumber,
-            messages.INVALID_TAXPAYER_NUMBER(),
-          );
-
-          await context.whatsappService.sendMessage(
-            phoneNumber,
-            messages.COUNTERPART_TAXPAYER_NUMBER_REQUEST(ticket.ownerType),
-          );
-
-          continue;
-        }
-
-        ticket.counterpartTaxpayerNumber =
-          this.formatTaxpayerNumber(taxpayerNumber);
+        ticket.serviceDetails = serviceDetails;
 
         // Update the user state.
         await context.whatsappService.ticketService.save({
           ...ticket,
-          state: TicketState.WAITING_COUNTERPART_TAXPAYER_NUMBER_CONFIRMATION,
+          state: TicketState.WAITING_SERVICE_DETAILS_CONFIRMATION,
         });
 
         // Send the confirmation options.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.COUNTERPART_TAXPAYER_NUMBER_CONFIRMATION_REQUEST(
-            ticket.ownerType,
-            ticket.counterpartTaxpayerNumber
-          ),
-          prefix.COUNTERPART_TAXPAYER_NUMBER,
+          messages.SERVICE_DETAILS_CONFIRMATION_REQUEST(),
+          prefix.SERVICE_DETAILS,
           false,
         );
         continue;
@@ -80,42 +62,34 @@ export class CounterpartTaxpayerNumberInputState extends MessageState {
       }
 
       // Check if the selected option is valid.
-      if (
-        !this.optionHasPrefix(
-          selectedOption,
-          prefix.COUNTERPART_TAXPAYER_NUMBER,
-        )
-      ) {
+      if (!this.optionHasPrefix(selectedOption, prefix.SERVICE_DETAILS)) {
         context.logger.error(
-          `${selectedOption} is not a valid option for ${prefix.COUNTERPART_TAXPAYER_NUMBER}.`,
+          `${selectedOption} is not a valid option for ${prefix.SERVICE_DETAILS}.`,
         );
 
         // Send the confirmation options again.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.COUNTERPART_TAXPAYER_NUMBER_CONFIRMATION_REQUEST(
-            ticket.ownerType,
-            ticket.counterpartTaxpayerNumber,
-          ),
-          prefix.COUNTERPART_TAXPAYER_NUMBER,
+          messages.SERVICE_DETAILS_CONFIRMATION_REQUEST(),
+          prefix.SERVICE_DETAILS,
           false,
         );
 
         continue;
       }
 
-      if (selectedOption === `${prefix.COUNTERPART_TAXPAYER_NUMBER}-no`) {
+      if (selectedOption === `${prefix.SERVICE_DETAILS}-no`) {
         // TODO: Go to previous state.
-        ticket.counterpartTaxpayerNumber = null;
+        ticket.serviceDetails = null;
 
         await context.whatsappService.ticketService.save({
           ...ticket,
-          state: TicketState.WAITING_COUNTERPART_TAXPAYER_NUMBER,
+          state: TicketState.WAITING_SERVICE_DETAILS,
         });
 
         await context.whatsappService.sendMessage(
           phoneNumber,
-          messages.COUNTERPART_TAXPAYER_NUMBER_REQUEST(ticket.ownerType),
+          messages.SERVICE_DETAILS_REQUEST(),
         );
 
         continue;
@@ -124,18 +98,19 @@ export class CounterpartTaxpayerNumberInputState extends MessageState {
       // Save the user.
       await context.whatsappService.ticketService.save({
         ...ticket,
-        state: TicketState.WAITING_COUNTERPART_PHONE_NUMBER,
+        state: TicketState.WAITING_SERVICE_STEPS,
       });
 
       // TODO: Send the name confirmation success message.
       // await context.whatsappService.sendMessage(
       //   phoneNumber,
-      //   messages.userTaxpayerNumberConfirmationSuccess,
+      //   messages.userPhoneNumberConfirmationSuccess,
       // );
 
-      await context.whatsappService.sendMessage(
+      await context.whatsappService.sendConfirmationOptions(
         phoneNumber,
-        messages.COUNTERPART_PHONE_NUMBER_REQUEST(ticket.ownerType),
+        messages.SERVICE_STEPS_REQUEST(),
+        prefix.SERVICE_STEPS,
       );
     }
   }

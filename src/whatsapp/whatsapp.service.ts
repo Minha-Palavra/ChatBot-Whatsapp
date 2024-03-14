@@ -164,6 +164,12 @@ export class WhatsappService {
         { body: message },
         phoneNumber,
       );
+      if (messageSent.statusCode() !== 200) {
+        this.logger.error('deu erro no sendPaymentInCashOptions.');
+        this.logger.log(messageSent.responseBodyToJSON());
+        //
+        setTimeout(() => this.sendMessage(phoneNumber, message), 5000);
+      }
       this.logger.log(`${await messageSent.rawResponse()}`);
     } catch (e) {
       this.logger.log(JSON.stringify(e));
@@ -186,7 +192,21 @@ export class WhatsappService {
       options,
       phoneNumber,
     );
-
+    if (messageSent.statusCode() !== 200) {
+      this.logger.error('deu erro no sendPaymentInCashOptions.');
+      this.logger.log(messageSent.responseBodyToJSON());
+      //
+      setTimeout(
+        () =>
+          this.sendConfirmationOptions(
+            phoneNumber,
+            message,
+            prefix,
+            cancelable,
+          ),
+        5000,
+      );
+    }
     this.logger.log(
       `${messageSent.statusCode()} ${messageSent.responseBodyToJSON()}`,
     );
@@ -212,6 +232,15 @@ export class WhatsappService {
       phoneNumber,
     );
 
+    if (messageSent.statusCode() !== 200) {
+      this.logger.error('deu erro no sendPaymentInCashOptions.');
+      this.logger.log(messageSent.responseBodyToJSON());
+      //
+      setTimeout(() =>
+        this.sendContextOptions(phoneNumber, message, prefix, cancelable),
+      );
+    }
+
     this.logger.log(
       `${messageSent.statusCode()} ${messageSent.responseBodyToJSON()}`,
     );
@@ -234,13 +263,13 @@ export class WhatsappService {
       optionList,
       phoneNumber,
     );
-
     if (messageSent.statusCode() !== 200) {
-      this.logger.error(
-        `${messageSent.statusCode()} ${messageSent.responseBodyToJSON()}`,
-      );
-      return false;
+      this.logger.error('deu erro no sendPaymentInCashOptions.');
+      this.logger.log(messageSent.responseBodyToJSON());
+      //
+      setTimeout(() => this.sendCategoryOptions(phoneNumber, category), 5000);
     }
+
     this.logger.log(
       `${messageSent.statusCode()} ${messageSent.responseBodyToJSON()}`,
     );
@@ -265,6 +294,21 @@ export class WhatsappService {
       options,
       phoneNumber,
     );
+    if (messageSent.statusCode() !== 200) {
+      this.logger.error('deu erro no sendPaymentInCashOptions.');
+      this.logger.log(messageSent.responseBodyToJSON());
+      //
+      setTimeout(
+        () =>
+          this.sendPaymentMethodsOptions(
+            phoneNumber,
+            message,
+            prefix,
+            cancelable,
+          ),
+        5000,
+      );
+    }
 
     this.logger.log(
       `${messageSent.statusCode()} ${messageSent.responseBodyToJSON()}`,
@@ -290,7 +334,21 @@ export class WhatsappService {
       options,
       phoneNumber,
     );
-
+    if (messageSent.statusCode() !== 200) {
+      this.logger.error('deu erro no sendPaymentInCashOptions.');
+      this.logger.log(messageSent.responseBodyToJSON());
+      //
+      setTimeout(
+        () =>
+          this.sendPaymentInInstallmentsOptions(
+            phoneNumber,
+            message,
+            prefix,
+            cancelable,
+          ),
+        5000,
+      );
+    }
     this.logger.log(
       `${messageSent.statusCode()} ${messageSent.responseBodyToJSON()}`,
     );
@@ -315,6 +373,22 @@ export class WhatsappService {
       options,
       phoneNumber,
     );
+
+    if (messageSent.statusCode() !== 200) {
+      this.logger.error('deu erro no sendPaymentInCashOptions.');
+      this.logger.log(messageSent.responseBodyToJSON());
+      //
+      setTimeout(
+        () =>
+          this.sendPaymentInCashOptions(
+            phoneNumber,
+            message,
+            prefix,
+            cancelable,
+          ),
+        5000,
+      );
+    }
 
     this.logger.log(
       `${messageSent.statusCode()} ${messageSent.responseBodyToJSON()}`,

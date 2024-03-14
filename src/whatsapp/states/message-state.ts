@@ -36,6 +36,26 @@ export abstract class MessageState implements IMessageState {
       option === `${prefix}-others`
     );
   }
+  protected paymentInInstallmentsMethodOptionHasPrefix(
+    option: string,
+    prefix: string,
+  ): boolean {
+    return (
+      option === `${prefix}-credit-card` ||
+      option === `${prefix}-bank-slip` ||
+      option === `${prefix}-others`
+    );
+  }
+  protected paymentInCashMethodOptionHasPrefix(
+    option: string,
+    prefix: string,
+  ): boolean {
+    return (
+      option === `${prefix}-money` ||
+      option === `${prefix}-pix` ||
+      option === `${prefix}-others`
+    );
+  }
 
   protected getSelectedOptionFromMessage(
     message: MessagesObject,

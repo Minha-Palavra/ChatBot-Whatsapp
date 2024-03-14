@@ -6,7 +6,7 @@ import { prefix } from '../../whatsapp/entities/prefix';
 import { TicketEntity } from '../entities/ticket.entity';
 import { TicketState } from '../entities/ticket-state';
 
-export class ServiceDetailsInputState extends MessageState {
+export class ServicePaymentAmountInputState extends MessageState {
   public async processMessages(
     value: ValueObject,
     context: IMessageProcessingContext,
@@ -29,21 +29,23 @@ export class ServiceDetailsInputState extends MessageState {
       const phoneNumber = this.formatPhoneNumber(message.from);
 
       if (message.type === 'text') {
-        const serviceDetails = message.text.body;
+        const servicePaymentAmount = message.text.body;
 
-        ticket.serviceDetails = serviceDetails;
+        ticket.servicePaymentAmount = servicePaymentAmount;
 
         // Update the user state.
         await context.whatsappService.ticketService.save({
           ...ticket,
-          state: TicketState.WAITING_SERVICE_DETAILS_CONFIRMATION,
+          state: TicketState.WAITING_SERVICE_PAYMENT_AMOUNT_CONFIRMATION,
         });
 
         // Send the confirmation options.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.SERVICE_DETAILS_CONFIRMATION_REQUEST(),
-          prefix.SERVICE_DETAILS,
+          messages.SERVICE_PAYMENT_AMOUNT_CONFIRMATION_REQUEST(
+            ticket.servicePaymentAmount,
+          ),
+          prefix.SERVICE_PAYMENT_AMOUNT,
           false,
         );
         continue;
@@ -62,34 +64,36 @@ export class ServiceDetailsInputState extends MessageState {
       }
 
       // Check if the selected option is valid.
-      if (!this.optionHasPrefix(selectedOption, prefix.SERVICE_DETAILS)) {
+      if (!this.optionHasPrefix(selectedOption, prefix.SERVICE_PAYMENT_AMOUNT)) {
         context.logger.error(
-          `${selectedOption} is not a valid option for ${prefix.SERVICE_DETAILS}.`,
+          `${selectedOption} is not a valid option for ${prefix.SERVICE_PAYMENT_AMOUNT}.`,
         );
 
         // Send the confirmation options again.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.SERVICE_DETAILS_CONFIRMATION_REQUEST(),
-          prefix.SERVICE_DETAILS,
+          messages.SERVICE_PAYMENT_AMOUNT_CONFIRMATION_REQUEST(
+            ticket.servicePaymentAmount,
+          ),
+          prefix.SERVICE_PAYMENT_AMOUNT,
           false,
         );
 
         continue;
       }
 
-      if (selectedOption === `${prefix.SERVICE_DETAILS}-no`) {
+      if (selectedOption === `${prefix.SERVICE_PAYMENT_AMOUNT}-no`) {
         // TODO: Go to previous state.
-        ticket.serviceDetails = null;
+        ticket.servicePaymentAmount = null;
 
         await context.whatsappService.ticketService.save({
           ...ticket,
-          state: TicketState.WAITING_SERVICE_DETAILS,
+          state: TicketState.WAITING_SERVICE_PAYMENT_AMOUNT,
         });
 
         await context.whatsappService.sendMessage(
           phoneNumber,
-          messages.SERVICE_DETAILS_REQUEST(),
+          messages.SERVICE_PAYMENT_AMOUNT_REQUEST(),
         );
 
         continue;
@@ -98,7 +102,7 @@ export class ServiceDetailsInputState extends MessageState {
       // Save the user.
       await context.whatsappService.ticketService.save({
         ...ticket,
-        state: TicketState.WAITING_SERVICE_STEPS,
+        state: TicketState.WAITING_SERVICE_PAYMENT_METHOD,
       });
 
       // TODO: Send the name confirmation success message.
@@ -107,10 +111,11 @@ export class ServiceDetailsInputState extends MessageState {
       //   messages.userPhoneNumberConfirmationSuccess,
       // );
 
-      await context.whatsappService.sendConfirmationOptions(
+      await context.whatsappService.sendPaymentMethodsOptions(
         phoneNumber,
-        messages.SERVICE_STEPS_REQUEST(),
-        prefix.SERVICE_STEPS,
+        messages.SERVICE_PAYMENT_METHOD_REQUEST(),
+        prefix.SERVICE_PAYMENT_METHOD,
+        false,
       );
     }
   }

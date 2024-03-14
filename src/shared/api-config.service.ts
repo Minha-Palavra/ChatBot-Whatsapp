@@ -55,7 +55,6 @@ export class ApiConfigService {
 
     return {
       type: 'postgres',
-      name: 'default',
       host: this.getString('DB_HOST') || 'localhost',
       port: this.getNumber('DB_PORT') || 5432,
       database: this.getString('DB_DATABASE') || 'postgres',

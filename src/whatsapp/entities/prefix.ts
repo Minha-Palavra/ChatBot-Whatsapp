@@ -31,6 +31,6 @@ export const prefix = {
   SERVICE_STEPS_DESCRIPTION: 'steps-description',
   SERVICE_HOURS_DESCRIPTION: 'hours-description',
   SERVICE_PAYMENT_METHOD: 'payment-method',
-  SERVICE_PAYMENT_IN_CASH_METHOD: 'payment-in-cash-method',
-  SERVICE_PAYMENT_IN_INSTALLMENTS_METHOD: 'payment-in-installments-method',
+  SERVICE_PAYMENT_IN_CASH_METHOD: 'payment-in-cash',
+  SERVICE_PAYMENT_IN_INSTALLMENTS_METHOD: 'payment-in-installments',
 };

@@ -6,9 +6,9 @@ import { CounterpartPhoneNumberInputState } from '../states/counterpart-phone-nu
 import { CounterpartEmailInputState } from '../states/counterpart-email-input-state';
 import { CounterpartAddressInputState } from '../states/counterpart-address-input-state';
 import { CounterpartTaxpayerNumberInputState } from '../states/counterpart-taxpayer-number-input-state';
-import { TicketServiceCategoryState } from '../states/ticket-service-category-state';
+import { ServiceCategoryState } from '../states/service-category-state';
 import { ServiceAddressInputState } from '../states/service-address-input-state';
-import { ServiceDetailsInputState } from '../states/service-details-input-state';
+import { ServiceDetailsState } from '../states/service-details-state';
 import { ServiceStartDateInputState } from '../states/service-start-date-input-state';
 import { ServiceEndDateInputState } from '../states/service-end-date-input-state';
 import { ServicePaymentAmountInputState } from '../states/service-payment-amount-input-state';
@@ -20,6 +20,8 @@ import { ServiceStepsDescriptionState } from '../states/service-steps-descriptio
 import { ServiceHoursState } from '../states/service-hours-state';
 import { ServiceHoursDescriptionState } from '../states/service-hours-description-state';
 import { ServicePaymentMethodState } from '../states/service-payment-method-state';
+import { ServiceInInstallmentsPaymentMethodState } from '../states/service-in-installments-payment-method-state';
+import { ServiceInCashPaymentMethodState } from '../states/service-in-cash-payment-method-state';
 
 export enum TicketState {
   NONE = 'NONE',
@@ -98,13 +100,13 @@ export const getTicketStateProcessor: Record<TicketState, IMessageState> = {
     new CounterpartTaxpayerNumberInputState(),
   [TicketState.WAITING_COUNTERPART_TAXPAYER_NUMBER_CONFIRMATION]:
     new CounterpartTaxpayerNumberInputState(),
-  [TicketState.WAITING_SERVICE_CATEGORY]: new TicketServiceCategoryState(),
+  [TicketState.WAITING_SERVICE_CATEGORY]: new ServiceCategoryState(),
   [TicketState.WAITING_SERVICE_ADDRESS]: new ServiceAddressInputState(),
   [TicketState.WAITING_SERVICE_ADDRESS_CONFIRMATION]:
     new ServiceAddressInputState(),
-  [TicketState.WAITING_SERVICE_DETAILS]: new ServiceDetailsInputState(),
+  [TicketState.WAITING_SERVICE_DETAILS]: new ServiceDetailsState(),
   [TicketState.WAITING_SERVICE_DETAILS_CONFIRMATION]:
-    new ServiceDetailsInputState(),
+    new ServiceDetailsState(),
   [TicketState.WAITING_SERVICE_STEPS]: new ServiceStepsState(),
   [TicketState.WAITING_SERVICE_STEPS_DESCRIPTION]:
     new ServiceStepsDescriptionState(),
@@ -122,8 +124,10 @@ export const getTicketStateProcessor: Record<TicketState, IMessageState> = {
   [TicketState.WAITING_SERVICE_PAYMENT_AMOUNT_CONFIRMATION]:
     new ServicePaymentAmountInputState(),
   [TicketState.WAITING_SERVICE_PAYMENT_METHOD]: new ServicePaymentMethodState(),
-  [TicketState.WAITING_SERVICE_PAYMENT_IN_INSTALLMENTS_METHOD]: null,
-  [TicketState.WAITING_SERVICE_PAYMENT_IN_CASH_METHOD]: null,
+  [TicketState.WAITING_SERVICE_PAYMENT_IN_INSTALLMENTS_METHOD]:
+    new ServiceInInstallmentsPaymentMethodState(),
+  [TicketState.WAITING_SERVICE_PAYMENT_IN_CASH_METHOD]:
+    new ServiceInCashPaymentMethodState(),
   [TicketState.WAITING_SERVICE_PAYMENT_OTHERS_METHOD]: null,
   [TicketState.WAITING_SERVICE_PAYMENT_DATES]:
     new ServicePaymentDatesInputState(),
