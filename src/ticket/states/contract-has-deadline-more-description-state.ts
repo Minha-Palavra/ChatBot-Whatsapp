@@ -38,7 +38,7 @@ export class ContractHasDeadlineMoreDescriptionState extends MessageState {
         await context.whatsappService.ticketService.save({
           ...ticket,
           state:
-            TicketState.WAITING_SERVICE_CONTRACT_HAS_DEADLINE_MORE_DESCRIPTION_CONFIRMATION,
+            TicketState.WAITING_CONTRACT_HAS_DEADLINE_MORE_DESCRIPTION_CONFIRMATION,
         });
 
         // Send the confirmation options.
