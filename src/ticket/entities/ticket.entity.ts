@@ -111,4 +111,32 @@ export class TicketEntity extends AbstractEntity {
   @ApiProperty()
   @Column({ nullable: true })
   servicePaymentMethodDescription: string;
+
+  @ApiProperty()
+  @Column({ nullable: true })
+  servicePaymentMethodInstallmentCount: string;
+
+  @ApiProperty()
+  @Column({ nullable: true })
+  materialIsPartOfContract: boolean;
+
+  @ApiProperty()
+  @Column({ nullable: true })
+  serviceMaterialPreDeterminedValue: string;
+
+  @ApiProperty()
+  @Column({ nullable: true })
+  whoWillPayForTheMaterials: string;
+
+  @ApiProperty()
+  @Column({ nullable: true })
+  serviceMaterialDetails: string;
+
+  @ApiProperty()
+  @Column({ nullable: true })
+  contractHasMoreDescription: string;
+
+  @ApiProperty()
+  @Column({ nullable: true })
+  contractHasDeadlineMoreDescription: string;
 }

@@ -6,7 +6,7 @@ import { prefix } from '../../whatsapp/entities/prefix';
 import { TicketEntity } from '../entities/ticket.entity';
 import { TicketState } from '../entities/ticket-state';
 
-export class ServiceMaterialHowMuchBudgetsInputState extends MessageState {
+export class MaterialHowManyBudgetsState extends MessageState {
   public async processMessages(
     value: ValueObject,
     context: IMessageProcessingContext,
@@ -36,7 +36,8 @@ export class ServiceMaterialHowMuchBudgetsInputState extends MessageState {
         // Update the user state.
         await context.whatsappService.ticketService.save({
           ...ticket,
-          state: TicketState.WAITING_SERVICE_MATERIAL_HOW_MUCH_BUDGETS_CONFIRMATION,
+          state:
+            TicketState.WAITING_SERVICE_MATERIAL_HOW_MUCH_BUDGETS_CONFIRMATION,
         });
 
         // Send the confirmation options.
@@ -64,7 +65,12 @@ export class ServiceMaterialHowMuchBudgetsInputState extends MessageState {
       }
 
       // Check if the selected option is valid.
-      if (!this.optionHasPrefix(selectedOption, prefix.SERVICE_MATERIAL_HOW_MUCH_BUDGETS)) {
+      if (
+        !this.optionHasPrefix(
+          selectedOption,
+          prefix.SERVICE_MATERIAL_HOW_MUCH_BUDGETS,
+        )
+      ) {
         context.logger.error(
           `${selectedOption} is not a valid option for ${prefix.SERVICE_MATERIAL_HOW_MUCH_BUDGETS}.`,
         );
@@ -99,33 +105,14 @@ export class ServiceMaterialHowMuchBudgetsInputState extends MessageState {
         continue;
       }
 
-      // Save the user.
       await context.whatsappService.ticketService.save({
         ...ticket,
-        state: TicketState.WAITING_SERVICE_CATEGORY,
+        state: TicketState.WAITING_SERVICE_MATERIAL_PRE_DETERMINED_VALUE,
       });
 
-      // TODO: Send the name confirmation success message.
-      // await context.whatsappService.sendMessage(
-      //   phoneNumber,
-      //   messages.userPhoneNumberConfirmationSuccess,
-      // );
-
-      const initialCategory =
-        await context.whatsappService.categoryService.findOne({
-          where: { slug: 'root' },
-        });
-
-      ticket.category = initialCategory;
-
-      await context.whatsappService.ticketService.save({
-        ...ticket,
-        state: TicketState.WAITING_SERVICE_CATEGORY,
-      });
-
-      await context.whatsappService.sendCategoryOptions(
+      await context.whatsappService.sendMessage(
         phoneNumber,
-        initialCategory,
+        messages.SERVICE_MATERIAL_PRE_DETERMINED_VALUE_REQUEST(),
       );
     }
   }

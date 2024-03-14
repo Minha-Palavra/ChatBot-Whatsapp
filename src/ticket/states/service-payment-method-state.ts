@@ -117,11 +117,10 @@ export class ServicePaymentMethodState extends MessageState {
           ...ticket,
           state: TicketState.WAITING_SERVICE_PAYMENT_OTHERS_METHOD,
         });
-
-        await context.whatsappService.ticketService.save({
-          ...ticket,
-          state: TicketState.WAITING_SERVICE_PAYMENT_METHOD,
-        });
+        await context.whatsappService.sendMessage(
+          phoneNumber,
+          messages.SERVICE_PAYMENT_OTHERS_REQUEST(),
+        );
 
         continue;
       } else {

@@ -6,7 +6,7 @@ import { prefix } from '../../whatsapp/entities/prefix';
 import { TicketEntity } from '../entities/ticket.entity';
 import { TicketState } from '../entities/ticket-state';
 
-export class ServiceMaterialHowBuyInputState extends MessageState {
+export class MaterialPaybackState extends MessageState {
   public async processMessages(
     value: ValueObject,
     context: IMessageProcessingContext,
@@ -29,23 +29,23 @@ export class ServiceMaterialHowBuyInputState extends MessageState {
       const phoneNumber = this.formatPhoneNumber(message.from);
 
       if (message.type === 'text') {
-        const serviceMaterialHowBuy = message.text.body;
+        const serviceMaterialPayback = message.text.body;
 
-        ticket.serviceMaterialHowBuy = serviceMaterialHowBuy;
+        ticket.serviceMaterialPayback = serviceMaterialPayback;
 
         // Update the user state.
         await context.whatsappService.ticketService.save({
           ...ticket,
-          state: TicketState.WAITING_SERVICE_MATERIAL_HOW_BUY_CONFIRMATION,
+          state: TicketState.WAITING_SERVICE_MATERIAL_PAYBACK_CONFIRMATION,
         });
 
         // Send the confirmation options.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.SERVICE_MATERIAL_HOW_BUY_CONFIRMATION_REQUEST(
-            ticket.serviceMaterialHowBuy,
+          messages.SERVICE_MATERIAL_PAYBACK_CONFIRMATION_REQUEST(
+            ticket.serviceMaterialPayback,
           ),
-          prefix.SERVICE_MATERIAL_HOW_BUY,
+          prefix.SERVICE_MATERIAL_PAYBACK,
           false,
         );
         continue;
@@ -64,36 +64,36 @@ export class ServiceMaterialHowBuyInputState extends MessageState {
       }
 
       // Check if the selected option is valid.
-      if (!this.optionHasPrefix(selectedOption, prefix.SERVICE_MATERIAL_HOW_BUY)) {
+      if (!this.optionHasPrefix(selectedOption, prefix.SERVICE_MATERIAL_PAYBACK)) {
         context.logger.error(
-          `${selectedOption} is not a valid option for ${prefix.SERVICE_MATERIAL_HOW_BUY}.`,
+          `${selectedOption} is not a valid option for ${prefix.SERVICE_MATERIAL_PAYBACK}.`,
         );
 
         // Send the confirmation options again.
-        await context.whatsappService.sendConfirmationOptions(
-          phoneNumber,
-          messages.SERVICE_MATERIAL_HOW_BUY_CONFIRMATION_REQUEST(
-            ticket.serviceMaterialHowBuy,
-          ),
-          prefix.SERVICE_MATERIAL_HOW_BUY,
-          false,
-        );
+        // await context.whatsappService.sendConfirmationOptions(
+        //   phoneNumber,
+        //   messages.SERVICE_MATERIAL_PAYBACK_CONFIRMATION_REQUEST(
+        //     ticket.serviceMaterialPayback,
+        //   ),
+        //   prefix.SERVICE_MATERIAL_PAYBACK,
+        //   false,
+        // );
 
         continue;
       }
 
-      if (selectedOption === `${prefix.SERVICE_MATERIAL_HOW_BUY}-no`) {
+      if (selectedOption === `${prefix.SERVICE_MATERIAL_PAYBACK}-no`) {
         // TODO: Go to previous state.
-        ticket.serviceMaterialHowBuy = null;
+        ticket.serviceMaterialPayback = null;
 
         await context.whatsappService.ticketService.save({
           ...ticket,
-          state: TicketState.WAITING_SERVICE_MATERIAL_HOW_BUY,
+          state: TicketState.WAITING_SERVICE_MATERIAL_PAYBACK,
         });
 
         await context.whatsappService.sendMessage(
           phoneNumber,
-          messages.SERVICE_MATERIAL_HOW_BUY_REQUEST(),
+          messages.SERVICE_MATERIAL_PAYBACK_REQUEST(),
         );
 
         continue;
@@ -101,12 +101,14 @@ export class ServiceMaterialHowBuyInputState extends MessageState {
 
       await context.whatsappService.ticketService.save({
         ...ticket,
-        state: TicketState.WAITING_SERVICE_MATERIAL_HOW_MUCH_BUDGETS,
+        state: TicketState.WAITING_SERVICE_MATERIAL_DETAILS,
       });
 
-      await context.whatsappService.sendMessage(
+      await context.whatsappService.sendConfirmationOptions(
         phoneNumber,
-        messages.SERVICE_MATERIAL_HOW_MUCH_BUDGETS_REQUEST(),
+        messages.MATERIAL_DETAILS_REQUEST(),
+        prefix.MATERIAL_DETAILS,
+        false,
       );
     }
   }

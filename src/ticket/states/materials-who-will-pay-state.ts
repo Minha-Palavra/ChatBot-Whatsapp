@@ -1,12 +1,12 @@
-import { MessageState } from '../../whatsapp/states/message-state';
-import { IMessageProcessingContext } from '../../whatsapp/states/message-processing-context.interface';
 import { ValueObject } from 'whatsapp/build/types/webhooks';
 import { messages } from '../../whatsapp/entities/messages';
 import { prefix } from '../../whatsapp/entities/prefix';
-import { TicketEntity } from '../entities/ticket.entity';
+import { IMessageProcessingContext } from '../../whatsapp/states/message-processing-context.interface';
+import { MessageState } from '../../whatsapp/states/message-state';
 import { TicketState } from '../entities/ticket-state';
+import { TicketEntity } from '../entities/ticket.entity';
 
-export class ServiceInCashPaymentMethodState extends MessageState {
+export class MaterialsWhoWillPayState extends MessageState {
   public async processMessages(
     value: ValueObject,
     context: IMessageProcessingContext,
@@ -34,10 +34,10 @@ export class ServiceInCashPaymentMethodState extends MessageState {
           messages.INVALID_OPTION(),
         );
 
-        await context.whatsappService.sendPaymentInCashOptions(
+        await context.whatsappService.sendContextOptions(
           phoneNumber,
-          messages.SERVICE_PAYMENT_METHOD_IN_CASH_REQUEST(),
-          prefix.SERVICE_PAYMENT_IN_CASH_METHOD,
+          messages.MATERIAL_WHO_PAY_REQUEST(),
+          prefix.MATERIAL_WHO_WILL_PAY,
           false,
         );
 
@@ -58,64 +58,49 @@ export class ServiceInCashPaymentMethodState extends MessageState {
 
       // Check if the selected option is valid.
       if (
-        !this.paymentInCashMethodOptionHasPrefix(
+        !this.contextOptionHasPrefix(
           selectedOption,
-          prefix.SERVICE_PAYMENT_IN_CASH_METHOD,
+          prefix.MATERIAL_WHO_WILL_PAY,
         )
       ) {
         context.logger.error(
-          `${selectedOption} is not a valid option for ${prefix.SERVICE_PAYMENT_IN_CASH_METHOD}.`,
+          `${selectedOption} is not a valid option for ${prefix.MATERIAL_WHO_WILL_PAY}.`,
         );
 
-        await context.whatsappService.sendMessage(
+        await context.whatsappService.sendContextOptions(
           phoneNumber,
-          messages.INVALID_OPTION(),
-        );
-
-        await context.whatsappService.sendPaymentInCashOptions(
-          phoneNumber,
-          messages.SERVICE_PAYMENT_METHOD_REQUEST(),
-          prefix.SERVICE_PAYMENT_IN_CASH_METHOD,
+          messages.MATERIAL_WHO_PAY_REQUEST(),
+          prefix.MATERIAL_WHO_WILL_PAY,
           false,
         );
 
         continue;
       }
 
-      if (selectedOption === `${prefix.SERVICE_PAYMENT_IN_CASH_METHOD}-money`) {
-        await context.whatsappService.ticketService.save({
-          ...ticket,
-          servicePaymentMethodDescription: 'Dinheiro',
-          state: TicketState.WAITING_SERVICE_PAYMENT_DATES,
-        });
-      } else if (
-        //
-        selectedOption === `${prefix.SERVICE_PAYMENT_IN_CASH_METHOD}-pix`
-      ) {
-        await context.whatsappService.ticketService.save({
-          ...ticket,
-          servicePaymentMethodDescription: 'PIX',
-          state: TicketState.WAITING_SERVICE_PAYMENT_DATES,
-        });
-      } else if (
-        selectedOption === `${prefix.SERVICE_PAYMENT_IN_CASH_METHOD}-others`
-      ) {
-        await context.whatsappService.ticketService.save({
-          ...ticket,
-          servicePaymentMethodDescription: 'Outros',
-          state: TicketState.WAITING_PAYMENT_IN_CASH_OTHER_METHOD,
-        });
+      if (selectedOption === `${prefix.MATERIAL_WHO_WILL_PAY}-provider`) {
+        // TODO: Go to previous state.
 
-        await context.whatsappService.sendMessage(
-          phoneNumber,
-          messages.SERVICE_PAYMENT_IN_CASH_OTHER_METHOD_REQUEST(),
-        );
-        continue;
+        await context.whatsappService.ticketService.save({
+          ...ticket,
+          whoWillPayForTheMaterials: 'provider',
+          state: TicketState.WAITING_SERVICE_MATERIAL_DATE,
+        });
+      } else if (
+        selectedOption === `${prefix.MATERIAL_WHO_WILL_PAY}-customer`
+      ) {
+        await context.whatsappService.ticketService.save({
+          ...ticket,
+          whoWillPayForTheMaterials: 'customer',
+          state: TicketState.WAITING_SERVICE_MATERIAL_DATE,
+        });
       }
+
       await context.whatsappService.sendMessage(
         phoneNumber,
-        messages.SERVICE_PAYMENT_DATES_REQUEST(),
+        messages.SERVICE_MATERIAL_DATE_REQUEST(),
       );
+
+      continue;
     }
   }
 }

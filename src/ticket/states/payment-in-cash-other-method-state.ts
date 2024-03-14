@@ -6,7 +6,7 @@ import { prefix } from '../../whatsapp/entities/prefix';
 import { TicketEntity } from '../entities/ticket.entity';
 import { TicketState } from '../entities/ticket-state';
 
-export class ServiceMaterialHowBuyInputState extends MessageState {
+export class PaymentInCashOtherMethodState extends MessageState {
   public async processMessages(
     value: ValueObject,
     context: IMessageProcessingContext,
@@ -29,23 +29,21 @@ export class ServiceMaterialHowBuyInputState extends MessageState {
       const phoneNumber = this.formatPhoneNumber(message.from);
 
       if (message.type === 'text') {
-        const serviceMaterialHowBuy = message.text.body;
-
-        ticket.serviceMaterialHowBuy = serviceMaterialHowBuy;
+        ticket.servicePaymentMethodDescription = message.text.body;
 
         // Update the user state.
         await context.whatsappService.ticketService.save({
           ...ticket,
-          state: TicketState.WAITING_SERVICE_MATERIAL_HOW_BUY_CONFIRMATION,
+          state: TicketState.WAITING_PAYMENT_IN_CASH_OTHER_METHOD_CONFIRMATION,
         });
 
         // Send the confirmation options.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.SERVICE_MATERIAL_HOW_BUY_CONFIRMATION_REQUEST(
-            ticket.serviceMaterialHowBuy,
+          messages.SERVICE_PAYMENT_IN_CASH_OTHER_METHOD_CONFIRMATION_REQUEST(
+            ticket.servicePaymentMethodDescription,
           ),
-          prefix.SERVICE_MATERIAL_HOW_BUY,
+          prefix.SERVICE_PAYMENT_IN_CASH_OTHER_METHOD,
           false,
         );
         continue;
@@ -64,49 +62,63 @@ export class ServiceMaterialHowBuyInputState extends MessageState {
       }
 
       // Check if the selected option is valid.
-      if (!this.optionHasPrefix(selectedOption, prefix.SERVICE_MATERIAL_HOW_BUY)) {
+      if (
+        !this.optionHasPrefix(
+          selectedOption,
+          prefix.SERVICE_PAYMENT_IN_CASH_OTHER_METHOD,
+        )
+      ) {
         context.logger.error(
-          `${selectedOption} is not a valid option for ${prefix.SERVICE_MATERIAL_HOW_BUY}.`,
+          `${selectedOption} is not a valid option for ${prefix.SERVICE_PAYMENT_IN_CASH_OTHER_METHOD}.`,
         );
 
         // Send the confirmation options again.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.SERVICE_MATERIAL_HOW_BUY_CONFIRMATION_REQUEST(
-            ticket.serviceMaterialHowBuy,
+          messages.SERVICE_PAYMENT_IN_CASH_OTHER_METHOD_CONFIRMATION_REQUEST(
+            ticket.servicePaymentMethodDescription,
           ),
-          prefix.SERVICE_MATERIAL_HOW_BUY,
+          prefix.SERVICE_PAYMENT_IN_CASH_OTHER_METHOD,
           false,
         );
 
         continue;
       }
 
-      if (selectedOption === `${prefix.SERVICE_MATERIAL_HOW_BUY}-no`) {
+      if (
+        selectedOption === `${prefix.SERVICE_PAYMENT_IN_CASH_OTHER_METHOD}-no`
+      ) {
         // TODO: Go to previous state.
-        ticket.serviceMaterialHowBuy = null;
+        ticket.servicePaymentMethodDescription = null;
 
         await context.whatsappService.ticketService.save({
           ...ticket,
-          state: TicketState.WAITING_SERVICE_MATERIAL_HOW_BUY,
+          state: TicketState.WAITING_PAYMENT_IN_CASH_OTHER_METHOD,
         });
 
         await context.whatsappService.sendMessage(
           phoneNumber,
-          messages.SERVICE_MATERIAL_HOW_BUY_REQUEST(),
+          messages.SERVICE_PAYMENT_IN_CASH_OTHER_METHOD_REQUEST(),
         );
 
         continue;
       }
 
+      // Save the user.
       await context.whatsappService.ticketService.save({
         ...ticket,
-        state: TicketState.WAITING_SERVICE_MATERIAL_HOW_MUCH_BUDGETS,
+        state: TicketState.WAITING_SERVICE_PAYMENT_DATES,
       });
+
+      // TODO: Send the name confirmation success message.
+      // await context.whatsappService.sendMessage(
+      //   phoneNumber,
+      //   messages.userPhoneNumberConfirmationSuccess,
+      // );
 
       await context.whatsappService.sendMessage(
         phoneNumber,
-        messages.SERVICE_MATERIAL_HOW_MUCH_BUDGETS_REQUEST(),
+        messages.SERVICE_PAYMENT_DATES_REQUEST(),
       );
     }
   }

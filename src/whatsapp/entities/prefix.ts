@@ -33,4 +33,20 @@ export const prefix = {
   SERVICE_PAYMENT_METHOD: 'payment-method',
   SERVICE_PAYMENT_IN_CASH_METHOD: 'payment-in-cash',
   SERVICE_PAYMENT_IN_INSTALLMENTS_METHOD: 'payment-in-installments',
+  SERVICE_PAYMENT_OTHER_METHOD: 'payment-other',
+  SERVICE_PAYMENT_INSTALLMENT_COUNT: 'payment-installment-amount',
+  SERVICE_PAYMENT_IN_INSTALLMENT_OTHER_METHOD: 'payment-in-installment-other',
+  SERVICE_PAYMENT_IN_CASH_OTHER_METHOD: 'payment-in-cash-other',
+  MATERIAL_IS_PART_OF_CONTRACT: 'material-is-part-of-contract',
+  MATERIAL_WHO_WILL_BUY: 'material-who-buy',
+  SERVICE_MATERIAL_PRE_DETERMINED_VALUE: 'material-pre-determined-value',
+  MATERIAL_WHO_WILL_PAY: 'material-who-pay',
+  MATERIAL_DETAILS: 'material-details',
+  MATERIAL_DETAILS_DESCRIPTION: 'material-details-description',
+  CONTRACT_HAS_MORE: 'contract-has-more',
+  CONTRACT_HAS_MORE_DESCRIPTION: 'contract-has-more-description',
+  CONTRACT_HAS_DEADLINE_MORE: 'contract-has-deadline-more',
+  CONTRACT_HAS_DEADLINE_MORE_DESCRIPTION: 'contract-has-deadline-more-description',
+
+
 };

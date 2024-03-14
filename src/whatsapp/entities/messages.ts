@@ -84,12 +84,11 @@ export const messages = {
   SERVICE_PAYMENT_DATES_REQUEST: () => 'Quais são as datas de pagamento?',
   SERVICE_PAYMENT_DATES_CONFIRMATION_REQUEST: (servicePaymentDates: string) =>
     `As datas de pagamento ${servicePaymentDates}, estão corretas?`,
-  SERVICE_MATERIAL_DATE_REQUEST: () => `Qual o prazo de
-entrega?`,
+  SERVICE_MATERIAL_DATE_REQUEST: () => `Qual o prazo de entrega?`,
   SERVICE_MATERIAL_DATE_CONFIRMATION_REQUEST: (serviceMaterialDate: string) =>
     `O prazo de entrega ${serviceMaterialDate}, está correto?`,
-  SERVICE_MATERIAL_HOW_BUY_REQUEST: () => `Como será feita a
-compra do material?`,
+  SERVICE_MATERIAL_HOW_BUY_REQUEST: () =>
+    `Como será feita a compra do material?`,
   SERVICE_MATERIAL_HOW_BUY_CONFIRMATION_REQUEST: (
     serviceMaterialHowBuy: string,
   ) =>
@@ -132,4 +131,55 @@ são necessários?`,
     `Qual a forma de pagamento a vista?`,
   SERVICE_PAYMENT_METHOD_IN_INSTALLMENTS_REQUEST: () =>
     `Qual a forma de pagamento parcelado?`,
+  SERVICE_PAYMENT_INSTALLMENT_COUNT_CONFIRMATION_REQUEST: (
+    servicePaymentMethodInstallmentCount: string,
+  ) =>
+    `O número de parcelas é ${servicePaymentMethodInstallmentCount}, está correto?`,
+  SERVICE_PAYMENT_INSTALLMENT_COUNT_REQUEST: () => `Quantas parcelas?`,
+  SERVICE_PAYMENT_IN_INSTALLMENT_OTHER_METHOD_REQUEST: () =>
+    `Descreva a forma de pagamento parcelado`,
+  SERVICE_PAYMENT_IN_INSTALLMENT_OTHER_METHOD_CONFIRMATION_REQUEST: (
+    servicePaymentMethodDescription: string,
+  ) =>
+    `A forma de pagamento parcelado é ${servicePaymentMethodDescription}, está correto?`,
+  SERVICE_PAYMENT_IN_CASH_OTHER_METHOD_REQUEST: () =>
+    `Descreva a forma de pagamento a vista`,
+  SERVICE_PAYMENT_IN_CASH_OTHER_METHOD_CONFIRMATION_REQUEST: (
+    servicePaymentMethodDescription: string,
+  ) =>
+    `A forma de pagamento a vista é ${servicePaymentMethodDescription}, está correto?`,
+  SERVICE_PAYMENT_OTHER_METHOD_CONFIRMATION_REQUEST: (
+    servicePaymentMethodDescription: string,
+  ) =>
+    `A forma de pagamento é ${servicePaymentMethodDescription}, está correto?`,
+  SERVICE_PAYMENT_OTHERS_REQUEST: () => `Descreva a forma de pagamento`,
+  MATERIAL_IS_PART_OF_CONTRACT_REQUEST: () =>
+    `O material faz parte do contrato?`,
+  MATERIAL_WHO_BUY_REQUEST: () => `Quem irá comprar o material?`,
+  SERVICE_MATERIAL_PRE_DETERMINED_VALUE_CONFIRMATION_REQUEST: (
+    serviceMaterialPreDeterminedValue: string,
+  ) =>
+    `O valor pré determinado é ${serviceMaterialPreDeterminedValue}, está correto?`,
+  SERVICE_MATERIAL_PRE_DETERMINED_VALUE_REQUEST: () =>
+    `Qual é o valor pré determinado?`,
+  MATERIAL_WHO_PAY_REQUEST: () => `Quem irá pagar pelo material?`,
+  SERVICE_MATERIAL_PAYBACK_CONFIRMATION_REQUEST: (
+    serviceMaterialPayback: string,
+  ) => `O reembolso será feito ${serviceMaterialPayback}, está correto?`,
+  SERVICE_MATERIAL_PAYBACK_REQUEST: () => `Como será feito o reembolso?`,
+  MATERIAL_DETAILS_REQUEST: () =>
+    `Gostaria de detalhar como irá acontecer a compra dos materiais?`,
+  SERVICE_MATERIAL_DETAILS_CONFIRMATION_REQUEST: (
+    serviceMaterialDetails: string,
+  ) => `Os detalhes da compra dos materiais estão corretos?`,
+  MATERIAL_DETAILS_DESCRIPTION_REQUEST: () =>
+    `Descreva como irá acontecer a compra dos materiais`,
+  CONTRACT_HAS_MORE_REQUEST: () =>
+    `Existirá multa prevista por atraso de pagamento?`,
+  CONTRACT_HAS_MORE_DESCRIPTION_REQUEST: () =>
+    `Descreva a multa prevista por atraso de pagamento`,
+  CONTRACT_HAS_MORE_DESCRIPTION_CONFIRMATION_REQUEST: (contractHasMoreDescription: string) => `A multa prevista por atraso de pagamento é ${contractHasMoreDescription}, está correta?`,
+  CONTRACT_HAS_DEADLINE_MORE_REQUEST: () => `Existirá multa prevista por atraso na entrega do serviço?`,
+  CONTRACT_HAS_DEADLINE_MORE_DESCRIPTION_REQUEST: () => `Descreva a multa prevista por atraso na entrega do serviço`,
+  CONTRACT_HAS_DEADLINE_MORE_DESCRIPTION_CONFIRMATION_REQUEST: (contractHasDeadlineMoreDescription: string) => `A multa prevista por atraso na entrega do serviço é ${contractHasDeadlineMoreDescription}, está correta?`,
 };

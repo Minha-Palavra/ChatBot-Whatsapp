@@ -1,12 +1,12 @@
-import { MessageState } from '../../whatsapp/states/message-state';
-import { IMessageProcessingContext } from '../../whatsapp/states/message-processing-context.interface';
 import { ValueObject } from 'whatsapp/build/types/webhooks';
 import { messages } from '../../whatsapp/entities/messages';
 import { prefix } from '../../whatsapp/entities/prefix';
-import { TicketEntity } from '../entities/ticket.entity';
+import { IMessageProcessingContext } from '../../whatsapp/states/message-processing-context.interface';
+import { MessageState } from '../../whatsapp/states/message-state';
 import { TicketState } from '../entities/ticket-state';
+import { TicketEntity } from '../entities/ticket.entity';
 
-export class ServiceMaterialHowBuyInputState extends MessageState {
+export class MaterialDetailsState extends MessageState {
   public async processMessages(
     value: ValueObject,
     context: IMessageProcessingContext,
@@ -29,25 +29,18 @@ export class ServiceMaterialHowBuyInputState extends MessageState {
       const phoneNumber = this.formatPhoneNumber(message.from);
 
       if (message.type === 'text') {
-        const serviceMaterialHowBuy = message.text.body;
+        await context.whatsappService.sendMessage(
+          phoneNumber,
+          messages.INVALID_OPTION(),
+        );
 
-        ticket.serviceMaterialHowBuy = serviceMaterialHowBuy;
-
-        // Update the user state.
-        await context.whatsappService.ticketService.save({
-          ...ticket,
-          state: TicketState.WAITING_SERVICE_MATERIAL_HOW_BUY_CONFIRMATION,
-        });
-
-        // Send the confirmation options.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.SERVICE_MATERIAL_HOW_BUY_CONFIRMATION_REQUEST(
-            ticket.serviceMaterialHowBuy,
-          ),
-          prefix.SERVICE_MATERIAL_HOW_BUY,
+          messages.MATERIAL_DETAILS_REQUEST(),
+          prefix.MATERIAL_DETAILS,
           false,
         );
+
         continue;
       }
 
@@ -64,50 +57,50 @@ export class ServiceMaterialHowBuyInputState extends MessageState {
       }
 
       // Check if the selected option is valid.
-      if (!this.optionHasPrefix(selectedOption, prefix.SERVICE_MATERIAL_HOW_BUY)) {
+      if (!this.optionHasPrefix(selectedOption, prefix.MATERIAL_DETAILS)) {
         context.logger.error(
-          `${selectedOption} is not a valid option for ${prefix.SERVICE_MATERIAL_HOW_BUY}.`,
+          `${selectedOption} is not a valid option for ${prefix.MATERIAL_DETAILS}.`,
         );
 
-        // Send the confirmation options again.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.SERVICE_MATERIAL_HOW_BUY_CONFIRMATION_REQUEST(
-            ticket.serviceMaterialHowBuy,
-          ),
-          prefix.SERVICE_MATERIAL_HOW_BUY,
+          messages.MATERIAL_DETAILS_REQUEST(),
+          prefix.MATERIAL_DETAILS,
           false,
         );
 
         continue;
       }
 
-      if (selectedOption === `${prefix.SERVICE_MATERIAL_HOW_BUY}-no`) {
+      if (selectedOption === `${prefix.MATERIAL_DETAILS}-no`) {
         // TODO: Go to previous state.
-        ticket.serviceMaterialHowBuy = null;
 
         await context.whatsappService.ticketService.save({
           ...ticket,
-          state: TicketState.WAITING_SERVICE_MATERIAL_HOW_BUY,
+          state: TicketState.WAITING_SERVICE_CONTRACT_HAS_MORE,
+        });
+
+        await context.whatsappService.sendConfirmationOptions(
+          phoneNumber,
+          messages.CONTRACT_HAS_MORE_REQUEST(),
+          prefix.CONTRACT_HAS_MORE,
+          false,
+        );
+
+      } else if (selectedOption === `${prefix.MATERIAL_DETAILS}-yes`) {
+        await context.whatsappService.ticketService.save({
+          ...ticket,
+          materialIsPartOfContract: true,
+          state: TicketState.WAITING_SERVICE_MATERIAL_DETAILS_DESCRIPTION,
         });
 
         await context.whatsappService.sendMessage(
           phoneNumber,
-          messages.SERVICE_MATERIAL_HOW_BUY_REQUEST(),
+          messages.MATERIAL_DETAILS_DESCRIPTION_REQUEST(),
         );
-
-        continue;
       }
 
-      await context.whatsappService.ticketService.save({
-        ...ticket,
-        state: TicketState.WAITING_SERVICE_MATERIAL_HOW_MUCH_BUDGETS,
-      });
-
-      await context.whatsappService.sendMessage(
-        phoneNumber,
-        messages.SERVICE_MATERIAL_HOW_MUCH_BUDGETS_REQUEST(),
-      );
+      // TODO: Send the data privacy confirmation success message.
     }
   }
 }

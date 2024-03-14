@@ -89,7 +89,7 @@ export class ServiceInInstallmentsPaymentMethodState extends MessageState {
         await context.whatsappService.ticketService.save({
           ...ticket,
           servicePaymentMethodDescription: 'Cartão de Crédito',
-          state: TicketState.WAITING_SERVICE_PAYMENT_DATES,
+          state: TicketState.WAITING_PAYMENT_INSTALLMENT_COUNT,
         });
       } else if (
         //
@@ -99,20 +99,27 @@ export class ServiceInInstallmentsPaymentMethodState extends MessageState {
         await context.whatsappService.ticketService.save({
           ...ticket,
           servicePaymentMethodDescription: 'Boleto Bancário',
-          state: TicketState.WAITING_SERVICE_PAYMENT_DATES,
+          state: TicketState.WAITING_PAYMENT_INSTALLMENT_COUNT,
         });
-      } else if (selectedOption === `${prefix.SERVICE_PAYMENT_METHOD}-others`) {
+      } else if (
+        selectedOption ===
+        `${prefix.SERVICE_PAYMENT_IN_INSTALLMENTS_METHOD}-others`
+      ) {
         await context.whatsappService.ticketService.save({
           ...ticket,
           servicePaymentMethodDescription: 'Outros',
-          state: TicketState.WAITING_SERVICE_PAYMENT_OTHERS_METHOD,
+          state: TicketState.WAITING_PAYMENT_IN_INSTALLMENT_OTHER_METHOD,
         });
 
+        await context.whatsappService.sendMessage(
+          phoneNumber,
+          messages.SERVICE_PAYMENT_IN_INSTALLMENT_OTHER_METHOD_REQUEST(),
+        );
         continue;
       }
       await context.whatsappService.sendMessage(
         phoneNumber,
-        messages.SERVICE_PAYMENT_DATES_REQUEST(),
+        messages.SERVICE_PAYMENT_INSTALLMENT_COUNT_REQUEST(),
       );
     }
   }

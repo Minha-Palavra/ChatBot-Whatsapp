@@ -6,7 +6,7 @@ import { prefix } from '../../whatsapp/entities/prefix';
 import { TicketEntity } from '../entities/ticket.entity';
 import { TicketState } from '../entities/ticket-state';
 
-export class ServiceMaterialWhereInputState extends MessageState {
+export class PaymentOtherMethodState extends MessageState {
   public async processMessages(
     value: ValueObject,
     context: IMessageProcessingContext,
@@ -29,23 +29,21 @@ export class ServiceMaterialWhereInputState extends MessageState {
       const phoneNumber = this.formatPhoneNumber(message.from);
 
       if (message.type === 'text') {
-        const serviceMaterialWhere = message.text.body;
-
-        ticket.serviceMaterialWhere = serviceMaterialWhere;
+        ticket.servicePaymentMethodDescription = message.text.body;
 
         // Update the user state.
         await context.whatsappService.ticketService.save({
           ...ticket,
-          state: TicketState.WAITING_SERVICE_MATERIAL_WHERE_CONFIRMATION,
+          state: TicketState.WAITING_SERVICE_PAYMENT_OTHER_METHOD_CONFIRMATION,
         });
 
         // Send the confirmation options.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.SERVICE_MATERIAL_WHERE_CONFIRMATION_REQUEST(
-            ticket.serviceMaterialWhere,
+          messages.SERVICE_PAYMENT_OTHER_METHOD_CONFIRMATION_REQUEST(
+            ticket.servicePaymentMethodDescription,
           ),
-          prefix.SERVICE_MATERIAL_WHERE,
+          prefix.SERVICE_PAYMENT_OTHER_METHOD,
           false,
         );
         continue;
@@ -64,36 +62,43 @@ export class ServiceMaterialWhereInputState extends MessageState {
       }
 
       // Check if the selected option is valid.
-      if (!this.optionHasPrefix(selectedOption, prefix.SERVICE_MATERIAL_WHERE)) {
+      if (
+        !this.optionHasPrefix(
+          selectedOption,
+          prefix.SERVICE_PAYMENT_OTHER_METHOD,
+        )
+      ) {
         context.logger.error(
-          `${selectedOption} is not a valid option for ${prefix.SERVICE_MATERIAL_WHERE}.`,
+          `${selectedOption} is not a valid option for ${prefix.SERVICE_PAYMENT_OTHER_METHOD}.`,
         );
 
         // Send the confirmation options again.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.SERVICE_MATERIAL_WHERE_CONFIRMATION_REQUEST(
-            ticket.serviceMaterialWhere,
+          messages.SERVICE_PAYMENT_OTHER_METHOD_CONFIRMATION_REQUEST(
+            ticket.servicePaymentMethodDescription,
           ),
-          prefix.SERVICE_MATERIAL_WHERE,
+          prefix.SERVICE_PAYMENT_OTHER_METHOD,
           false,
         );
 
         continue;
       }
 
-      if (selectedOption === `${prefix.SERVICE_MATERIAL_WHERE}-no`) {
+      if (
+        selectedOption === `${prefix.SERVICE_PAYMENT_OTHER_METHOD}-no`
+      ) {
         // TODO: Go to previous state.
-        ticket.serviceMaterialWhere = null;
+        ticket.servicePaymentMethodDescription = null;
 
         await context.whatsappService.ticketService.save({
           ...ticket,
-          state: TicketState.WAITING_SERVICE_MATERIAL_WHERE,
+          state: TicketState.WAITING_SERVICE_PAYMENT_OTHERS_METHOD,
         });
 
         await context.whatsappService.sendMessage(
           phoneNumber,
-          messages.SERVICE_MATERIAL_WHERE_REQUEST(),
+          messages.SERVICE_PAYMENT_OTHERS_REQUEST(),
         );
 
         continue;
@@ -102,7 +107,7 @@ export class ServiceMaterialWhereInputState extends MessageState {
       // Save the user.
       await context.whatsappService.ticketService.save({
         ...ticket,
-        state: TicketState.WAITING_SERVICE_CATEGORY,
+        state: TicketState.WAITING_SERVICE_PAYMENT_DATES,
       });
 
       // TODO: Send the name confirmation success message.
@@ -111,21 +116,9 @@ export class ServiceMaterialWhereInputState extends MessageState {
       //   messages.userPhoneNumberConfirmationSuccess,
       // );
 
-      const initialCategory =
-        await context.whatsappService.categoryService.findOne({
-          where: { slug: 'root' },
-        });
-
-      ticket.category = initialCategory;
-
-      await context.whatsappService.ticketService.save({
-        ...ticket,
-        state: TicketState.WAITING_SERVICE_CATEGORY,
-      });
-
-      await context.whatsappService.sendCategoryOptions(
+      await context.whatsappService.sendMessage(
         phoneNumber,
-        initialCategory,
+        messages.SERVICE_PAYMENT_DATES_REQUEST(),
       );
     }
   }

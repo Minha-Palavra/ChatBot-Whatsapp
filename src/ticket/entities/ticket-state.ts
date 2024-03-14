@@ -12,8 +12,8 @@ import { ServiceDetailsState } from '../states/service-details-state';
 import { ServiceStartDateInputState } from '../states/service-start-date-input-state';
 import { ServiceEndDateInputState } from '../states/service-end-date-input-state';
 import { ServicePaymentAmountInputState } from '../states/service-payment-amount-input-state';
-import { ServicePaymentDatesInputState } from '../states/service-payment-dates-input-state';
-import { ServiceMaterialDateInputState } from '../states/service-material-date-state';
+import { ServicePaymentDatesState } from '../states/service-payment-dates-state';
+import { MaterialArrivalDateState } from '../states/material-arrival-date-state';
 import { ServiceMaterialHowBuyInputState } from '../states/service-material-how-buy-input-state';
 import { ServiceStepsState } from '../states/service-steps-state';
 import { ServiceStepsDescriptionState } from '../states/service-steps-description-state';
@@ -22,6 +22,23 @@ import { ServiceHoursDescriptionState } from '../states/service-hours-descriptio
 import { ServicePaymentMethodState } from '../states/service-payment-method-state';
 import { ServiceInInstallmentsPaymentMethodState } from '../states/service-in-installments-payment-method-state';
 import { ServiceInCashPaymentMethodState } from '../states/service-in-cash-payment-method-state';
+import { ServicePaymentInInstallmentsCountState } from '../states/service-payment-in-installments-count-state';
+import { PaymentInInstallmentsOtherMethodState } from '../states/payment-in-installments-other-method-state';
+import { PaymentInCashOtherMethodState } from '../states/payment-in-cash-other-method-state';
+import { PaymentOtherMethodState } from '../states/service-other-payment-method-state';
+import { MaterialIsPartOfContractState } from '../states/material-is-part-of-contract-state';
+import { MaterialsWhoWillBuyState } from '../states/materials-who-will-buy-state';
+import { MaterialHowManyBudgetsState } from '../states/material-how-many-budgets-state';
+import { MaterialPreDeterminedValueState } from '../states/material-pre-determined-value-state';
+import { MaterialsWhoWillPayState } from '../states/materials-who-will-pay-state';
+import { MaterialWhereToArrivalState } from '../states/material-where-to-arrival-state';
+import { MaterialPaybackState } from '../states/material-payback-state';
+import { MaterialDetailsState } from '../states/material-details-state';
+import { MaterialDetailsDescriptionState } from '../states/material-details-description-state';
+import { ContractHasMoreState } from '../states/contract-has-more-state';
+import { ContractHasMoreDescriptionState } from '../states/contract-has-more-description-state';
+import { ContractHasDeadlineMoreState } from '../states/contract-has-deadline-more-state';
+import { ContractHasDeadlineMoreDescriptionState } from '../states/contract-has-deadline-more-description-state';
 
 export enum TicketState {
   NONE = 'NONE',
@@ -76,6 +93,27 @@ export enum TicketState {
   WAITING_SERVICE_PAYMENT_IN_INSTALLMENTS_METHOD = 'WAITING_SERVICE_PAYMENT_IN_INSTALLMENTS_METHOD',
   WAITING_SERVICE_PAYMENT_IN_CASH_METHOD = 'WAITING_SERVICE_PAYMENT_IN_CASH_METHOD',
   WAITING_SERVICE_PAYMENT_OTHERS_METHOD = 'WAITING_SERVICE_PAYMENT_OTHERS_METHOD',
+  WAITING_SERVICE_PAYMENT_OTHER_METHOD_CONFIRMATION = 'WAITING_SERVICE_PAYMENT_OTHER_METHOD_CONFIRMATION',
+  WAITING_PAYMENT_INSTALLMENT_COUNT = 'WAITING_PAYMENT_INSTALLMENT_COUNT',
+  WAITING_PAYMENT_INSTALLMENT_COUNT_CONFIRMATION = 'WAITING_PAYMENT_INSTALLMENT_COUNT_CONFIRMATION',
+  WAITING_PAYMENT_IN_INSTALLMENT_OTHER_METHOD_CONFIRMATION = 'WAITING_PAYMENT_IN_INSTALLMENT_OTHER_METHOD_CONFIRMATION',
+  WAITING_PAYMENT_IN_INSTALLMENT_OTHER_METHOD = 'WAITING_PAYMENT_IN_INSTALLMENT_OTHER_METHOD',
+  WAITING_PAYMENT_IN_CASH_OTHER_METHOD = 'WAITING_PAYMENT_IN_CASH_OTHER_METHOD',
+  WAITING_PAYMENT_IN_CASH_OTHER_METHOD_CONFIRMATION = 'WAITING_PAYMENT_IN_CASH_OTHER_METHOD_CONFIRMATION',
+  WAITING_MATERIAL_IS_PART_OF_CONTRACT = 'WAITING_MATERIAL_IS_PART_OF_CONTRACT',
+  WAITING_SERVICE_MATERIAL_WHO_BUY = 'WAITING_SERVICE_MATERIAL_WHO_BUY',
+  WAITING_SERVICE_MATERIAL_PRE_DETERMINED_VALUE_CONFIRMATION = 'WAITING_SERVICE_MATERIAL_PRE_DETERMINED_VALUE_CONFIRMATION',
+  WAITING_SERVICE_MATERIAL_PRE_DETERMINED_VALUE = 'WAITING_SERVICE_MATERIAL_PRE_DETERMINED_VALUE',
+  WAITING_SERVICE_MATERIAL_HOW_PAY = 'WAITING_SERVICE_MATERIAL_HOW_PAY',
+  WAITING_SERVICE_MATERIAL_DETAILS = 'WAITING_SERVICE_MATERIAL_DETAILS',
+  WAITING_SERVICE_MATERIAL_DETAILS_DESCRIPTION = 'WAITING_SERVICE_MATERIAL_DETAILS_DESCRIPTION',
+  WAITING_SERVICE_MATERIAL_DETAILS_CONFIRMATION = 'WAITING_SERVICE_MATERIAL_DETAILS_CONFIRMATION',
+  WAITING_SERVICE_CONTRACT_HAS_MORE = 'WAITING_SERVICE_CONTRACT_HAS_MORE',
+  WAITING_SERVICE_CONTRACT_HAS_MORE_DESCRIPTION = 'WAITING_SERVICE_CONTRACT_HAS_MORE_DESCRIPTION',
+  WAITING_SERVICE_CONTRACT_HAS_MORE_DESCRIPTION_CONFIRMATION = 'WAITING_SERVICE_CONTRACT_HAS_MORE_DESCRIPTION_CONFIRMATION ',
+  WAITING_SERVICE_CONTRACT_HAS_DEADLINE_MORE = 'WAITING_SERVICE_CONTRACT_HAS_DEADLINE_MORE',
+  WAITING_SERVICE_CONTRACT_HAS_DEADLINE_MORE_DESCRIPTION = 'WAITING_SERVICE_CONTRACT_HAS_DEADLINE_MORE_DESCRIPTION',
+  WAITING_SERVICE_CONTRACT_HAS_DEADLINE_MORE_DESCRIPTION_CONFIRMATION = 'WAITING_SERVICE_CONTRACT_HAS_DEADLINE_MORE_DESCRIPTION_CONFIRMATION',
 }
 
 export const getTicketStateProcessor: Record<TicketState, IMessageState> = {
@@ -105,8 +143,7 @@ export const getTicketStateProcessor: Record<TicketState, IMessageState> = {
   [TicketState.WAITING_SERVICE_ADDRESS_CONFIRMATION]:
     new ServiceAddressInputState(),
   [TicketState.WAITING_SERVICE_DETAILS]: new ServiceDetailsState(),
-  [TicketState.WAITING_SERVICE_DETAILS_CONFIRMATION]:
-    new ServiceDetailsState(),
+  [TicketState.WAITING_SERVICE_DETAILS_CONFIRMATION]: new ServiceDetailsState(),
   [TicketState.WAITING_SERVICE_STEPS]: new ServiceStepsState(),
   [TicketState.WAITING_SERVICE_STEPS_DESCRIPTION]:
     new ServiceStepsDescriptionState(),
@@ -128,31 +165,74 @@ export const getTicketStateProcessor: Record<TicketState, IMessageState> = {
     new ServiceInInstallmentsPaymentMethodState(),
   [TicketState.WAITING_SERVICE_PAYMENT_IN_CASH_METHOD]:
     new ServiceInCashPaymentMethodState(),
-  [TicketState.WAITING_SERVICE_PAYMENT_OTHERS_METHOD]: null,
-  [TicketState.WAITING_SERVICE_PAYMENT_DATES]:
-    new ServicePaymentDatesInputState(),
+  [TicketState.WAITING_SERVICE_PAYMENT_OTHERS_METHOD]:
+    new PaymentOtherMethodState(),
+  [TicketState.WAITING_SERVICE_PAYMENT_OTHER_METHOD_CONFIRMATION]:
+    new PaymentOtherMethodState(),
+  [TicketState.WAITING_PAYMENT_IN_CASH_OTHER_METHOD]:
+    new PaymentInCashOtherMethodState(),
+  [TicketState.WAITING_PAYMENT_IN_CASH_OTHER_METHOD_CONFIRMATION]:
+    new PaymentInCashOtherMethodState(),
+  [TicketState.WAITING_PAYMENT_IN_INSTALLMENT_OTHER_METHOD]:
+    new PaymentInInstallmentsOtherMethodState(),
+  [TicketState.WAITING_PAYMENT_IN_INSTALLMENT_OTHER_METHOD_CONFIRMATION]:
+    new PaymentInInstallmentsOtherMethodState(),
+  [TicketState.WAITING_SERVICE_PAYMENT_DATES]: new ServicePaymentDatesState(),
   [TicketState.WAITING_SERVICE_PAYMENT_DATES_CONFIRMATION]:
-    new ServicePaymentDatesInputState(),
-  [TicketState.WAITING_SERVICE_MATERIAL_DATE]:
-    new ServiceMaterialDateInputState(),
+    new ServicePaymentDatesState(),
+  [TicketState.WAITING_PAYMENT_INSTALLMENT_COUNT]:
+    new ServicePaymentInInstallmentsCountState(),
+  [TicketState.WAITING_PAYMENT_INSTALLMENT_COUNT_CONFIRMATION]:
+    new ServicePaymentInInstallmentsCountState(),
+  [TicketState.WAITING_SERVICE_MATERIAL_WHO_BUY]:
+    new MaterialsWhoWillBuyState(),
+  [TicketState.WAITING_SERVICE_MATERIAL_DATE]: new MaterialArrivalDateState(),
   [TicketState.WAITING_SERVICE_MATERIAL_DATE_CONFIRMATION]:
-    new ServiceMaterialDateInputState(),
+    new MaterialArrivalDateState(),
   [TicketState.WAITING_SERVICE_MATERIAL_HOW_BUY]:
     new ServiceMaterialHowBuyInputState(),
   [TicketState.WAITING_SERVICE_MATERIAL_HOW_BUY_CONFIRMATION]:
     new ServiceMaterialHowBuyInputState(),
-  [TicketState.WAITING_SERVICE_MATERIAL_HOW_MUCH_BUDGETS]: null,
-  [TicketState.WAITING_SERVICE_MATERIAL_HOW_MUCH_BUDGETS_CONFIRMATION]: null,
-  [TicketState.WAITING_SERVICE_MATERIAL_WHERE]: null,
-  [TicketState.WAITING_SERVICE_MATERIAL_WHERE_CONFIRMATION]: null,
-  [TicketState.WAITING_SERVICE_MATERIAL_PAYBACK]: null,
-  [TicketState.WAITING_SERVICE_MATERIAL_PAYBACK_CONFIRMATION]: null,
+  [TicketState.WAITING_SERVICE_MATERIAL_HOW_MUCH_BUDGETS]:
+    new MaterialHowManyBudgetsState(),
+  [TicketState.WAITING_SERVICE_MATERIAL_HOW_MUCH_BUDGETS_CONFIRMATION]:
+    new MaterialHowManyBudgetsState(),
+  [TicketState.WAITING_SERVICE_MATERIAL_PRE_DETERMINED_VALUE]:
+    new MaterialPreDeterminedValueState(),
+  [TicketState.WAITING_SERVICE_MATERIAL_PRE_DETERMINED_VALUE_CONFIRMATION]:
+    new MaterialPreDeterminedValueState(),
+  [TicketState.WAITING_SERVICE_MATERIAL_HOW_PAY]:
+    new MaterialsWhoWillPayState(),
+  [TicketState.WAITING_SERVICE_MATERIAL_WHERE]:
+    new MaterialWhereToArrivalState(),
+  [TicketState.WAITING_SERVICE_MATERIAL_WHERE_CONFIRMATION]:
+    new MaterialWhereToArrivalState(),
+  [TicketState.WAITING_SERVICE_MATERIAL_PAYBACK]: new MaterialPaybackState(),
+  [TicketState.WAITING_SERVICE_MATERIAL_PAYBACK_CONFIRMATION]:
+    new MaterialPaybackState(),
+  [TicketState.WAITING_SERVICE_MATERIAL_DETAILS]: new MaterialDetailsState(),
+  [TicketState.WAITING_SERVICE_MATERIAL_DETAILS_DESCRIPTION]:
+    new MaterialDetailsDescriptionState(),
+  [TicketState.WAITING_SERVICE_MATERIAL_DETAILS_CONFIRMATION]:
+    new MaterialDetailsDescriptionState(),
+  [TicketState.WAITING_SERVICE_CONTRACT_HAS_MORE]: new ContractHasMoreState(),
+  [TicketState.WAITING_SERVICE_CONTRACT_HAS_MORE_DESCRIPTION]:
+    new ContractHasMoreDescriptionState(),
+  [TicketState.WAITING_SERVICE_CONTRACT_HAS_MORE_DESCRIPTION_CONFIRMATION]:
+    new ContractHasMoreDescriptionState(),
+  [TicketState.WAITING_SERVICE_CONTRACT_HAS_DEADLINE_MORE]:
+    new ContractHasDeadlineMoreState(),
+  [TicketState.WAITING_SERVICE_CONTRACT_HAS_DEADLINE_MORE_DESCRIPTION]:
+    new ContractHasDeadlineMoreDescriptionState(),
+  [TicketState.WAITING_SERVICE_CONTRACT_HAS_DEADLINE_MORE_DESCRIPTION_CONFIRMATION]:
+    new ContractHasDeadlineMoreDescriptionState(),
   [TicketState.WAITING_SERVICE_CONTRACT_CANCEL]: null,
   [TicketState.WAITING_SERVICE_CONTRACT_CANCEL_CONFIRMATION]: null,
   [TicketState.WAITING_SERVICE_CONTRACT_CANCEL_DETAILS]: null,
   [TicketState.WAITING_SERVICE_CONTRACT_CANCEL_DETAILS_CONFIRMATION]: null,
   [TicketState.WAITING_SERVICE_MATERIAL_HOW_MUCH]: null,
   [TicketState.WAITING_SERVICE_MATERIAL_HOW_MUCH_CONFIRMATION]: null,
-
+  [TicketState.WAITING_MATERIAL_IS_PART_OF_CONTRACT]:
+    new MaterialIsPartOfContractState(),
   [TicketState.CLOSED]: null,
 };

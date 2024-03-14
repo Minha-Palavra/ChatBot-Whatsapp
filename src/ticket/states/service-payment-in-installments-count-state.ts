@@ -6,7 +6,7 @@ import { prefix } from '../../whatsapp/entities/prefix';
 import { TicketEntity } from '../entities/ticket.entity';
 import { TicketState } from '../entities/ticket-state';
 
-export class ServicePaymentDatesInputState extends MessageState {
+export class ServicePaymentInInstallmentsCountState extends MessageState {
   public async processMessages(
     value: ValueObject,
     context: IMessageProcessingContext,
@@ -31,21 +31,21 @@ export class ServicePaymentDatesInputState extends MessageState {
       if (message.type === 'text') {
         const servicePaymentDates = message.text.body;
 
-        ticket.servicePaymentDates = servicePaymentDates;
+        ticket.servicePaymentMethodInstallmentCount = servicePaymentDates;
 
         // Update the user state.
         await context.whatsappService.ticketService.save({
           ...ticket,
-          state: TicketState.WAITING_SERVICE_PAYMENT_DATES_CONFIRMATION,
+          state: TicketState.WAITING_PAYMENT_INSTALLMENT_COUNT_CONFIRMATION,
         });
 
         // Send the confirmation options.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.SERVICE_PAYMENT_DATES_CONFIRMATION_REQUEST(
-            ticket.servicePaymentDates,
+          messages.SERVICE_PAYMENT_INSTALLMENT_COUNT_CONFIRMATION_REQUEST(
+            ticket.servicePaymentMethodInstallmentCount,
           ),
-          prefix.SERVICE_PAYMENT_DATES,
+          prefix.SERVICE_PAYMENT_INSTALLMENT_COUNT,
           false,
         );
         continue;
@@ -64,36 +64,36 @@ export class ServicePaymentDatesInputState extends MessageState {
       }
 
       // Check if the selected option is valid.
-      if (!this.optionHasPrefix(selectedOption, prefix.SERVICE_PAYMENT_DATES)) {
+      if (!this.optionHasPrefix(selectedOption, prefix.SERVICE_PAYMENT_INSTALLMENT_COUNT)) {
         context.logger.error(
-          `${selectedOption} is not a valid option for ${prefix.SERVICE_PAYMENT_DATES}.`,
+          `${selectedOption} is not a valid option for ${prefix.SERVICE_PAYMENT_INSTALLMENT_COUNT}.`,
         );
 
         // Send the confirmation options again.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.SERVICE_PAYMENT_DATES_CONFIRMATION_REQUEST(
-            ticket.servicePaymentDates,
+          messages.SERVICE_PAYMENT_INSTALLMENT_COUNT_CONFIRMATION_REQUEST(
+            ticket.servicePaymentMethodInstallmentCount,
           ),
-          prefix.SERVICE_PAYMENT_DATES,
+          prefix.SERVICE_PAYMENT_INSTALLMENT_COUNT,
           false,
         );
 
         continue;
       }
 
-      if (selectedOption === `${prefix.SERVICE_PAYMENT_DATES}-no`) {
+      if (selectedOption === `${prefix.SERVICE_PAYMENT_INSTALLMENT_COUNT}-no`) {
         // TODO: Go to previous state.
-        ticket.servicePaymentDates = null;
+        ticket.servicePaymentMethodInstallmentCount = null;
 
         await context.whatsappService.ticketService.save({
           ...ticket,
-          state: TicketState.WAITING_SERVICE_PAYMENT_DATES,
+          state: TicketState.WAITING_PAYMENT_INSTALLMENT_COUNT,
         });
 
         await context.whatsappService.sendMessage(
           phoneNumber,
-          messages.SERVICE_PAYMENT_DATES_REQUEST(),
+          messages.SERVICE_PAYMENT_INSTALLMENT_COUNT_REQUEST(),
         );
 
         continue;
@@ -102,7 +102,7 @@ export class ServicePaymentDatesInputState extends MessageState {
       // Save the user.
       await context.whatsappService.ticketService.save({
         ...ticket,
-        state: TicketState.WAITING_SERVICE_CATEGORY,
+        state: TicketState.WAITING_SERVICE_PAYMENT_DATES,
       });
 
       // TODO: Send the name confirmation success message.
@@ -111,21 +111,9 @@ export class ServicePaymentDatesInputState extends MessageState {
       //   messages.userPhoneNumberConfirmationSuccess,
       // );
 
-      const initialCategory =
-        await context.whatsappService.categoryService.findOne({
-          where: { slug: 'root' },
-        });
-
-      ticket.category = initialCategory;
-
-      await context.whatsappService.ticketService.save({
-        ...ticket,
-        state: TicketState.WAITING_SERVICE_CATEGORY,
-      });
-
-      await context.whatsappService.sendCategoryOptions(
+      await context.whatsappService.sendMessage(
         phoneNumber,
-        initialCategory,
+        messages.SERVICE_PAYMENT_DATES_REQUEST(),
       );
     }
   }
