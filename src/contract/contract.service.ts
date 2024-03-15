@@ -77,7 +77,7 @@ export class ContractService {
     *Foro para Resolução de Disputas*: ${disputeForum}
     
     *Data do Contrato:* ${dataFormatada}
-    Observações: Este contrato não incluirá detalhes sobre endereços, nacionalidade, estado civil ou profissão. O contrato será validado pelo apertar do botão "Sim" enviado via WhatsApp número +1 (802) 383-6625. Formate o contrato usando * para trechos em negrito e ** para trechos em itálico. Não inclua espaços para preenchimento manual da assinatura.
+    Observações: Este contrato não incluirá detalhes sobre endereço do contratante e contratado, nacionalidade, estado civil ou profissão. O contrato será validado pelo apertar do botão "Sim" enviado via WhatsApp número +55 (11) 91238-5500. Formate o contrato usando * para trechos em negrito e ** para trechos em itálico. Não inclua espaços para preenchimento manual da assinatura.
     
     `;
     //horarios pula e fazemos if depois
