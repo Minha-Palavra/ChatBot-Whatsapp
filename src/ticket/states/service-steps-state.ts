@@ -77,12 +77,12 @@ export class ServiceStepsState extends MessageState {
 
         await context.whatsappService.ticketService.save({
           ...ticket,
-          state: TicketState.WAITING_SERVICE_STEPS,
+          state: TicketState.WAITING_SERVICE_START_DATE,
         });
 
         await context.whatsappService.sendMessage(
           phoneNumber,
-          messages.SERVICE_ADDRESS_REQUEST(),
+          messages.SERVICE_START_DATE_REQUEST(),
         );
 
         continue;
