@@ -36,7 +36,8 @@ export class ContractHasMoreDescriptionState extends MessageState {
         // Update the user state.
         await context.whatsappService.ticketService.save({
           ...ticket,
-          state: TicketState.WAITING_SERVICE_CONTRACT_HAS_MORE_DESCRIPTION_CONFIRMATION,
+          state:
+            TicketState.WAITING_SERVICE_CONTRACT_HAS_MORE_DESCRIPTION_CONFIRMATION,
         });
 
         // Send the confirmation options.
@@ -64,7 +65,12 @@ export class ContractHasMoreDescriptionState extends MessageState {
       }
 
       // Check if the selected option is valid.
-      if (!this.optionHasPrefix(selectedOption, prefix.CONTRACT_HAS_MORE_DESCRIPTION)) {
+      if (
+        !this.optionHasPrefix(
+          selectedOption,
+          prefix.CONTRACT_HAS_MORE_DESCRIPTION,
+        )
+      ) {
         context.logger.error(
           `${selectedOption} is not a valid option for ${prefix.CONTRACT_HAS_MORE_DESCRIPTION}.`,
         );

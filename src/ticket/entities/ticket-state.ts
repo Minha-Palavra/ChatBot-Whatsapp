@@ -39,6 +39,8 @@ import { ContractHasMoreState } from '../states/contract-has-more-state';
 import { ContractHasMoreDescriptionState } from '../states/contract-has-more-description-state';
 import { ContractHasDeadlineMoreState } from '../states/contract-has-deadline-more-state';
 import { ContractHasDeadlineMoreDescriptionState } from '../states/contract-has-deadline-more-description-state';
+import { ServiceDeliveryDescriptionState } from '../states/service-delivery-description-state';
+import { ContractHasCancellationMoreDescriptionState } from '../states/contract-has-cancelation-more-description-state';
 
 export enum TicketState {
   NONE = 'NONE',
@@ -114,6 +116,11 @@ export enum TicketState {
   WAITING_SERVICE_CONTRACT_HAS_DEADLINE_MORE = 'WAITING_SERVICE_CONTRACT_HAS_DEADLINE_MORE',
   WAITING_SERVICE_CONTRACT_HAS_DEADLINE_MORE_DESCRIPTION = 'WAITING_SERVICE_CONTRACT_HAS_DEADLINE_MORE_DESCRIPTION',
   WAITING_CONTRACT_HAS_DEADLINE_MORE_DESCRIPTION_CONFIRMATION = 'WAITING_CONTRACT_HAS_DEADLINE_MORE_DESCRIPTION_CONFIRMATION',
+  WAITING_SERVICE_DELIVERY = 'WAITING_SERVICE_DELIVERY',
+  WAITING_SERVICE_DELIVERY_CONFIRMATION = 'WAITING_SERVICE_DELIVERY_CONFIRMATION',
+  WAITING_SERVICE_CONTRACT_HAS_CANCELLATION_MORE = 'WAITING_SERVICE_CONTRACT_HAS_CANCELLATION_MORE',
+  WAITING_SERVICE_CONTRACT_HAS_CANCELLATION_MORE_DESCRIPTION = 'WAITING_SERVICE_CONTRACT_HAS_CANCELLATION_MORE_DESCRIPTION',
+  WAITING_CONTRACT_HAS_CANCELLATION_MORE_DESCRIPTION_CONFIRMATION = 'WAITING_CONTRACT_HAS_CANCELLATION_MORE_DESCRIPTION_CONFIRMATION',
 }
 
 export const getTicketStateProcessor: Record<TicketState, IMessageState> = {
@@ -226,6 +233,15 @@ export const getTicketStateProcessor: Record<TicketState, IMessageState> = {
     new ContractHasDeadlineMoreDescriptionState(),
   [TicketState.WAITING_CONTRACT_HAS_DEADLINE_MORE_DESCRIPTION_CONFIRMATION]:
     new ContractHasDeadlineMoreDescriptionState(),
+  [TicketState.WAITING_SERVICE_DELIVERY]: new ServiceDeliveryDescriptionState(),
+  [TicketState.WAITING_SERVICE_DELIVERY_CONFIRMATION]:
+    new ServiceDeliveryDescriptionState(),
+  [TicketState.WAITING_SERVICE_CONTRACT_HAS_CANCELLATION_MORE]:
+    new ContractHasDeadlineMoreDescriptionState(),
+  [TicketState.WAITING_SERVICE_CONTRACT_HAS_CANCELLATION_MORE_DESCRIPTION]:
+    new ContractHasCancellationMoreDescriptionState(),
+  [TicketState.WAITING_CONTRACT_HAS_CANCELLATION_MORE_DESCRIPTION_CONFIRMATION]:
+    new ContractHasCancellationMoreDescriptionState(),
   [TicketState.WAITING_SERVICE_CONTRACT_CANCEL]: null,
   [TicketState.WAITING_SERVICE_CONTRACT_CANCEL_CONFIRMATION]: null,
   [TicketState.WAITING_SERVICE_CONTRACT_CANCEL_DETAILS]: null,

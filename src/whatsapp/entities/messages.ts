@@ -178,8 +178,25 @@ são necessários?`,
     `Existirá multa prevista por atraso de pagamento?`,
   CONTRACT_HAS_MORE_DESCRIPTION_REQUEST: () =>
     `Descreva a multa prevista por atraso de pagamento`,
-  CONTRACT_HAS_MORE_DESCRIPTION_CONFIRMATION_REQUEST: (contractHasMoreDescription: string) => `A multa prevista por atraso de pagamento é ${contractHasMoreDescription}, está correta?`,
-  CONTRACT_HAS_DEADLINE_MORE_REQUEST: () => `Existirá multa prevista por atraso na entrega do serviço?`,
-  CONTRACT_HAS_DEADLINE_MORE_DESCRIPTION_REQUEST: () => `Descreva a multa prevista por atraso na entrega do serviço`,
-  CONTRACT_HAS_DEADLINE_MORE_DESCRIPTION_CONFIRMATION_REQUEST: (contractHasDeadlineMoreDescription: string) => `A multa prevista por atraso na entrega do serviço é ${contractHasDeadlineMoreDescription}, está correta?`,
+  CONTRACT_HAS_MORE_DESCRIPTION_CONFIRMATION_REQUEST: (
+    contractHasMoreDescription: string,
+  ) =>
+    `A multa prevista por atraso de pagamento é ${contractHasMoreDescription}, está correta?`,
+  CONTRACT_HAS_DEADLINE_MORE_REQUEST: () =>
+    `Existirá multa prevista por atraso na entrega do serviço?`,
+  CONTRACT_HAS_DEADLINE_MORE_DESCRIPTION_REQUEST: () =>
+    `Descreva a multa prevista por atraso na entrega do serviço`,
+  CONTRACT_HAS_DEADLINE_MORE_DESCRIPTION_CONFIRMATION_REQUEST: (
+    contractHasDeadlineMoreDescription: string,
+  ) =>
+    `A multa prevista por atraso na entrega do serviço é ${contractHasDeadlineMoreDescription}, está correta?`,
+  SERVICE_DELIVERY_REQUEST: () =>
+    `Como será registrada a entrega da prestação?`,
+  SERVICE_DELIVERY_DESCRIPTION_CONFIRMATION_REQUEST: () =>
+    `A forma de registro da entrega da prestação está correta?`,
+  CONTRACT_HAS_CANCELLATION_MORE_REQUEST: () =>
+    `Terá penalidade caso de cancelamento do contrato?`,
+  CONTRACT_HAS_CANCELLATION_MORE_DESCRIPTION_REQUEST: () =>
+    `O que será considerado um cancelamento de contrato? Descreva`,
+  CONTRACT_HAS_CANCELLATION_MORE_DESCRIPTION_CONFIRMATION_REQUEST: (contractHasCancellationMoreDescription: string) => `O cancelamento de contrato será considerado ${contractHasCancellationMoreDescription}, está correto?`,
 };

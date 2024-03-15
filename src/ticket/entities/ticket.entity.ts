@@ -139,4 +139,12 @@ export class TicketEntity extends AbstractEntity {
   @ApiProperty()
   @Column({ nullable: true })
   contractHasDeadlineMoreDescription: string;
+
+  @ApiProperty()
+  @Column({ nullable: true })
+  serviceDeliveryDescription: string;
+
+  @ApiProperty()
+  @Column({ nullable: true })
+  contractHasCancellationMoreDescription: string;
 }

@@ -1,12 +1,12 @@
+import { MessageState } from '../../whatsapp/states/message-state';
+import { IMessageProcessingContext } from '../../whatsapp/states/message-processing-context.interface';
 import { ValueObject } from 'whatsapp/build/types/webhooks';
 import { messages } from '../../whatsapp/entities/messages';
 import { prefix } from '../../whatsapp/entities/prefix';
-import { IMessageProcessingContext } from '../../whatsapp/states/message-processing-context.interface';
-import { MessageState } from '../../whatsapp/states/message-state';
-import { TicketState } from '../entities/ticket-state';
 import { TicketEntity } from '../entities/ticket.entity';
+import { TicketState } from '../entities/ticket-state';
 
-export class ContractHasDeadlineMoreState extends MessageState {
+export class ServiceDeliveryDescriptionState extends MessageState {
   public async processMessages(
     value: ValueObject,
     context: IMessageProcessingContext,
@@ -29,23 +29,23 @@ export class ContractHasDeadlineMoreState extends MessageState {
       const phoneNumber = this.formatPhoneNumber(message.from);
 
       if (message.type === 'text') {
-        await context.whatsappService.sendMessage(
-          phoneNumber,
-          messages.INVALID_OPTION(),
-        );
+        const serviceDeliveryDescription = message.text.body;
 
+        ticket.serviceDeliveryDescription = serviceDeliveryDescription;
+
+        // Update the user state.
         await context.whatsappService.ticketService.save({
           ...ticket,
-          state: TicketState.WAITING_SERVICE_CONTRACT_HAS_DEADLINE_MORE,
+          state: TicketState.WAITING_SERVICE_DELIVERY_CONFIRMATION,
         });
 
+        // Send the confirmation options.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.CONTRACT_HAS_DEADLINE_MORE_REQUEST(),
-          prefix.CONTRACT_HAS_DEADLINE_MORE,
+          messages.SERVICE_DELIVERY_DESCRIPTION_CONFIRMATION_REQUEST(),
+          prefix.SERVICE_DELIVERY_DESCRIPTION,
           false,
         );
-
         continue;
       }
 
@@ -63,23 +63,30 @@ export class ContractHasDeadlineMoreState extends MessageState {
 
       // Check if the selected option is valid.
       if (
-        !this.optionHasPrefix(selectedOption, prefix.CONTRACT_HAS_DEADLINE_MORE)
+        !this.optionHasPrefix(
+          selectedOption,
+          prefix.SERVICE_DELIVERY_DESCRIPTION,
+        )
       ) {
         context.logger.error(
-          `${selectedOption} is not a valid option for ${prefix.CONTRACT_HAS_DEADLINE_MORE}.`,
+          `${selectedOption} is not a valid option for ${prefix.SERVICE_DELIVERY_DESCRIPTION}.`,
         );
 
+        // Send the confirmation options again.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.CONTRACT_HAS_DEADLINE_MORE_REQUEST(),
-          prefix.CONTRACT_HAS_DEADLINE_MORE,
+          messages.SERVICE_DELIVERY_DESCRIPTION_CONFIRMATION_REQUEST(),
+          prefix.SERVICE_DELIVERY_DESCRIPTION,
           false,
         );
 
         continue;
       }
 
-      if (selectedOption === `${prefix.CONTRACT_HAS_DEADLINE_MORE}-no`) {
+      if (selectedOption === `${prefix.SERVICE_DELIVERY_DESCRIPTION}-no`) {
+        // TODO: Go to previous state.
+        ticket.serviceDeliveryDescription = null;
+
         await context.whatsappService.ticketService.save({
           ...ticket,
           state: TicketState.WAITING_SERVICE_DELIVERY,
@@ -91,23 +98,24 @@ export class ContractHasDeadlineMoreState extends MessageState {
         );
 
         continue;
-      } else if (
-        selectedOption === `${prefix.CONTRACT_HAS_DEADLINE_MORE}-yes`
-      ) {
-        await context.whatsappService.ticketService.save({
-          ...ticket,
-          materialIsPartOfContract: true,
-          state:
-            TicketState.WAITING_SERVICE_CONTRACT_HAS_DEADLINE_MORE_DESCRIPTION,
-        });
-
-        await context.whatsappService.sendMessage(
-          phoneNumber,
-          messages.CONTRACT_HAS_DEADLINE_MORE_DESCRIPTION_REQUEST(),
-        );
       }
 
-      // TODO: Send the data privacy confirmation success message.
+      // Save the user.
+      await context.whatsappService.ticketService.save({
+        ...ticket,
+        state: TicketState.WAITING_SERVICE_PAYMENT_AMOUNT,
+      });
+
+      // TODO: Send the name confirmation success message.
+      // await context.whatsappService.sendMessage(
+      //   phoneNumber,
+      //   messages.userPhoneNumberConfirmationSuccess,
+      // );
+
+      await context.whatsappService.sendMessage(
+        phoneNumber,
+        messages.SERVICE_PAYMENT_AMOUNT_REQUEST(),
+      );
     }
   }
 }

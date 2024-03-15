@@ -6,7 +6,7 @@ import { prefix } from '../../whatsapp/entities/prefix';
 import { TicketEntity } from '../entities/ticket.entity';
 import { TicketState } from '../entities/ticket-state';
 
-export class ContractHasDeadlineMoreDescriptionState extends MessageState {
+export class ContractHasCancellationMoreDescriptionState extends MessageState {
   public async processMessages(
     value: ValueObject,
     context: IMessageProcessingContext,
@@ -29,25 +29,25 @@ export class ContractHasDeadlineMoreDescriptionState extends MessageState {
       const phoneNumber = this.formatPhoneNumber(message.from);
 
       if (message.type === 'text') {
-        const contractHasDeadlineMoreDescription = message.text.body;
+        const contractHasCancellationMoreDescription = message.text.body;
 
-        ticket.contractHasDeadlineMoreDescription =
-          contractHasDeadlineMoreDescription;
+        ticket.contractHasCancellationMoreDescription =
+          contractHasCancellationMoreDescription;
 
         // Update the user state.
         await context.whatsappService.ticketService.save({
           ...ticket,
           state:
-            TicketState.WAITING_CONTRACT_HAS_DEADLINE_MORE_DESCRIPTION_CONFIRMATION,
+            TicketState.WAITING_CONTRACT_HAS_CANCELLATION_MORE_DESCRIPTION_CONFIRMATION,
         });
 
         // Send the confirmation options.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.CONTRACT_HAS_DEADLINE_MORE_DESCRIPTION_CONFIRMATION_REQUEST(
-            ticket.contractHasDeadlineMoreDescription,
+          messages.CONTRACT_HAS_CANCELLATION_MORE_DESCRIPTION_CONFIRMATION_REQUEST(
+            ticket.contractHasCancellationMoreDescription,
           ),
-          prefix.CONTRACT_HAS_DEADLINE_MORE_DESCRIPTION,
+          prefix.CONTRACT_HAS_CANCELLATION_MORE_DESCRIPTION,
           false,
         );
         continue;
@@ -69,20 +69,20 @@ export class ContractHasDeadlineMoreDescriptionState extends MessageState {
       if (
         !this.optionHasPrefix(
           selectedOption,
-          prefix.CONTRACT_HAS_DEADLINE_MORE_DESCRIPTION,
+          prefix.CONTRACT_HAS_CANCELLATION_MORE_DESCRIPTION,
         )
       ) {
         context.logger.error(
-          `${selectedOption} is not a valid option for ${prefix.CONTRACT_HAS_DEADLINE_MORE_DESCRIPTION}.`,
+          `${selectedOption} is not a valid option for ${prefix.CONTRACT_HAS_CANCELLATION_MORE_DESCRIPTION}.`,
         );
 
         // Send the confirmation options again.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.CONTRACT_HAS_DEADLINE_MORE_DESCRIPTION_CONFIRMATION_REQUEST(
-            ticket.contractHasDeadlineMoreDescription,
+          messages.CONTRACT_HAS_CANCELLATION_MORE_DESCRIPTION_CONFIRMATION_REQUEST(
+            ticket.contractHasCancellationMoreDescription,
           ),
-          prefix.CONTRACT_HAS_DEADLINE_MORE,
+          prefix.CONTRACT_HAS_CANCELLATION_MORE,
           false,
         );
 
@@ -90,20 +90,21 @@ export class ContractHasDeadlineMoreDescriptionState extends MessageState {
       }
 
       if (
-        selectedOption === `${prefix.CONTRACT_HAS_DEADLINE_MORE_DESCRIPTION}-no`
+        selectedOption ===
+        `${prefix.CONTRACT_HAS_CANCELLATION_MORE_DESCRIPTION}-no`
       ) {
         // TODO: Go to previous state.
-        ticket.contractHasDeadlineMoreDescription = null;
+        ticket.contractHasCancellationMoreDescription = null;
 
         await context.whatsappService.ticketService.save({
           ...ticket,
           state:
-            TicketState.WAITING_SERVICE_CONTRACT_HAS_DEADLINE_MORE_DESCRIPTION,
+            TicketState.WAITING_SERVICE_CONTRACT_HAS_CANCELLATION_MORE_DESCRIPTION,
         });
 
         await context.whatsappService.sendMessage(
           phoneNumber,
-          messages.CONTRACT_HAS_DEADLINE_MORE_DESCRIPTION_REQUEST(),
+          messages.CONTRACT_HAS_CANCELLATION_MORE_DESCRIPTION_REQUEST(),
         );
 
         continue;
@@ -111,12 +112,12 @@ export class ContractHasDeadlineMoreDescriptionState extends MessageState {
 
       await context.whatsappService.ticketService.save({
         ...ticket,
-        state: TicketState.WAITING_SERVICE_CONTRACT_HAS_CANCELLATION_MORE,
+        state: TicketState.WAITING_SERVICE_DELIVERY,
       });
 
       await context.whatsappService.sendMessage(
         phoneNumber,
-        messages.CONTRACT_HAS_CANCELLATION_MORE_REQUEST(),
+        messages.SERVICE_DELIVERY_REQUEST(),
       );
 
       continue;

@@ -80,12 +80,17 @@ export class ContractHasMoreState extends MessageState {
       if (selectedOption === `${prefix.CONTRACT_HAS_MORE}-no`) {
         // TODO: Go to previous state.
 
-        // await context.whatsappService.ticketService.save({
-        //   ...ticket,
-        //   materialIsPartOfContract: false,
-        //   state: TicketState.,
-        // });
+        await context.whatsappService.ticketService.save({
+          ...ticket,
+          state: TicketState.WAITING_SERVICE_CONTRACT_HAS_DEADLINE_MORE,
+        });
 
+        await context.whatsappService.sendConfirmationOptions(
+          phoneNumber,
+          messages.CONTRACT_HAS_DEADLINE_MORE_REQUEST(),
+          prefix.CONTRACT_HAS_DEADLINE_MORE,
+          false,
+        );
       } else if (selectedOption === `${prefix.CONTRACT_HAS_MORE}-yes`) {
         await context.whatsappService.ticketService.save({
           ...ticket,

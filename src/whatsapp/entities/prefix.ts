@@ -46,7 +46,10 @@ export const prefix = {
   CONTRACT_HAS_MORE: 'contract-has-more',
   CONTRACT_HAS_MORE_DESCRIPTION: 'contract-has-more-description',
   CONTRACT_HAS_DEADLINE_MORE: 'contract-has-deadline-more',
-  CONTRACT_HAS_DEADLINE_MORE_DESCRIPTION: 'contract-has-deadline-more-description',
-
-
+  CONTRACT_HAS_DEADLINE_MORE_DESCRIPTION:
+    'contract-has-deadline-more-description',
+  SERVICE_DELIVERY_DESCRIPTION: 'service-delivery-description',
+  CONTRACT_HAS_CANCELLATION_MORE: 'contract-has-cancellation-more',
+  CONTRACT_HAS_CANCELLATION_MORE_DESCRIPTION:
+    'contract-has-cancellation-more-description',
 };

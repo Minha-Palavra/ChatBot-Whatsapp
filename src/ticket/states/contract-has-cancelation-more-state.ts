@@ -6,7 +6,7 @@ import { MessageState } from '../../whatsapp/states/message-state';
 import { TicketState } from '../entities/ticket-state';
 import { TicketEntity } from '../entities/ticket.entity';
 
-export class ContractHasDeadlineMoreState extends MessageState {
+export class ContractHasCancellationMoreState extends MessageState {
   public async processMessages(
     value: ValueObject,
     context: IMessageProcessingContext,
@@ -36,13 +36,13 @@ export class ContractHasDeadlineMoreState extends MessageState {
 
         await context.whatsappService.ticketService.save({
           ...ticket,
-          state: TicketState.WAITING_SERVICE_CONTRACT_HAS_DEADLINE_MORE,
+          state: TicketState.WAITING_SERVICE_CONTRACT_HAS_CANCELLATION_MORE,
         });
 
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.CONTRACT_HAS_DEADLINE_MORE_REQUEST(),
-          prefix.CONTRACT_HAS_DEADLINE_MORE,
+          messages.CONTRACT_HAS_CANCELLATION_MORE_REQUEST(),
+          prefix.CONTRACT_HAS_CANCELLATION_MORE,
           false,
         );
 
@@ -63,47 +63,49 @@ export class ContractHasDeadlineMoreState extends MessageState {
 
       // Check if the selected option is valid.
       if (
-        !this.optionHasPrefix(selectedOption, prefix.CONTRACT_HAS_DEADLINE_MORE)
+        !this.optionHasPrefix(
+          selectedOption,
+          prefix.CONTRACT_HAS_CANCELLATION_MORE,
+        )
       ) {
         context.logger.error(
-          `${selectedOption} is not a valid option for ${prefix.CONTRACT_HAS_DEADLINE_MORE}.`,
+          `${selectedOption} is not a valid option for ${prefix.CONTRACT_HAS_CANCELLATION_MORE}.`,
         );
 
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.CONTRACT_HAS_DEADLINE_MORE_REQUEST(),
-          prefix.CONTRACT_HAS_DEADLINE_MORE,
+          messages.CONTRACT_HAS_CANCELLATION_MORE_REQUEST(),
+          prefix.CONTRACT_HAS_CANCELLATION_MORE,
           false,
         );
 
         continue;
       }
 
-      if (selectedOption === `${prefix.CONTRACT_HAS_DEADLINE_MORE}-no`) {
+      if (selectedOption === `${prefix.CONTRACT_HAS_CANCELLATION_MORE}-no`) {
         await context.whatsappService.ticketService.save({
           ...ticket,
-          state: TicketState.WAITING_SERVICE_DELIVERY,
+          state: TicketState.WAITING_SERVICE_CONTRACT_HAS_CANCELLATION_MORE,
         });
 
         await context.whatsappService.sendMessage(
           phoneNumber,
-          messages.SERVICE_DELIVERY_REQUEST(),
+          messages.CONTRACT_HAS_CANCELLATION_MORE_REQUEST(),
         );
 
         continue;
       } else if (
-        selectedOption === `${prefix.CONTRACT_HAS_DEADLINE_MORE}-yes`
+        selectedOption === `${prefix.CONTRACT_HAS_CANCELLATION_MORE}-yes`
       ) {
         await context.whatsappService.ticketService.save({
           ...ticket,
-          materialIsPartOfContract: true,
           state:
-            TicketState.WAITING_SERVICE_CONTRACT_HAS_DEADLINE_MORE_DESCRIPTION,
+            TicketState.WAITING_SERVICE_CONTRACT_HAS_CANCELLATION_MORE_DESCRIPTION,
         });
 
         await context.whatsappService.sendMessage(
           phoneNumber,
-          messages.CONTRACT_HAS_DEADLINE_MORE_DESCRIPTION_REQUEST(),
+          messages.CONTRACT_HAS_CANCELLATION_MORE_DESCRIPTION_REQUEST(),
         );
       }
 
