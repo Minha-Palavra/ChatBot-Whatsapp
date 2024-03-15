@@ -4,7 +4,6 @@ import { ValueObject } from 'whatsapp/build/types/webhooks';
 import { messages } from '../../whatsapp/entities/messages';
 import { prefix } from '../../whatsapp/entities/prefix';
 import { TicketEntity } from '../entities/ticket.entity';
-import { OwnerType } from '../entities/owner-type';
 import { TicketState } from '../entities/ticket-state';
 
 export class ServiceWarrantyState extends MessageState {
@@ -85,8 +84,17 @@ export class ServiceWarrantyState extends MessageState {
       } else if (selectedOption === `${prefix.DATA_PRIVACY}-none`) {
         //
         ticket.serviceWarranty = 'nenhuma';
-        ticket.ownerType = OwnerType.CUSTOMER;
-      } else {
+
+        await context.whatsappService.ticketService.save({
+          ...ticket,
+          state: TicketState.WAITING_SERVICE_JUDICIAL_RESOLUTION,
+        });
+
+        await context.whatsappService.sendMessage(
+          phoneNumber,
+          messages.JUDICIAL_RESOLUTION_REQUEST(),
+        );
+        continue;
       }
 
       await context.whatsappService.ticketService.save({

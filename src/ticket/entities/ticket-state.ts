@@ -44,7 +44,7 @@ import { ContractHasCancellationMoreDescriptionState } from '../states/contract-
 import { ContractHasCancellationMoreState } from '../states/contract-has-cancelation-more-state';
 import { ContractWhatIsCancellationState } from '../states/contract-what-is-cancellation-state';
 import { ServiceWarrantyState } from '../states/service-warranty-state';
-import { ContractWarrantyDescriptionState } from '../states/contract-warranty-description-state';
+import { WarrantyDetailsState } from '../states/warranty-details-state';
 import { ContractJudicialState } from '../states/contract-judicial-state';
 import { ContractApprovalState } from '../states/contract-approval-state';
 
@@ -263,9 +263,9 @@ export const getTicketStateProcessor: Record<TicketState, IMessageState> = {
     new ContractWhatIsCancellationState(),
   [TicketState.WAITING_SERVICE_WARRANTY]: new ServiceWarrantyState(),
   [TicketState.WAITING_SERVICE_WARRANTY_DESCRIPTION]:
-    new ContractWarrantyDescriptionState(),
+    new WarrantyDetailsState(),
   [TicketState.WAITING_SERVICE_WARRANTY_DESCRIPTION_CONFIRMATION]:
-    new ContractWarrantyDescriptionState(),
+    new WarrantyDetailsState(),
   [TicketState.WAITING_SERVICE_JUDICIAL_RESOLUTION]:
     new ContractJudicialState(),
   [TicketState.WAITING_SERVICE_JUDICIAL_RESOLUTION_CONFIRMATION]:

@@ -35,7 +35,7 @@ import { ContractModule } from './contract/contract.module';
     TicketModule,
     UserModule,
     HistoryModule,
-    PaymentModule,
+    // PaymentModule,
     CategoryModule,
     ContractModule,
   ],

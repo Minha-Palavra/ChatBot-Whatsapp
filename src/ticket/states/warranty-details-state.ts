@@ -6,7 +6,7 @@ import { prefix } from '../../whatsapp/entities/prefix';
 import { TicketEntity } from '../entities/ticket.entity';
 import { TicketState } from '../entities/ticket-state';
 
-export class ContractWarrantyDescriptionState extends MessageState {
+export class WarrantyDetailsState extends MessageState {
   public async processMessages(
     value: ValueObject,
     context: IMessageProcessingContext,
