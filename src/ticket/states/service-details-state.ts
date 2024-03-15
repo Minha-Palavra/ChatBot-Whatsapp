@@ -29,9 +29,7 @@ export class ServiceDetailsState extends MessageState {
       const phoneNumber = this.formatPhoneNumber(message.from);
 
       if (message.type === 'text') {
-        const serviceDetails = message.text.body;
-
-        ticket.serviceDetails = serviceDetails;
+        ticket.serviceDetails = message.text.body;
 
         // Update the user state.
         await context.whatsappService.ticketService.save({

@@ -10,7 +10,6 @@ import { SharedModule } from './shared/shared.module';
 import { TicketModule } from './ticket/ticket.module';
 import { UserModule } from './user/user.module';
 import { WhatsappModule } from './whatsapp/whatsapp.module';
-import { PaymentModule } from './payment/payment.module';
 import { CategoryModule } from './category/category.module';
 import { ContractModule } from './contract/contract.module';
 

@@ -6,7 +6,7 @@ import { CounterpartPhoneNumberInputState } from '../states/counterpart-phone-nu
 import { CounterpartEmailInputState } from '../states/counterpart-email-input-state';
 import { CounterpartAddressInputState } from '../states/counterpart-address-input-state';
 import { CounterpartTaxpayerNumberInputState } from '../states/counterpart-taxpayer-number-input-state';
-import { ServiceCategoryState } from '../states/service-category-state';
+import { CategoryState } from '../states/category-state';
 import { ServiceAddressInputState } from '../states/service-address-input-state';
 import { ServiceDetailsState } from '../states/service-details-state';
 import { ServiceStartDateInputState } from '../states/service-start-date-input-state';
@@ -160,7 +160,7 @@ export const getTicketStateProcessor: Record<TicketState, IMessageState> = {
     new CounterpartTaxpayerNumberInputState(),
   [TicketState.WAITING_COUNTERPART_TAXPAYER_NUMBER_CONFIRMATION]:
     new CounterpartTaxpayerNumberInputState(),
-  [TicketState.WAITING_SERVICE_CATEGORY]: new ServiceCategoryState(),
+  [TicketState.WAITING_SERVICE_CATEGORY]: new CategoryState(),
   [TicketState.WAITING_SERVICE_ADDRESS]: new ServiceAddressInputState(),
   [TicketState.WAITING_SERVICE_ADDRESS_CONFIRMATION]:
     new ServiceAddressInputState(),

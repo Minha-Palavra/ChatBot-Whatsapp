@@ -74,8 +74,6 @@ export class ServiceHoursState extends MessageState {
       }
 
       if (selectedOption === `${prefix.SERVICE_HOURS}-no`) {
-        // TODO: Go to previous state.
-        ticket.serviceDetails = null;
 
         await context.whatsappService.ticketService.save({
           ...ticket,
