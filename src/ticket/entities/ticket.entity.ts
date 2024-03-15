@@ -163,4 +163,12 @@ export class TicketEntity extends AbstractEntity {
   @ApiProperty()
   @Column({ nullable: true })
   judicialResolution: string;
+
+  @ApiProperty()
+  @Column({ nullable: true })
+  signedByOwner: boolean;
+
+  @ApiProperty()
+  @Column({ nullable: true })
+  contract: string;
 }

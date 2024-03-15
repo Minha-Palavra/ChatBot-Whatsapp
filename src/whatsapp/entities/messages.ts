@@ -219,5 +219,5 @@ são necessários?`,
   JUDICIAL_RESOLUTION_CONFIRMATION_REQUEST: (judicialResolution: string) =>
     `O foro escolhido é ${judicialResolution}, está correto?`,
   CONTRACT_APPROVAL_REQUEST: () =>
-    `O contrato está correto? Deseja aprovar e assina-lo?`,
+    `O contrato está correto? Deseja aprovar, assinar e enviar para a contraparte?`,
 };

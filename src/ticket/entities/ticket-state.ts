@@ -46,6 +46,7 @@ import { ContractWhatIsCancellationState } from '../states/contract-what-is-canc
 import { ServiceWarrantyState } from '../states/service-warranty-state';
 import { ContractWarrantyDescriptionState } from '../states/contract-warranty-description-state';
 import { ContractJudicialState } from '../states/contract-judicial-state';
+import { ContractApprovalState } from '../states/contract-approval-state';
 
 export enum TicketState {
   NONE = 'NONE',
@@ -134,6 +135,7 @@ export enum TicketState {
   WAITING_SERVICE_JUDICIAL_RESOLUTION = 'WAITING_SERVICE_JUDICIAL_RESOLUTION',
   WAITING_SERVICE_JUDICIAL_RESOLUTION_CONFIRMATION = 'WAITING_SERVICE_JUDICIAL_RESOLUTION_CONFIRMATION',
   WAITING_CONTRACT_APPROVAL = 'WAITING_CONTRACT_APPROVAL',
+  WAITING_SERVICE_CONTRACT_APPROVAL_DESCRIPTION = 'WAITING_SERVICE_CONTRACT_APPROVAL_DESCRIPTION',
 }
 
 export const getTicketStateProcessor: Record<TicketState, IMessageState> = {
@@ -268,7 +270,8 @@ export const getTicketStateProcessor: Record<TicketState, IMessageState> = {
     new ContractJudicialState(),
   [TicketState.WAITING_SERVICE_JUDICIAL_RESOLUTION_CONFIRMATION]:
     new ContractJudicialState(),
-  [TicketState.WAITING_CONTRACT_APPROVAL]: null,
+  [TicketState.WAITING_CONTRACT_APPROVAL]: new ContractApprovalState(),
+  [TicketState.WAITING_SERVICE_CONTRACT_APPROVAL_DESCRIPTION]: new ContractApprovalState(),
   [TicketState.WAITING_SERVICE_CONTRACT_CANCEL]: null,
   [TicketState.WAITING_SERVICE_CONTRACT_CANCEL_CONFIRMATION]: null,
   [TicketState.WAITING_SERVICE_CONTRACT_CANCEL_DETAILS]: null,

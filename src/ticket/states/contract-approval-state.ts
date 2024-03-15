@@ -1,12 +1,12 @@
-import { MessageState } from '../../whatsapp/states/message-state';
-import { IMessageProcessingContext } from '../../whatsapp/states/message-processing-context.interface';
 import { ValueObject } from 'whatsapp/build/types/webhooks';
 import { messages } from '../../whatsapp/entities/messages';
 import { prefix } from '../../whatsapp/entities/prefix';
-import { TicketEntity } from '../entities/ticket.entity';
+import { IMessageProcessingContext } from '../../whatsapp/states/message-processing-context.interface';
+import { MessageState } from '../../whatsapp/states/message-state';
 import { TicketState } from '../entities/ticket-state';
+import { TicketEntity } from '../entities/ticket.entity';
 
-export class ContractJudicialState extends MessageState {
+export class ContractApprovalState extends MessageState {
   public async processMessages(
     value: ValueObject,
     context: IMessageProcessingContext,
@@ -29,25 +29,23 @@ export class ContractJudicialState extends MessageState {
       const phoneNumber = this.formatPhoneNumber(message.from);
 
       if (message.type === 'text') {
-        const judicialResolution = message.text.body;
+        await context.whatsappService.sendMessage(
+          phoneNumber,
+          messages.INVALID_OPTION(),
+        );
 
-        ticket.judicialResolution = judicialResolution;
-
-        // Update the user state.
         await context.whatsappService.ticketService.save({
           ...ticket,
-          state: TicketState.WAITING_SERVICE_JUDICIAL_RESOLUTION_CONFIRMATION,
+          state: TicketState.WAITING_CONTRACT_APPROVAL,
         });
 
-        // Send the confirmation options.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.JUDICIAL_RESOLUTION_CONFIRMATION_REQUEST(
-            ticket.judicialResolution,
-          ),
-          prefix.JUDICIAL_RESOLUTION,
+          messages.CONTRACT_APPROVAL_REQUEST(),
+          prefix.CONTRACT_APPROVAL,
           false,
         );
+
         continue;
       }
 
@@ -64,56 +62,34 @@ export class ContractJudicialState extends MessageState {
       }
 
       // Check if the selected option is valid.
-      if (!this.optionHasPrefix(selectedOption, prefix.JUDICIAL_RESOLUTION)) {
+      if (!this.optionHasPrefix(selectedOption, prefix.CONTRACT_APPROVAL)) {
         context.logger.error(
-          `${selectedOption} is not a valid option for ${prefix.JUDICIAL_RESOLUTION}.`,
+          `${selectedOption} is not a valid option for ${prefix.CONTRACT_APPROVAL}.`,
         );
 
-        // Send the confirmation options again.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.JUDICIAL_RESOLUTION_CONFIRMATION_REQUEST(
-            ticket.judicialResolution,
-          ),
-          prefix.JUDICIAL_RESOLUTION,
+          messages.CONTRACT_APPROVAL_REQUEST(),
+          prefix.CONTRACT_APPROVAL,
           false,
         );
 
         continue;
       }
 
-      if (selectedOption === `${prefix.JUDICIAL_RESOLUTION}-no`) {
+      if (selectedOption === `${prefix.CONTRACT_APPROVAL}-no`) {
         // TODO: Go to previous state.
-        ticket.judicialResolution = null;
-
-        await context.whatsappService.ticketService.save({
-          ...ticket,
-          state: TicketState.WAITING_SERVICE_JUDICIAL_RESOLUTION,
-        });
-
-        await context.whatsappService.sendMessage(
-          phoneNumber,
-          messages.JUDICIAL_RESOLUTION_REQUEST(),
-        );
 
         continue;
       }
-
-      const contract = await context.whatsappService.generateContract(ticket);
-
       await context.whatsappService.ticketService.save({
         ...ticket,
-        contract,
-        state: TicketState.WAITING_CONTRACT_APPROVAL,
+        signedByOwner: true,
       });
 
-      await context.whatsappService.sendMessage(phoneNumber, contract);
-
-      await context.whatsappService.sendConfirmationOptions(
-        phoneNumber,
-        messages.CONTRACT_APPROVAL_REQUEST(),
-        prefix.CONTRACT_APPROVAL,
-        false,
+      await context.whatsappService.sendMessage(
+        ticket.counterpartPhoneNumber,
+        ticket.contract,
       );
     }
   }
