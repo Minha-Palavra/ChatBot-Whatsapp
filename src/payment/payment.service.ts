@@ -1,10 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { lastValueFrom } from 'rxjs';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Payment } from './entities/payment.entity';
 
 @Injectable()
 export class PaymentService {
-  constructor(private httpService: HttpService) {}
+  constructor(
+    private httpService: HttpService,
+    @InjectRepository(Payment)
+    private paymentRepository: Repository<Payment>,
+  ) {}
 
   async createPixPayment(orderInfo: any): Promise<any> {
     const apiURL = 'https://pix.paghiper.com/invoice/create/';
@@ -37,7 +44,21 @@ export class PaymentService {
 
     try {
       const response = await lastValueFrom(this.httpService.post(apiURL, data, headersRequest));
-      return response.data;
+      const responseData = response.data;
+
+      if (responseData.pix_create_request && responseData.pix_create_request.result === "success") {
+        const paymentRecord = this.paymentRepository.create({
+          order_id: orderInfo.order_id,
+          payer_phone: orderInfo.payer_phone,
+          transaction_id: responseData.pix_create_request.transaction_id,
+          status: responseData.pix_create_request.status,
+          emv: responseData.pix_create_request.pix_code.emv,
+        });
+
+        await this.paymentRepository.save(paymentRecord);
+      }
+
+      return responseData;
     } catch (error) {
       throw new Error('Falha ao criar pagamento PIX: ' + error.message);
     }
