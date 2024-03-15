@@ -90,7 +90,6 @@ export class MaterialDetailsState extends MessageState {
       } else if (selectedOption === `${prefix.MATERIAL_DETAILS}-yes`) {
         await context.whatsappService.ticketService.save({
           ...ticket,
-          materialIsPartOfContract: true,
           state: TicketState.WAITING_SERVICE_MATERIAL_DETAILS_DESCRIPTION,
         });
 

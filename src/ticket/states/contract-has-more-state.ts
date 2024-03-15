@@ -94,7 +94,6 @@ export class ContractHasMoreState extends MessageState {
       } else if (selectedOption === `${prefix.CONTRACT_HAS_MORE}-yes`) {
         await context.whatsappService.ticketService.save({
           ...ticket,
-          materialIsPartOfContract: true,
           state: TicketState.WAITING_SERVICE_CONTRACT_HAS_MORE_DESCRIPTION,
         });
 

@@ -80,11 +80,18 @@ export class MaterialIsPartOfContractState extends MessageState {
       if (selectedOption === `${prefix.MATERIAL_IS_PART_OF_CONTRACT}-no`) {
         // TODO: Go to previous state.
 
-        // await context.whatsappService.ticketService.save({
-        //   ...ticket,
-        //   materialIsPartOfContract: false,
-        //   state: TicketState.,
-        // });
+        await context.whatsappService.ticketService.save({
+          ...ticket,
+          materialIsPartOfContract: false,
+          state: TicketState.WAITING_SERVICE_CONTRACT_HAS_MORE,
+        });
+
+        await context.whatsappService.sendConfirmationOptions(
+          phoneNumber,
+          messages.CONTRACT_HAS_MORE_REQUEST(),
+          prefix.CONTRACT_HAS_MORE,
+          false,
+        )
 
         continue;
       } else if (

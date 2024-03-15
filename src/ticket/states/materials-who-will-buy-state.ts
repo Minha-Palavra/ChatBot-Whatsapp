@@ -82,7 +82,7 @@ export class MaterialsWhoWillBuyState extends MessageState {
 
         await context.whatsappService.ticketService.save({
           ...ticket,
-          materialIsPartOfContract: false,
+          whoWillBuyMaterial: 'provider',
           state: TicketState.WAITING_SERVICE_MATERIAL_HOW_BUY,
         });
       } else if (
@@ -90,7 +90,7 @@ export class MaterialsWhoWillBuyState extends MessageState {
       ) {
         await context.whatsappService.ticketService.save({
           ...ticket,
-          materialIsPartOfContract: false,
+            whoWillBuyMaterial: 'customer',
           state: TicketState.WAITING_SERVICE_MATERIAL_HOW_BUY,
         });
       }

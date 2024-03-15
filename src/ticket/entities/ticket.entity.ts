@@ -119,6 +119,9 @@ export class TicketEntity extends AbstractEntity {
   @ApiProperty()
   @Column({ nullable: true })
   materialIsPartOfContract: boolean;
+  @ApiProperty()
+  @Column({ nullable: true })
+  whoWillBuyMaterial: string;
 
   @ApiProperty()
   @Column({ nullable: true })

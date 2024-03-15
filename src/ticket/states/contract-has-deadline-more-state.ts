@@ -96,7 +96,6 @@ export class ContractHasDeadlineMoreState extends MessageState {
       ) {
         await context.whatsappService.ticketService.save({
           ...ticket,
-          materialIsPartOfContract: true,
           state:
             TicketState.WAITING_SERVICE_CONTRACT_HAS_DEADLINE_MORE_DESCRIPTION,
         });
