@@ -75,7 +75,7 @@ export class OwnerTypeState extends MessageState {
         continue;
       }
 
-      if (selectedOption === `${prefix.DATA_PRIVACY}-provider`) {
+      if (selectedOption === `${prefix.TICKET_OWNER_TYPE}-provider`) {
         //
         ticket.ownerType = OwnerType.SERVICE_PROVIDER;
 
@@ -84,7 +84,7 @@ export class OwnerTypeState extends MessageState {
           ownerType: OwnerType.SERVICE_PROVIDER,
         });
 
-      } else if (selectedOption === `${prefix.DATA_PRIVACY}-customer`) {
+      } else if (selectedOption === `${prefix.TICKET_OWNER_TYPE}-customer`) {
         //
         ticket.ownerType = OwnerType.CUSTOMER;
 
