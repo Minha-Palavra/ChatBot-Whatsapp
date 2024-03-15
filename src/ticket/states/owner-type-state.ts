@@ -7,7 +7,7 @@ import { TicketEntity } from '../entities/ticket.entity';
 import { OwnerType } from '../entities/owner-type';
 import { TicketState } from '../entities/ticket-state';
 
-export class TicketOwnerTypeInputState extends MessageState {
+export class OwnerTypeState extends MessageState {
   public async processMessages(
     value: ValueObject,
     context: IMessageProcessingContext,
@@ -78,9 +78,20 @@ export class TicketOwnerTypeInputState extends MessageState {
       if (selectedOption === `${prefix.DATA_PRIVACY}-provider`) {
         //
         ticket.ownerType = OwnerType.SERVICE_PROVIDER;
+
+        await context.whatsappService.ticketService.save({
+          ...ticket,
+          ownerType: OwnerType.SERVICE_PROVIDER,
+        });
+
       } else if (selectedOption === `${prefix.DATA_PRIVACY}-customer`) {
         //
         ticket.ownerType = OwnerType.CUSTOMER;
+
+        await context.whatsappService.ticketService.save({
+          ...ticket,
+          ownerType: OwnerType.CUSTOMER,
+        });
       }
       await context.whatsappService.ticketService.save({
         ...ticket,

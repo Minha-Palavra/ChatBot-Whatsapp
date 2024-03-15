@@ -1,6 +1,6 @@
 import { IMessageState } from '../../whatsapp/states/message-state.interface';
 import { FirstTicketConfirmationState } from '../states/first-ticket-confirmation-state';
-import { TicketOwnerTypeInputState } from '../states/ticket-owner-type-input-state';
+import { OwnerTypeState } from '../states/owner-type-state';
 import { CounterpartNameInputState } from '../states/counterpart-name-input-state';
 import { CounterpartPhoneNumberInputState } from '../states/counterpart-phone-number-input-state';
 import { CounterpartEmailInputState } from '../states/counterpart-email-input-state';
@@ -142,7 +142,7 @@ export const getTicketStateProcessor: Record<TicketState, IMessageState> = {
   [TicketState.NONE]: null,
   [TicketState.FIRST_TICKET]: new FirstTicketConfirmationState(),
   [TicketState.SELECT_TICKET]: null,
-  [TicketState.WAITING_OWNER_TYPE]: new TicketOwnerTypeInputState(),
+  [TicketState.WAITING_OWNER_TYPE]: new OwnerTypeState(),
   [TicketState.WAITING_COUNTERPART_NAME]: new CounterpartNameInputState(),
   [TicketState.WAITING_COUNTERPART_NAME_CONFIRMATION]:
     new CounterpartNameInputState(),
