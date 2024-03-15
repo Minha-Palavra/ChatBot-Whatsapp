@@ -85,8 +85,6 @@ export class MaterialsWhoWillBuyState extends MessageState {
           materialIsPartOfContract: false,
           state: TicketState.WAITING_SERVICE_MATERIAL_HOW_BUY,
         });
-
-        continue;
       } else if (
         selectedOption === `${prefix.MATERIAL_WHO_WILL_BUY}-customer`
       ) {
@@ -95,17 +93,13 @@ export class MaterialsWhoWillBuyState extends MessageState {
           materialIsPartOfContract: false,
           state: TicketState.WAITING_SERVICE_MATERIAL_HOW_BUY,
         });
-
-        await context.whatsappService.sendContextOptions(
-          phoneNumber,
-          messages.SERVICE_MATERIAL_HOW_BUY_REQUEST(),
-          prefix.SERVICE_MATERIAL_HOW_BUY,
-          false,
-        );
-
-        continue;
       }
-
+      await context.whatsappService.sendContextOptions(
+        phoneNumber,
+        messages.SERVICE_MATERIAL_HOW_BUY_REQUEST(),
+        prefix.SERVICE_MATERIAL_HOW_BUY,
+        false,
+      );
       // TODO: Send the data privacy confirmation success message.
     }
   }

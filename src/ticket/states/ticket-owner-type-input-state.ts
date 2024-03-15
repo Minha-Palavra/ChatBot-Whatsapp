@@ -58,15 +58,16 @@ export class TicketOwnerTypeInputState extends MessageState {
       }
 
       // Check if the selected option is valid.
-      if (!this.optionHasPrefix(selectedOption, prefix.TICKET_OWNER_TYPE)) {
+      if (
+        !this.contextOptionHasPrefix(selectedOption, prefix.TICKET_OWNER_TYPE)
+      ) {
         context.logger.error(
           `${selectedOption} is not a valid option for ${prefix.TICKET_OWNER_TYPE}.`,
         );
 
-        // Send the confirmation options again.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.TICKET_OWNER_TYPE_CONFIRMATION_REQUEST(ticket.ownerType),
+          messages.TICKET_OWNER_TYPE_REQUEST(),
           prefix.TICKET_OWNER_TYPE,
           false,
         );
@@ -80,7 +81,6 @@ export class TicketOwnerTypeInputState extends MessageState {
       } else if (selectedOption === `${prefix.DATA_PRIVACY}-customer`) {
         //
         ticket.ownerType = OwnerType.CUSTOMER;
-      } else {
       }
       await context.whatsappService.ticketService.save({
         ...ticket,

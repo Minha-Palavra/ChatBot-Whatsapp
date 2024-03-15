@@ -5,6 +5,30 @@ import { IMessageState } from './message-state.interface';
 import { CategoryEntity } from '../../category/category.entity';
 
 export abstract class MessageState implements IMessageState {
+  previousState?: IMessageState;
+
+  nextState?: IMessageState;
+
+  public async onStateBegin() {
+    return;
+  }
+
+  public async onStateEnd() {
+    if (!this.nextState) {
+      await this.nextState.onStateBegin();
+    }
+  }
+
+  public async onProcessingMessageError() {}
+
+  public async handleMessages() {
+    try {
+      //
+    } catch (error) {
+      await this.onProcessingMessageError();
+    }
+  }
+
   public abstract processMessages(
     value: ValueObject,
     context: IMessageProcessingContext,
@@ -25,6 +49,7 @@ export abstract class MessageState implements IMessageState {
       option === `${prefix}-cancel`
     );
   }
+
   protected warrantyOptionHasPrefix(option: string, prefix: string): boolean {
     return (
       option === `${prefix}-total` ||
@@ -32,6 +57,7 @@ export abstract class MessageState implements IMessageState {
       option === `${prefix}-none`
     );
   }
+
   protected paymentMethodOptionHasPrefix(
     option: string,
     prefix: string,
@@ -42,6 +68,7 @@ export abstract class MessageState implements IMessageState {
       option === `${prefix}-others`
     );
   }
+
   protected paymentInInstallmentsMethodOptionHasPrefix(
     option: string,
     prefix: string,
@@ -52,6 +79,7 @@ export abstract class MessageState implements IMessageState {
       option === `${prefix}-others`
     );
   }
+
   protected paymentInCashMethodOptionHasPrefix(
     option: string,
     prefix: string,
