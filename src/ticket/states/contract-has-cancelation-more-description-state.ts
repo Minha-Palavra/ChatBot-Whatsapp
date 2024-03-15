@@ -82,7 +82,7 @@ export class ContractHasCancellationMoreDescriptionState extends MessageState {
           messages.CONTRACT_HAS_CANCELLATION_MORE_DESCRIPTION_CONFIRMATION_REQUEST(
             ticket.contractHasCancellationMoreDescription,
           ),
-          prefix.CONTRACT_HAS_CANCELLATION_MORE,
+          prefix.CONTRACT_HAS_CANCELLATION_MORE_DESCRIPTION,
           false,
         );
 
@@ -112,12 +112,12 @@ export class ContractHasCancellationMoreDescriptionState extends MessageState {
 
       await context.whatsappService.ticketService.save({
         ...ticket,
-        state: TicketState.WAITING_SERVICE_DELIVERY,
+        state: TicketState.WAITING_WHAT_IS_CONTRACT_CANCELLATION,
       });
 
       await context.whatsappService.sendMessage(
         phoneNumber,
-        messages.SERVICE_DELIVERY_REQUEST(),
+        messages.WHAT_IS_CONTRACT_CANCELLATION_REQUEST(),
       );
 
       continue;

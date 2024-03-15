@@ -12,6 +12,7 @@ import { UserModule } from './user/user.module';
 import { WhatsappModule } from './whatsapp/whatsapp.module';
 import { PaymentModule } from './payment/payment.module';
 import { CategoryModule } from './category/category.module';
+import { ContractModule } from './contract/contract.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { CategoryModule } from './category/category.module';
     HistoryModule,
     PaymentModule,
     CategoryModule,
+    ContractModule,
   ],
   controllers: [AppController],
   providers: [],

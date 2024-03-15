@@ -25,7 +25,13 @@ export abstract class MessageState implements IMessageState {
       option === `${prefix}-cancel`
     );
   }
-
+  protected warrantyOptionHasPrefix(option: string, prefix: string): boolean {
+    return (
+      option === `${prefix}-total` ||
+      option === `${prefix}-parcial` ||
+      option === `${prefix}-none`
+    );
+  }
   protected paymentMethodOptionHasPrefix(
     option: string,
     prefix: string,

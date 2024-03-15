@@ -52,4 +52,11 @@ export const prefix = {
   CONTRACT_HAS_CANCELLATION_MORE: 'contract-has-cancellation-more',
   CONTRACT_HAS_CANCELLATION_MORE_DESCRIPTION:
     'contract-has-cancellation-more-description',
+  WHAT_IS_CONTRACT_CANCELLATION: 'what-is-contract-cancellation',
+  SERVICE_WARRANTY: 'service-warranty',
+  WARRANTY_DESCRIPTION: 'warranty-description',
+  JUDICIAL_RESOLUTION: 'judicial-resolution',
+  CONTRACT_APPROVAL: 'contract-approval',
+
+
 };

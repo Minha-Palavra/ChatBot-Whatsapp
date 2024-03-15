@@ -6,6 +6,7 @@ import { UserModule } from '../user/user.module';
 import { WhatsappController } from './whatsapp.controller';
 import { WhatsappService } from './whatsapp.service';
 import { CategoryModule } from '../category/category.module';
+import { ContractModule } from '../contract/contract.module';
 
 @Module({
   imports: [
@@ -14,7 +15,7 @@ import { CategoryModule } from '../category/category.module';
     TicketModule,
     CategoryModule,
     UserModule,
-    WhatsappModule,
+    ContractModule,
   ],
   controllers: [WhatsappController],
   providers: [WhatsappService],

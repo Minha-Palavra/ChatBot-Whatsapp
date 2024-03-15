@@ -1,12 +1,12 @@
+import { MessageState } from '../../whatsapp/states/message-state';
+import { IMessageProcessingContext } from '../../whatsapp/states/message-processing-context.interface';
 import { ValueObject } from 'whatsapp/build/types/webhooks';
 import { messages } from '../../whatsapp/entities/messages';
 import { prefix } from '../../whatsapp/entities/prefix';
-import { IMessageProcessingContext } from '../../whatsapp/states/message-processing-context.interface';
-import { MessageState } from '../../whatsapp/states/message-state';
-import { TicketState } from '../entities/ticket-state';
 import { TicketEntity } from '../entities/ticket.entity';
+import { TicketState } from '../entities/ticket-state';
 
-export class ContractHasCancellationMoreState extends MessageState {
+export class ContractWhatIsCancellationState extends MessageState {
   public async processMessages(
     value: ValueObject,
     context: IMessageProcessingContext,
@@ -29,23 +29,23 @@ export class ContractHasCancellationMoreState extends MessageState {
       const phoneNumber = this.formatPhoneNumber(message.from);
 
       if (message.type === 'text') {
-        await context.whatsappService.sendMessage(
-          phoneNumber,
-          messages.INVALID_OPTION(),
-        );
+        ticket.whatIsContractCancellation = message.text.body;
 
+        // Update the user state.
         await context.whatsappService.ticketService.save({
           ...ticket,
-          state: TicketState.WAITING_SERVICE_CONTRACT_HAS_CANCELLATION_MORE,
+          state: TicketState.WAITING_WHAT_IS_CONTRACT_CANCELLATION_CONFIRMATION,
         });
 
+        // Send the confirmation options.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.CONTRACT_HAS_CANCELLATION_MORE_REQUEST(),
-          prefix.CONTRACT_HAS_CANCELLATION_MORE,
+          messages.WHAT_IS_CONTRACT_CANCELLATION_CONFIRMATION_REQUEST(
+            ticket.whatIsContractCancellation,
+          ),
+          prefix.WHAT_IS_CONTRACT_CANCELLATION,
           false,
         );
-
         continue;
       }
 
@@ -65,24 +65,30 @@ export class ContractHasCancellationMoreState extends MessageState {
       if (
         !this.optionHasPrefix(
           selectedOption,
-          prefix.CONTRACT_HAS_CANCELLATION_MORE,
+          prefix.WHAT_IS_CONTRACT_CANCELLATION,
         )
       ) {
         context.logger.error(
-          `${selectedOption} is not a valid option for ${prefix.CONTRACT_HAS_CANCELLATION_MORE}.`,
+          `${selectedOption} is not a valid option for ${prefix.WHAT_IS_CONTRACT_CANCELLATION}.`,
         );
 
+        // Send the confirmation options again.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.CONTRACT_HAS_CANCELLATION_MORE_REQUEST(),
-          prefix.CONTRACT_HAS_CANCELLATION_MORE,
+          messages.WHAT_IS_CONTRACT_CANCELLATION_CONFIRMATION_REQUEST(
+            ticket.whatIsContractCancellation,
+          ),
+          prefix.WHAT_IS_CONTRACT_CANCELLATION,
           false,
         );
 
         continue;
       }
 
-      if (selectedOption === `${prefix.CONTRACT_HAS_CANCELLATION_MORE}-no`) {
+      if (selectedOption === `${prefix.WHAT_IS_CONTRACT_CANCELLATION}-no`) {
+        // TODO: Go to previous state.
+        ticket.whatIsContractCancellation = null;
+
         await context.whatsappService.ticketService.save({
           ...ticket,
           state: TicketState.WAITING_WHAT_IS_CONTRACT_CANCELLATION,
@@ -94,22 +100,21 @@ export class ContractHasCancellationMoreState extends MessageState {
         );
 
         continue;
-      } else if (
-        selectedOption === `${prefix.CONTRACT_HAS_CANCELLATION_MORE}-yes`
-      ) {
-        await context.whatsappService.ticketService.save({
-          ...ticket,
-          state:
-            TicketState.WAITING_SERVICE_CONTRACT_HAS_CANCELLATION_MORE_DESCRIPTION,
-        });
-
-        await context.whatsappService.sendMessage(
-          phoneNumber,
-          messages.CONTRACT_HAS_CANCELLATION_MORE_DESCRIPTION_REQUEST(),
-        );
       }
 
-      // TODO: Send the data privacy confirmation success message.
+      await context.whatsappService.ticketService.save({
+        ...ticket,
+        state: TicketState.WAITING_SERVICE_WARRANTY,
+      });
+
+      await context.whatsappService.sendWarrantyOptions(
+        phoneNumber,
+        messages.SERVICE_WARRANTY_REQUEST(),
+        prefix.SERVICE_WARRANTY,
+        false,
+      );
+
+      continue;
     }
   }
 }

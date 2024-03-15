@@ -24,6 +24,8 @@ import {
 import { TicketEntity } from '../ticket/entities/ticket.entity';
 import { CategoryEntity } from '../category/category.entity';
 import { CategoryService } from '../category/category.service';
+import { ContractService } from '../contract/contract.service';
+import { OwnerType } from '../ticket/entities/owner-type';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const WhatsApp = require('whatsapp');
@@ -39,6 +41,7 @@ export class WhatsappService {
     private configService: ConfigService,
     public categoryService: CategoryService,
     private historyService: HistoryService,
+    public contractService: ContractService,
     public ticketService: TicketService,
     public userService: UserService,
   ) {}
@@ -397,6 +400,50 @@ export class WhatsappService {
     return true;
   }
 
+  public async generateContract(ticket: TicketEntity) {
+    return await this.contractService.generateProposal(
+      ticket.category.title,
+      ticket.serviceDetails,
+      ticket.serviceDetails,
+      ticket.serviceStartDate,
+      ticket.serviceEndDate,
+      ticket.servicePaymentMethodDescription,
+      ticket.servicePaymentAmount,
+      ticket.servicePaymentMethodDescription,
+      ticket.servicePaymentDates,
+      ticket.serviceContractCancelDetails,
+      ticket.whatIsContractCancellation,
+      ticket.ownerType == OwnerType.SERVICE_PROVIDER
+        ? ticket.owner.fullName
+        : ticket.counterpartName,
+      ticket.ownerType == OwnerType.SERVICE_PROVIDER
+        ? ticket.owner.phoneNumber
+        : ticket.counterpartPhoneNumber,
+      ticket.ownerType == OwnerType.SERVICE_PROVIDER
+        ? ticket.owner.email
+        : ticket.counterpartEmail,
+      ticket.ownerType == OwnerType.SERVICE_PROVIDER
+        ? ticket.owner.taxpayerNumber
+        : ticket.counterpartTaxpayerNumber,
+      ticket.ownerType == OwnerType.CUSTOMER
+        ? ticket.owner.fullName
+        : ticket.counterpartName,
+      ticket.ownerType == OwnerType.CUSTOMER
+        ? ticket.owner.phoneNumber
+        : ticket.counterpartPhoneNumber,
+      ticket.ownerType == OwnerType.CUSTOMER
+        ? ticket.owner.email
+        : ticket.counterpartEmail,
+      ticket.ownerType == OwnerType.CUSTOMER
+        ? ticket.owner.taxpayerNumber
+        : ticket.counterpartTaxpayerNumber,
+      ticket.serviceEndDate,
+      ticket.judicialResolution,
+      ticket.serviceWarranty,
+      ticket.warrantyDescription,
+    );
+  }
+
   private async generateConfirmationOptions(
     message: string,
     prefix: string,
@@ -472,6 +519,90 @@ export class WhatsappService {
       },
     });
 
+    if (cancelable) {
+      interactive.action.buttons.push({
+        type: 'reply',
+        reply: {
+          id: `${prefix}-cancel`,
+          title: 'Cancelar',
+        },
+      });
+    }
+    return interactive;
+  }
+
+  public async sendWarrantyOptions(
+    phoneNumber: string,
+    message: string,
+    prefix: string,
+    cancelable = true,
+  ) {
+    // Generate the confirmation options using the prefix.
+    const options = await this.generateWarrantyOptions(
+      message,
+      prefix,
+      cancelable,
+    );
+
+    const messageSent = await this.whatsapp.messages.interactive(
+      options,
+      phoneNumber,
+    );
+
+    if (messageSent.statusCode() !== 200) {
+      this.logger.error('deu erro no sendPaymentInCashOptions.');
+      this.logger.log(messageSent.responseBodyToJSON());
+      //
+      setTimeout(() =>
+        this.sendContextOptions(phoneNumber, message, prefix, cancelable),
+      );
+    }
+
+    this.logger.log(
+      `${messageSent.statusCode()} ${messageSent.responseBodyToJSON()}`,
+    );
+
+    return true;
+  }
+
+  private async generateWarrantyOptions(
+    message: string,
+    prefix: string,
+    cancelable = true,
+  ): Promise<InteractiveObject> {
+    const interactive: InteractiveObject = {
+      action: {
+        buttons: [],
+      },
+      type: InteractiveTypesEnum.Button,
+      body: {
+        text: message,
+      },
+    };
+
+    interactive.action.buttons.push({
+      type: 'reply',
+      reply: {
+        id: `${prefix}-total`,
+        title: 'Total',
+      },
+    });
+
+    interactive.action.buttons.push({
+      type: 'reply',
+      reply: {
+        id: `${prefix}-parcial`,
+        title: 'Parcial',
+      },
+    });
+
+    interactive.action.buttons.push({
+      type: 'reply',
+      reply: {
+        id: `${prefix}-none`,
+        title: 'Sem Garantia',
+      },
+    });
     if (cancelable) {
       interactive.action.buttons.push({
         type: 'reply',

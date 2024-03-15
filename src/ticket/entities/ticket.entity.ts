@@ -147,4 +147,20 @@ export class TicketEntity extends AbstractEntity {
   @ApiProperty()
   @Column({ nullable: true })
   contractHasCancellationMoreDescription: string;
+
+  @ApiProperty()
+  @Column({ nullable: true })
+  whatIsContractCancellation: string;
+
+  @ApiProperty()
+  @Column({ nullable: true })
+  serviceWarranty: string;
+
+  @ApiProperty()
+  @Column({ nullable: true })
+  warrantyDescription: string;
+
+  @ApiProperty()
+  @Column({ nullable: true })
+  judicialResolution: string;
 }

@@ -197,6 +197,27 @@ são necessários?`,
   CONTRACT_HAS_CANCELLATION_MORE_REQUEST: () =>
     `Terá penalidade caso de cancelamento do contrato?`,
   CONTRACT_HAS_CANCELLATION_MORE_DESCRIPTION_REQUEST: () =>
-    `O que será considerado um cancelamento de contrato? Descreva`,
-  CONTRACT_HAS_CANCELLATION_MORE_DESCRIPTION_CONFIRMATION_REQUEST: (contractHasCancellationMoreDescription: string) => `O cancelamento de contrato será considerado ${contractHasCancellationMoreDescription}, está correto?`,
+    `Descreva a penalidade de cancelamento`,
+  CONTRACT_HAS_CANCELLATION_MORE_DESCRIPTION_CONFIRMATION_REQUEST: (
+    contractHasCancellationMoreDescription: string,
+  ) =>
+    `A penalidade de cancelamento é ${contractHasCancellationMoreDescription}, está correta?`,
+  WHAT_IS_CONTRACT_CANCELLATION_REQUEST: () =>
+    `Descreva em detalhes as práticas exigidas para cancelamentos de contratos em andamento do seu serviço prestado, bem como, como devem ser feitas as avaliações da qualidade dos serviços prestados.`,
+  WHAT_IS_CONTRACT_CANCELLATION_CONFIRMATION_REQUEST: (
+    whatIsContractCancellation: string,
+  ) =>
+    `As práticas exigidas para cancelamentos de contratos em andamento do seu serviço prestado, bem como, como devem ser feitas as avaliações da qualidade dos serviços prestados, estão corretas?`,
+  SERVICE_WARRANTY_REQUEST: () => `Gostaria de incluir garantia?`,
+  SERVICE_WARRANTY_CONFIRMATION_REQUEST: () => `A garantia está correta?`,
+  WARRANTY_DESCRIPTION_REQUEST: () =>
+    `Descreva a garantia e prazos de garantia`,
+  WARRANTY_DESCRIPTION_CONFIRMATION_REQUEST: (warrantyDescription: string) =>
+    `A garantia e prazos de garantia estão corretos?`,
+  JUDICIAL_RESOLUTION_REQUEST: () =>
+    `Em caso de desacordo qual o foro escolhido? (ideal ser na cidade onde se é prestado o serviço)`,
+  JUDICIAL_RESOLUTION_CONFIRMATION_REQUEST: (judicialResolution: string) =>
+    `O foro escolhido é ${judicialResolution}, está correto?`,
+  CONTRACT_APPROVAL_REQUEST: () =>
+    `O contrato está correto? Deseja aprovar e assina-lo?`,
 };

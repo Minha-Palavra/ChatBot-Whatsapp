@@ -4,9 +4,10 @@ import { ValueObject } from 'whatsapp/build/types/webhooks';
 import { messages } from '../../whatsapp/entities/messages';
 import { prefix } from '../../whatsapp/entities/prefix';
 import { TicketEntity } from '../entities/ticket.entity';
+import { OwnerType } from '../entities/owner-type';
 import { TicketState } from '../entities/ticket-state';
 
-export class ServiceDeliveryDescriptionState extends MessageState {
+export class ServiceWarrantyState extends MessageState {
   public async processMessages(
     value: ValueObject,
     context: IMessageProcessingContext,
@@ -29,23 +30,18 @@ export class ServiceDeliveryDescriptionState extends MessageState {
       const phoneNumber = this.formatPhoneNumber(message.from);
 
       if (message.type === 'text') {
-        const serviceDeliveryDescription = message.text.body;
-
-        ticket.serviceDeliveryDescription = serviceDeliveryDescription;
-
-        // Update the user state.
-        await context.whatsappService.ticketService.save({
-          ...ticket,
-          state: TicketState.WAITING_SERVICE_DELIVERY_CONFIRMATION,
-        });
-
-        // Send the confirmation options.
-        await context.whatsappService.sendConfirmationOptions(
+        await context.whatsappService.sendMessage(
           phoneNumber,
-          messages.SERVICE_DELIVERY_DESCRIPTION_CONFIRMATION_REQUEST(),
-          prefix.SERVICE_DELIVERY_DESCRIPTION,
+          messages.INVALID_OPTION(),
+        );
+
+        await context.whatsappService.sendWarrantyOptions(
+          phoneNumber,
+          messages.SERVICE_WARRANTY_REQUEST(),
+          prefix.SERVICE_WARRANTY,
           false,
         );
+
         continue;
       }
 
@@ -63,53 +59,44 @@ export class ServiceDeliveryDescriptionState extends MessageState {
 
       // Check if the selected option is valid.
       if (
-        !this.optionHasPrefix(
-          selectedOption,
-          prefix.SERVICE_DELIVERY_DESCRIPTION,
-        )
+        !this.warrantyOptionHasPrefix(selectedOption, prefix.SERVICE_WARRANTY)
       ) {
         context.logger.error(
-          `${selectedOption} is not a valid option for ${prefix.SERVICE_DELIVERY_DESCRIPTION}.`,
+          `${selectedOption} is not a valid option for ${prefix.SERVICE_WARRANTY}.`,
         );
 
         // Send the confirmation options again.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.SERVICE_DELIVERY_DESCRIPTION_CONFIRMATION_REQUEST(),
-          prefix.SERVICE_DELIVERY_DESCRIPTION,
+          messages.SERVICE_WARRANTY_CONFIRMATION_REQUEST(),
+          prefix.SERVICE_WARRANTY,
           false,
         );
 
         continue;
       }
 
-      if (selectedOption === `${prefix.SERVICE_DELIVERY_DESCRIPTION}-no`) {
-        // TODO: Go to previous state.
-        ticket.serviceDeliveryDescription = null;
-
-        await context.whatsappService.ticketService.save({
-          ...ticket,
-          state: TicketState.WAITING_SERVICE_DELIVERY,
-        });
-
-        await context.whatsappService.sendMessage(
-          phoneNumber,
-          messages.SERVICE_DELIVERY_REQUEST(),
-        );
-
-        continue;
+      if (selectedOption === `${prefix.DATA_PRIVACY}-total`) {
+        //
+        ticket.serviceWarranty = 'total';
+      } else if (selectedOption === `${prefix.DATA_PRIVACY}-parcial`) {
+        //
+        ticket.serviceWarranty = 'parcial';
+      } else if (selectedOption === `${prefix.DATA_PRIVACY}-none`) {
+        //
+        ticket.serviceWarranty = 'nenhuma';
+        ticket.ownerType = OwnerType.CUSTOMER;
+      } else {
       }
 
       await context.whatsappService.ticketService.save({
         ...ticket,
-        state: TicketState.WAITING_SERVICE_CONTRACT_HAS_CANCELLATION_MORE,
+        state: TicketState.WAITING_SERVICE_WARRANTY_DESCRIPTION,
       });
 
-      await context.whatsappService.sendConfirmationOptions(
+      await context.whatsappService.sendMessage(
         phoneNumber,
-        messages.CONTRACT_HAS_CANCELLATION_MORE_REQUEST(),
-        prefix.CONTRACT_HAS_CANCELLATION_MORE,
-        false,
+        messages.WARRANTY_DESCRIPTION_REQUEST(),
       );
     }
   }

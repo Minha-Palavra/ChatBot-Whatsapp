@@ -111,12 +111,12 @@ export class ContractHasDeadlineMoreDescriptionState extends MessageState {
 
       await context.whatsappService.ticketService.save({
         ...ticket,
-        state: TicketState.WAITING_SERVICE_CONTRACT_HAS_CANCELLATION_MORE,
+        state: TicketState.WAITING_SERVICE_DELIVERY,
       });
 
       await context.whatsappService.sendMessage(
         phoneNumber,
-        messages.CONTRACT_HAS_CANCELLATION_MORE_REQUEST(),
+        messages.SERVICE_DELIVERY_REQUEST(),
       );
 
       continue;

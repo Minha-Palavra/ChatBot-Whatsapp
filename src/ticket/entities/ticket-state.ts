@@ -41,6 +41,11 @@ import { ContractHasDeadlineMoreState } from '../states/contract-has-deadline-mo
 import { ContractHasDeadlineMoreDescriptionState } from '../states/contract-has-deadline-more-description-state';
 import { ServiceDeliveryDescriptionState } from '../states/service-delivery-description-state';
 import { ContractHasCancellationMoreDescriptionState } from '../states/contract-has-cancelation-more-description-state';
+import { ContractHasCancellationMoreState } from '../states/contract-has-cancelation-more-state';
+import { ContractWhatIsCancellationState } from '../states/contract-what-is-cancellation-state';
+import { ServiceWarrantyState } from '../states/service-warranty-state';
+import { ContractWarrantyDescriptionState } from '../states/contract-warranty-description-state';
+import { ContractJudicialState } from '../states/contract-judicial-state';
 
 export enum TicketState {
   NONE = 'NONE',
@@ -121,6 +126,14 @@ export enum TicketState {
   WAITING_SERVICE_CONTRACT_HAS_CANCELLATION_MORE = 'WAITING_SERVICE_CONTRACT_HAS_CANCELLATION_MORE',
   WAITING_SERVICE_CONTRACT_HAS_CANCELLATION_MORE_DESCRIPTION = 'WAITING_SERVICE_CONTRACT_HAS_CANCELLATION_MORE_DESCRIPTION',
   WAITING_CONTRACT_HAS_CANCELLATION_MORE_DESCRIPTION_CONFIRMATION = 'WAITING_CONTRACT_HAS_CANCELLATION_MORE_DESCRIPTION_CONFIRMATION',
+  WAITING_WHAT_IS_CONTRACT_CANCELLATION_CONFIRMATION = 'WAITING_WHAT_IS_CONTRACT_CANCELLATION_CONFIRMATION',
+  WAITING_WHAT_IS_CONTRACT_CANCELLATION = 'WAITING_WHAT_IS_CONTRACT_CANCELLATION',
+  WAITING_SERVICE_WARRANTY = 'WAITING_SERVICE_WARRANTY',
+  WAITING_SERVICE_WARRANTY_DESCRIPTION_CONFIRMATION = 'WAITING_SERVICE_WARRANTY_DESCRIPTION_CONFIRMATION',
+  WAITING_SERVICE_WARRANTY_DESCRIPTION = 'WAITING_SERVICE_WARRANTY_DESCRIPTION',
+  WAITING_SERVICE_JUDICIAL_RESOLUTION = 'WAITING_SERVICE_JUDICIAL_RESOLUTION',
+  WAITING_SERVICE_JUDICIAL_RESOLUTION_CONFIRMATION = 'WAITING_SERVICE_JUDICIAL_RESOLUTION_CONFIRMATION',
+  WAITING_CONTRACT_APPROVAL = 'WAITING_CONTRACT_APPROVAL',
 }
 
 export const getTicketStateProcessor: Record<TicketState, IMessageState> = {
@@ -237,11 +250,25 @@ export const getTicketStateProcessor: Record<TicketState, IMessageState> = {
   [TicketState.WAITING_SERVICE_DELIVERY_CONFIRMATION]:
     new ServiceDeliveryDescriptionState(),
   [TicketState.WAITING_SERVICE_CONTRACT_HAS_CANCELLATION_MORE]:
-    new ContractHasDeadlineMoreDescriptionState(),
+    new ContractHasCancellationMoreState(),
   [TicketState.WAITING_SERVICE_CONTRACT_HAS_CANCELLATION_MORE_DESCRIPTION]:
     new ContractHasCancellationMoreDescriptionState(),
   [TicketState.WAITING_CONTRACT_HAS_CANCELLATION_MORE_DESCRIPTION_CONFIRMATION]:
     new ContractHasCancellationMoreDescriptionState(),
+  [TicketState.WAITING_WHAT_IS_CONTRACT_CANCELLATION]:
+    new ContractWhatIsCancellationState(),
+  [TicketState.WAITING_WHAT_IS_CONTRACT_CANCELLATION_CONFIRMATION]:
+    new ContractWhatIsCancellationState(),
+  [TicketState.WAITING_SERVICE_WARRANTY]: new ServiceWarrantyState(),
+  [TicketState.WAITING_SERVICE_WARRANTY_DESCRIPTION]:
+    new ContractWarrantyDescriptionState(),
+  [TicketState.WAITING_SERVICE_WARRANTY_DESCRIPTION_CONFIRMATION]:
+    new ContractWarrantyDescriptionState(),
+  [TicketState.WAITING_SERVICE_JUDICIAL_RESOLUTION]:
+    new ContractJudicialState(),
+  [TicketState.WAITING_SERVICE_JUDICIAL_RESOLUTION_CONFIRMATION]:
+    new ContractJudicialState(),
+  [TicketState.WAITING_CONTRACT_APPROVAL]: null,
   [TicketState.WAITING_SERVICE_CONTRACT_CANCEL]: null,
   [TicketState.WAITING_SERVICE_CONTRACT_CANCEL_CONFIRMATION]: null,
   [TicketState.WAITING_SERVICE_CONTRACT_CANCEL_DETAILS]: null,
