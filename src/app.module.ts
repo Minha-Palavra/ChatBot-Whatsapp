@@ -12,6 +12,8 @@ import { UserModule } from './user/user.module';
 import { WhatsappModule } from './whatsapp/whatsapp.module';
 import { CategoryModule } from './category/category.module';
 import { ContractModule } from './contract/contract.module';
+import { ConversationModule } from './conversation/conversation.module';
+import { AgreementModule } from './agreement/agreement.module';
 
 @Module({
   imports: [
@@ -37,6 +39,8 @@ import { ContractModule } from './contract/contract.module';
     // PaymentModule,
     CategoryModule,
     ContractModule,
+    ConversationModule,
+    AgreementModule,
   ],
   controllers: [AppController],
   providers: [],

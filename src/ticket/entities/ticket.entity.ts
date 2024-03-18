@@ -26,67 +26,67 @@ export class TicketEntity extends AbstractEntity {
 
   @ApiProperty()
   @Column({ nullable: true })
-  counterpartName: string;
+  counterpartName: string; // Nome do Contratante
 
   @ApiProperty()
   @Column({ nullable: true })
-  counterpartTaxpayerNumber: string;
+  counterpartTaxpayerNumber: string; // CPF/CNPJ do Contratante
 
   @ApiProperty()
   @Column({ nullable: true })
-  counterpartPhoneNumber: string;
+  counterpartPhoneNumber: string; // Telefone do Contratante
 
   @ApiProperty()
   @Column({ nullable: true })
-  counterpartEmail: string;
+  counterpartEmail: string; // Email do Contratante
 
   @ApiProperty()
   @Column({ nullable: true })
-  counterpartAddress: string;
+  counterpartAddress: string; // Endereço do Contratante
 
   @ApiProperty()
   @Column({ nullable: true })
-  serviceAddress: string;
+  serviceAddress: string; // Endereço do serviço
 
   @ApiProperty()
   @Column({ nullable: true })
-  serviceDetails: string;
+  serviceDetails: string; // Detalhes do serviço
 
   @ApiProperty()
   @Column({ nullable: true })
-  serviceStartDate: string;
+  serviceStartDate: string; // Data de início do serviço
 
   @ApiProperty()
   @Column({ nullable: true })
-  serviceEndDate: string;
+  serviceEndDate: string; // Data de término do serviço
 
   @ApiProperty()
   @Column({ nullable: true })
-  servicePaymentAmount: string;
+  servicePaymentAmount: string; // Valor do serviço
 
   @ApiProperty()
   @Column({ nullable: true })
-  servicePaymentDates: string;
+  servicePaymentDates: string; // Datas de pagamento
 
   @ApiProperty()
   @Column({ nullable: true })
-  serviceMaterialDate: string;
+  serviceMaterialDate: string; // Data de entrega dos materiais
 
   @ApiProperty()
   @Column({ nullable: true })
-  serviceMaterialHowBuy: string;
+  serviceMaterialHowBuy: string; // Como comprar os materiais
 
   @ApiProperty()
   @Column({ nullable: true })
-  serviceMaterialPayback: string;
+  serviceMaterialPayback: string; // Como será o reembolso dos materiais
 
   @ApiProperty()
   @Column({ nullable: true })
-  serviceMaterialHowMuchBudgets: string;
+  serviceMaterialHowMuchBudgets: string; // Quantos orçamentos
 
   @ApiProperty()
   @Column({ nullable: true })
-  serviceMaterialWhere: string;
+  serviceMaterialWhere: string; // Onde comprar os materiais
 
   @ApiProperty()
   @Column({ nullable: true })
@@ -98,14 +98,14 @@ export class TicketEntity extends AbstractEntity {
 
   @ApiProperty()
   @Column({ nullable: true })
-  serviceMaterialHowMuch: string;
+  serviceMaterialHowMuch: string; // Quanto comprar
 
   @ApiProperty()
-  @Column({ nullable: true })
+  @Column({ nullable: true }) // Detalhes do serviço
   serviceStepsDescription: string;
 
   @ApiProperty()
-  @Column({ nullable: true })
+  @Column({ nullable: true }) // Horas de serviço
   serviceHoursDescription: string;
 
   @ApiProperty()
@@ -114,54 +114,55 @@ export class TicketEntity extends AbstractEntity {
 
   @ApiProperty()
   @Column({ nullable: true })
-  servicePaymentMethodInstallmentCount: string;
+  servicePaymentMethodInstallmentCount: string; // Quantidade de parcelas
 
   @ApiProperty()
   @Column({ nullable: true })
   materialIsPartOfContract: boolean;
-  @ApiProperty()
-  @Column({ nullable: true })
-  whoWillBuyMaterial: string;
 
   @ApiProperty()
   @Column({ nullable: true })
-  serviceMaterialPreDeterminedValue: string;
+  whoWillBuyMaterial: string; // Quem irá comprar os materiais
 
   @ApiProperty()
   @Column({ nullable: true })
-  whoWillPayForTheMaterials: string;
+  serviceMaterialPreDeterminedValue: string; // Valor pré-determinado dos materiais
 
   @ApiProperty()
   @Column({ nullable: true })
-  serviceMaterialDetails: string;
+  whoWillPayForTheMaterials: string; // Quem irá pagar pelos materiais
 
   @ApiProperty()
   @Column({ nullable: true })
-  contractHasMoreDescription: string;
+  serviceMaterialDetails: string; // Detalhes dos materiais
 
   @ApiProperty()
   @Column({ nullable: true })
-  contractHasDeadlineMoreDescription: string;
+  contractHasMoreDescription: string; //MULTA POR ATRASO NA ENTREGA
 
   @ApiProperty()
   @Column({ nullable: true })
-  serviceDeliveryDescription: string;
+  contractHasDeadlineMoreDescription: string; // MULTA
 
   @ApiProperty()
   @Column({ nullable: true })
-  contractHasCancellationMoreDescription: string;
+  serviceDeliveryDescription: string; // DETALHES DA ENTREGA
 
   @ApiProperty()
   @Column({ nullable: true })
-  whatIsContractCancellation: string;
+  contractHasCancellationMoreDescription: string; // MULTA POR ATRASO NO PAGAMENTO
 
   @ApiProperty()
   @Column({ nullable: true })
-  serviceWarranty: string;
+  whatIsContractCancellation: string; // O QUE É O CANCELAMENTO
 
   @ApiProperty()
   @Column({ nullable: true })
-  warrantyDescription: string;
+  serviceWarranty: string; // GARANTIA
+
+  @ApiProperty()
+  @Column({ nullable: true })
+  warrantyDescription: string; // DETALHES DA GARANTIA
 
   @ApiProperty()
   @Column({ nullable: true })

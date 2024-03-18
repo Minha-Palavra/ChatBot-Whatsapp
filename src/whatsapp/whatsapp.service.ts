@@ -57,11 +57,10 @@ export class WhatsappService {
     }
   }
 
-  public async handleWebhook(body: WebhookObject): Promise<string> {
-    this.logger.log('Message Arrived: ' + JSON.stringify(body));
+  public async handleWebhook(body: WebhookObject) {
+    await this.checkWebhookMinimumRequirements(body);
 
     await this.historyService.create(body, MessageDirection.INCOMING);
-    await this.checkWebhookMinimumRequirements(body);
 
     let isMessage = false;
 
@@ -95,19 +94,19 @@ export class WhatsappService {
 
         if (value.messages && value.messages.length !== 0) {
           isMessage = true;
-          await this.processReceivedMessages(value);
+          await this.processMessages(value);
         }
       }
     }
 
     if (isMessage) {
-      this.logger.log(JSON.stringify(body));
+      this.logger.log('Message Received: ' + JSON.stringify(body));
     }
 
-    return 'ok';
+    return;
   }
 
-  private async processReceivedMessages(value: ValueObject) {
+  private async processMessages(value: ValueObject) {
     const contact = value.contacts[0];
 
     // TODO: After the user creation if user wanna change the phoneNumber, it should be done by an email verification.
@@ -115,8 +114,9 @@ export class WhatsappService {
 
     let state: IMessageState;
     let ticket: TicketEntity;
+
+    // TODO: if user is not found, start user registration process.
     if (!user) {
-      // TODO: if user is not found, start user registration process.
       state = new UserRegistrationInitialState();
     } else if (user.state !== UserState.REGISTRATION_COMPLETE) {
       //
