@@ -104,16 +104,6 @@ export class ContractHasRejectedByCounterpartState extends MessageState {
         continue;
       }
 
-      await context.whatsappService.ticketService.save({
-        ...ticket,
-        state: TicketState.WAITING_WHAT_IS_CONTRACT_CANCELLATION,
-      });
-
-      await context.whatsappService.sendMessage(
-        phoneNumber,
-        messages.WHAT_IS_CONTRACT_CANCELLATION_REQUEST(),
-      );
-
       continue;
     }
   }

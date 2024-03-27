@@ -99,6 +99,7 @@ export class ContractCounterpartSignatureState extends MessageState {
         );
         continue;
       }
+
       await context.whatsappService.ticketService.save({
         ...ticket,
         signedByCounterpart: true,
