@@ -47,6 +47,8 @@ import { ServiceWarrantyState } from '../states/service-warranty-state';
 import { WarrantyDetailsState } from '../states/warranty-details-state';
 import { ContractJudicialState } from '../states/contract-judicial-state';
 import { ContractApprovalState } from '../states/contract-approval-state';
+import { ContractCounterpartSignatureState } from '../states/contract-counterpart-signature-state';
+import { ContractHasRejectedByCounterpartState } from '../states/contract-has-rejected-by-counterpart-state';
 
 export enum TicketState {
   NONE = 'NONE',
@@ -136,6 +138,9 @@ export enum TicketState {
   WAITING_SERVICE_JUDICIAL_RESOLUTION_CONFIRMATION = 'WAITING_SERVICE_JUDICIAL_RESOLUTION_CONFIRMATION',
   WAITING_CONTRACT_APPROVAL = 'WAITING_CONTRACT_APPROVAL',
   WAITING_SERVICE_CONTRACT_APPROVAL_DESCRIPTION = 'WAITING_SERVICE_CONTRACT_APPROVAL_DESCRIPTION',
+  WAITING_COUNTERPART_SIGNATURE = 'WAITING_COUNTERPART_SIGNATURE',
+  WAITING_CONTRACT_HAS_REJECTED_BY_COUNTERPART_DESCRIPTION = 'WAITING_CONTRACT_HAS_REJECTED_BY_COUNTERPART_DESCRIPTION',
+  WAITING_CONTRACT_HAS_REJECTED_BY_COUNTERPART_CONFIRMATION = 'WAITING_CONTRACT_HAS_REJECTED_BY_COUNTERPART_CONFIRMATION',
 }
 
 export const getTicketStateProcessor: Record<TicketState, IMessageState> = {
@@ -271,7 +276,14 @@ export const getTicketStateProcessor: Record<TicketState, IMessageState> = {
   [TicketState.WAITING_SERVICE_JUDICIAL_RESOLUTION_CONFIRMATION]:
     new ContractJudicialState(),
   [TicketState.WAITING_CONTRACT_APPROVAL]: new ContractApprovalState(),
-  [TicketState.WAITING_SERVICE_CONTRACT_APPROVAL_DESCRIPTION]: new ContractApprovalState(),
+  [TicketState.WAITING_SERVICE_CONTRACT_APPROVAL_DESCRIPTION]:
+    new ContractApprovalState(),
+  [TicketState.WAITING_COUNTERPART_SIGNATURE]:
+    new ContractCounterpartSignatureState(),
+  [TicketState.WAITING_CONTRACT_HAS_REJECTED_BY_COUNTERPART_DESCRIPTION]:
+    new ContractHasRejectedByCounterpartState(),
+  [TicketState.WAITING_CONTRACT_HAS_REJECTED_BY_COUNTERPART_CONFIRMATION]:
+    new ContractHasRejectedByCounterpartState(),
   [TicketState.WAITING_SERVICE_CONTRACT_CANCEL]: null,
   [TicketState.WAITING_SERVICE_CONTRACT_CANCEL_CONFIRMATION]: null,
   [TicketState.WAITING_SERVICE_CONTRACT_CANCEL_DETAILS]: null,

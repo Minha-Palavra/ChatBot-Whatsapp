@@ -57,6 +57,6 @@ export const prefix = {
   WARRANTY_DESCRIPTION: 'warranty-description',
   JUDICIAL_RESOLUTION: 'judicial-resolution',
   CONTRACT_APPROVAL: 'contract-approval',
-
-
+  CONTRACT_COUNTERPART_SIGNATURE: 'contract-counterpart-signature',
+  CONTRACT_HAS_REJECTED_BY_COUNTERPART_DESCRIPTION: '',
 };

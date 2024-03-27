@@ -220,4 +220,13 @@ são necessários?`,
     `O foro escolhido é ${judicialResolution}, está correto?`,
   CONTRACT_APPROVAL_REQUEST: () =>
     `O contrato está correto? Deseja aprovar, assinar e enviar para a contraparte?`,
+  CONTRACT_SIGNATURE_REQUEST: (name: string) =>
+    `O ${name} enviou um contrato para vocês para que possam oficializar a prestação do serviço. Por favor, revise e assine o contrato.`,
+  CONTRACT_HAS_SENT_TO_COUNTERPART: (counterpartName: string) =>
+    `O contrato foi enviado para ${counterpartName}. Por favor, aguarde a assinatura.`,
+  CONTRACT_COUNTERPART_SIGNATURE_REQUEST: () => `Deseja assinar o contrato?`,
+  CONTRACT_HAS_REJECTED_BY_COUNTERPART_DESCRIPTION_REQUEST: () =>
+    `Com qual parte do contrato você não concorda? Descreva`,
+  CONTRACT_HAS_REJECTED_BY_COUNTERPART_DESCRIPTION_CONFIRMATION_REQUEST: () =>
+    `Você descreveu corretamente o que não concorda?`,
 };

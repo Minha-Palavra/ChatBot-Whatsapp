@@ -1,12 +1,12 @@
+import { MessageState } from '../../whatsapp/states/message-state';
+import { IMessageProcessingContext } from '../../whatsapp/states/message-processing-context.interface';
 import { ValueObject } from 'whatsapp/build/types/webhooks';
 import { messages } from '../../whatsapp/entities/messages';
 import { prefix } from '../../whatsapp/entities/prefix';
-import { IMessageProcessingContext } from '../../whatsapp/states/message-processing-context.interface';
-import { MessageState } from '../../whatsapp/states/message-state';
-import { TicketState } from '../entities/ticket-state';
 import { TicketEntity } from '../entities/ticket.entity';
+import { TicketState } from '../entities/ticket-state';
 
-export class ContractApprovalState extends MessageState {
+export class ContractHasRejectedByCounterpartState extends MessageState {
   public async processMessages(
     value: ValueObject,
     context: IMessageProcessingContext,
@@ -29,20 +29,20 @@ export class ContractApprovalState extends MessageState {
       const phoneNumber = this.formatPhoneNumber(message.from);
 
       if (message.type === 'text') {
-        await context.whatsappService.sendMessage(
-          phoneNumber,
-          messages.INVALID_OPTION(),
-        );
+        ticket.contractHasRejectedByCounterpartDescription = message.text.body;
 
+        // Update the user state.
         await context.whatsappService.ticketService.save({
           ...ticket,
-          state: TicketState.WAITING_CONTRACT_APPROVAL,
+          state:
+            TicketState.WAITING_CONTRACT_HAS_REJECTED_BY_COUNTERPART_CONFIRMATION,
         });
 
+        // Send the confirmation options.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.CONTRACT_APPROVAL_REQUEST(),
-          prefix.CONTRACT_APPROVAL,
+          messages.CONTRACT_HAS_REJECTED_BY_COUNTERPART_DESCRIPTION_CONFIRMATION_REQUEST(),
+          prefix.CONTRACT_HAS_REJECTED_BY_COUNTERPART_DESCRIPTION,
           false,
         );
 
@@ -62,60 +62,59 @@ export class ContractApprovalState extends MessageState {
       }
 
       // Check if the selected option is valid.
-      if (!this.optionHasPrefix(selectedOption, prefix.CONTRACT_APPROVAL)) {
+      if (
+        !this.optionHasPrefix(
+          selectedOption,
+          prefix.CONTRACT_HAS_REJECTED_BY_COUNTERPART_DESCRIPTION,
+        )
+      ) {
         context.logger.error(
-          `${selectedOption} is not a valid option for ${prefix.CONTRACT_APPROVAL}.`,
+          `${selectedOption} is not a valid option for ${prefix.CONTRACT_HAS_REJECTED_BY_COUNTERPART_DESCRIPTION}.`,
         );
 
+        // Send the confirmation options again.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.CONTRACT_APPROVAL_REQUEST(),
-          prefix.CONTRACT_APPROVAL,
+          messages.CONTRACT_HAS_REJECTED_BY_COUNTERPART_DESCRIPTION_CONFIRMATION_REQUEST(),
+          prefix.CONTRACT_HAS_REJECTED_BY_COUNTERPART_DESCRIPTION,
           false,
         );
 
         continue;
       }
 
-      if (selectedOption === `${prefix.CONTRACT_APPROVAL}-no`) {
+      if (
+        selectedOption ===
+        `${prefix.CONTRACT_HAS_REJECTED_BY_COUNTERPART_DESCRIPTION}-no`
+      ) {
         // TODO: Go to previous state.
+        ticket.contractHasRejectedByCounterpartDescription = null;
+
         await context.whatsappService.ticketService.save({
           ...ticket,
-          signedByOwner: false,
-          signedByOwnerAt: null,
-          state: TicketState.WAITING_CONTRACT_APPROVAL,
+          state:
+            TicketState.WAITING_CONTRACT_HAS_REJECTED_BY_COUNTERPART_DESCRIPTION,
         });
+
+        await context.whatsappService.sendMessage(
+          phoneNumber,
+          messages.CONTRACT_HAS_REJECTED_BY_COUNTERPART_DESCRIPTION_REQUEST(),
+        );
+
         continue;
       }
 
       await context.whatsappService.ticketService.save({
         ...ticket,
-        signedByOwner: true,
-        signedByOwnerAt: new Date(),
-        state: TicketState.WAITING_COUNTERPART_SIGNATURE,
+        state: TicketState.WAITING_WHAT_IS_CONTRACT_CANCELLATION,
       });
 
       await context.whatsappService.sendMessage(
-        ticket.counterpartPhoneNumber,
-        messages.CONTRACT_SIGNATURE_REQUEST(ticket.owner.fullName),
-      );
-
-      await context.whatsappService.sendMessage(
-        ticket.counterpartPhoneNumber,
-        ticket.contract,
-      );
-
-      await context.whatsappService.sendConfirmationOptions(
-        ticket.counterpartPhoneNumber,
-        messages.CONTRACT_COUNTERPART_SIGNATURE_REQUEST(),
-        prefix.CONTRACT_COUNTERPART_SIGNATURE,
-        false,
-      );
-
-      await context.whatsappService.sendMessage(
         phoneNumber,
-        messages.CONTRACT_HAS_SENT_TO_COUNTERPART(ticket.counterpartName),
+        messages.WHAT_IS_CONTRACT_CANCELLATION_REQUEST(),
       );
+
+      continue;
     }
   }
 }

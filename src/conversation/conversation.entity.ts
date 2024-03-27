@@ -1,7 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Column, Entity } from 'typeorm';
 import { AbstractEntity } from '../shared/entities/abstract.entity';
-import { UserEntity } from '../user/entities/user.entity';
 import { AgreementCreationPayload } from '../agreement/types/agreement-creation-payload';
 
 enum ConversationStatus {

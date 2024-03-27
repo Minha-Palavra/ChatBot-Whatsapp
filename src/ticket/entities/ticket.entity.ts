@@ -174,5 +174,21 @@ export class TicketEntity extends AbstractEntity {
 
   @ApiProperty()
   @Column({ nullable: true })
+  signedByOwnerAt: Date;
+
+  @ApiProperty()
+  @Column({ nullable: true })
+  signedByCounterpart: boolean;
+
+  @ApiProperty()
+  @Column({ nullable: true })
+  signedByCounterpartAt: Date;
+
+  @ApiProperty()
+  @Column({ nullable: true })
   contract: string;
+
+  @ApiProperty()
+  @Column({ nullable: true })
+  contractHasRejectedByCounterpartDescription: string;
 }

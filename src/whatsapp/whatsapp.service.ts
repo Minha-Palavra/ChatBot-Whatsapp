@@ -115,6 +115,12 @@ export class WhatsappService {
     let state: IMessageState;
     let ticket: TicketEntity;
 
+    // TODO: Check if the user by the contact id or phone number has a contract open as counterpart.
+    const phoneNumber = value.messages[0].from;
+
+    // if (this.ticketService.findUserNewestTicketAsCounterpart(phoneNumber)) {
+    //   console.log('Hello World');
+    // } else {
     // TODO: if user is not found, start user registration process.
     if (!user) {
       state = new UserRegistrationInitialState();
@@ -146,6 +152,7 @@ export class WhatsappService {
         state = getTicketStateProcessor[ticket.state];
       }
     }
+    // }
 
     const context = new MessagesProcessingContext(
       this,
@@ -174,6 +181,9 @@ export class WhatsappService {
         setTimeout(() => this.sendMessage(phoneNumber, message), 5000);
       }
       this.logger.log(`${await messageSent.rawResponse()}`);
+      this.logger.log(
+        `${messageSent.statusCode()} ${messageSent.responseBodyToJSON()}`,
+      );
     } catch (e) {
       this.logger.log(JSON.stringify(e));
     }

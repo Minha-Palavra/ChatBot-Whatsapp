@@ -90,7 +90,7 @@ export class AgreementService {
         Formate o contrato usando * para trechos em negrito e ** para trechos em itálico.
         Não inclua espaços para preenchimento manual da assinatura.
     `;
-
+    console.log(prompt);
     const body = {
       model: 'gpt-3.5-turbo-instruct',
       prompt: prompt,

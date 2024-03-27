@@ -29,6 +29,19 @@ export class TicketService extends TypeOrmCrudService<TicketEntity> {
     });
   }
 
+  public async findUserNewestTicketAsCounterpart(
+    phoneNumber: string,
+  ): Promise<TicketEntity | null> {
+    return await this.findOne({
+      where: {
+        // status: 'open',
+        counterpartPhoneNumber: phoneNumber,
+      },
+      order: { updatedAt: 'DESC' },
+      relations: { owner: true, category: true },
+    });
+  }
+
   public async create(data: Partial<TicketEntity>) {
     return await this.repository.save(data);
   }
