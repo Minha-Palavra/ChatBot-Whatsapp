@@ -1,8 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OpenAI } from 'openai';
 import { ApiConfigService } from '../shared/api-config.service';
-import { TicketEntity } from '../ticket/entities/ticket.entity';
-import { OwnerType } from '../ticket/entities/owner-type';
 
 @Injectable()
 export class ContractService {
@@ -96,26 +94,52 @@ export class ContractService {
       presence_penalty: 0.0,
     };
 
-    const response = await this.openai.completions.create(data);
-    this.logger.log(response.choices[0].text);
-    return response.choices[0].text;
+    const response = await this.openai.chat.completions.create({
+      model: 'gpt-4-turbo-preview',
+      messages: [
+        {
+          role: 'system',
+          content:
+            'Você é um advogado especialista na crianção de contratos de prestação de serviços',
+        },
+        { role: 'user', content: prompt },
+      ],
+      top_p: 1.0,
+      frequency_penalty: 0.0,
+      presence_penalty: 0.0,
+    });
+    this.logger.log(response.choices[0].message.content);
+    return response.choices[0].message.content;
   }
 
   public async updateContract(contract: string, updates: string) {
     const prompt = `
     Atualize o contrato : ${contract} com as seguintes informações: ${updates}`;
     const data = {
-      model: 'gpt-3.5-turbo-instruct',
+      model: 'gpt-4-turbo-preview',
       prompt: prompt,
       temperature: 0.6,
-      max_tokens: 3500,
+      max_tokens: 128000,
       top_p: 1.0,
       frequency_penalty: 0.0,
       presence_penalty: 0.0,
     };
 
-    const response = await this.openai.completions.create(data);
-    this.logger.log(response.choices[0].text);
-    return response.choices[0].text;
+    const response = await this.openai.chat.completions.create({
+      model: 'gpt-4-turbo-preview',
+      messages: [
+        {
+          role: 'system',
+          content:
+            'Você é um advogado especialista na crianção de contratos de prestação de serviços',
+        },
+        { role: 'user', content: prompt },
+      ],
+      top_p: 1.0,
+      frequency_penalty: 0.0,
+      presence_penalty: 0.0,
+    });
+    this.logger.log(response.choices[0].message.content);
+    return response.choices[0].message.content;
   }
 }

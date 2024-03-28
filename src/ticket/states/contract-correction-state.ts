@@ -102,6 +102,8 @@ export class ContractCorrectionState extends MessageState {
         continue;
       }
 
+      await context.whatsappService.sendMessage(phoneNumber, `Por favor aguarde enquanto atualizamos o contrato.`);
+
       const contract = await context.whatsappService.updateContract(ticket);
 
       await context.whatsappService.ticketService.save({

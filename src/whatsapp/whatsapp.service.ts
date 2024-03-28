@@ -57,6 +57,16 @@ export class WhatsappService {
     }
   }
 
+  private async cancelTicket(phoneNumber: string, ticket: TicketEntity) {
+    ticket.state = TicketState.CLOSED;
+
+    await this.ticketService.save(ticket);
+    await this.sendMessage(
+      phoneNumber,
+      'O ticket foi cancelado com sucesso. Obrigado por usar o nosso serviço.',
+    );
+  }
+
   public async handleWebhook(body: WebhookObject) {
     await this.checkWebhookMinimumRequirements(body);
 
@@ -117,51 +127,90 @@ export class WhatsappService {
 
     // TODO: Check if the user by the contact id or phone number has a contract open as counterpart.
     const phoneNumber = value.messages[0].from;
+    //
+    ticket =
+      await this.ticketService.findUserNewestTicketAsCounterpart(phoneNumber);
+    if (!ticket) {
+      const newPhoneNumber =
+        phoneNumber.slice(0, 4) + '9' + phoneNumber.slice(4);
+      ticket =
+        await this.ticketService.findUserNewestTicketAsCounterpart(
+          newPhoneNumber,
+        );
+    }
 
-    // TODO: Cancelar o ticket.
-    // for (const message of value.messages) {
-    //   if (message.type === 'text') {
-    //     const text = message.text.body;
-    //     if (text === 'cancelar') {
-    //     }
-    //   }
-    // }
-
-    // if (this.ticketService.findUserNewestTicketAsCounterpart(phoneNumber)) {
-    //   console.log('Hello World');
-    // } else {
-    // TODO: if user is not found, start user registration process.
-    if (!user) {
-      state = new UserRegistrationInitialState();
-    } else if (user.state !== UserState.REGISTRATION_COMPLETE) {
-      //
-      state = getUserStateProcessor[user.state];
-    } else {
-      // Conversation flow to select a ticket or create a new one.
-      ticket = await this.ticketService.findUserNewestTicket(user);
-
-      if (!ticket || ticket.state === TicketState.CLOSED) {
-        const tickets = await this.ticketService.find({
-          where: {
-            owner: { id: user.id },
-          },
-          order: { updatedAt: 'DESC' },
-          relations: { owner: true },
-        });
-
-        if (tickets.length > 0) {
-          // TODO: if user does not have any open ticket. Then I should redirect it to menu flow.
-          // TODO: Menu flow allows user to select a ticket or create a new one.
-          state = getTicketStateProcessor[TicketState.SELECT_TICKET];
-        } else {
-          // TODO: If user doesn't have any ticket at all it should go to the first ticket flow.
-          state = getTicketStateProcessor[TicketState.FIRST_TICKET];
-        }
-      } else {
+    if (ticket && ticket.state != TicketState.CLOSED) {
+      if (ticket.state == TicketState.WAITING_COUNTERPART_SIGNATURE) {
+        // CONTRAPART EDITANDO.
         state = getTicketStateProcessor[ticket.state];
+      } else if (
+        ticket.state ==
+        TicketState.WAITING_CONTRACT_HAS_REJECTED_BY_COUNTERPART_DESCRIPTION
+      ) {
+        state = getTicketStateProcessor[ticket.state];
+      } else {
+        // Ele precisa aguardar, preciso mandar msg para ele aguardar.
+        await this.sendMessage(
+          phoneNumber,
+          'Você já tem um contrato em andamento. Aguarde o retorno da sua contraparte.',
+        );
+        return;
+      }
+    } else {
+      // TODO: if user is not found, start user registration process.
+      if (!user) {
+        state = new UserRegistrationInitialState();
+      } else if (user.state != UserState.REGISTRATION_COMPLETE) {
+        //
+        state = getUserStateProcessor[user.state];
+      } else {
+        // Conversation flow to select a ticket or create a new one.
+        ticket = await this.ticketService.findUserNewestTicket(user);
+
+        if (!ticket || ticket.state == TicketState.CLOSED) {
+          const tickets = await this.ticketService.find({
+            where: {
+              owner: { id: user.id },
+            },
+            order: { updatedAt: 'DESC' },
+            relations: { owner: true },
+          });
+
+          if (tickets.length > 0) {
+            // TODO: if user does not have any open ticket. Then I should redirect it to menu flow.
+            // TODO: Menu flow allows user to select a ticket or create a new one.
+            state = getTicketStateProcessor[TicketState.SELECT_TICKET];
+          } else {
+            // TODO: If user doesn't have any ticket at all it should go to the first ticket flow.
+            state = getTicketStateProcessor[TicketState.FIRST_TICKET];
+          }
+        } else {
+          state = getTicketStateProcessor[ticket.state];
+        }
+
+        if (
+          ticket.state == TicketState.WAITING_COUNTERPART_SIGNATURE ||
+          ticket.state ==
+            TicketState.WAITING_CONTRACT_HAS_REJECTED_BY_COUNTERPART_DESCRIPTION
+        ) {
+          await this.sendMessage(
+            phoneNumber,
+            'Você já tem um contrato em andamento. Aguarde o retorno da sua contraparte.',
+          );
+          return;
+        }
+      }
+
+      // TODO: Cancelar o ticket.
+      for (const message of value.messages) {
+        if (message.type == 'text') {
+          const text = message.text.body;
+          if (text == 'cancelar') {
+            await this.cancelTicket(phoneNumber, ticket);
+          }
+        }
       }
     }
-    // }
 
     const context = new MessagesProcessingContext(
       this,

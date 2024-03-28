@@ -121,6 +121,11 @@ export class ContractHasRejectedByCounterpartState extends MessageState {
         messages.CONTRACT_CORRECTION_BY_OWNER_REQUEST(),
       );
 
+      await context.whatsappService.sendMessage(
+        phoneNumber,
+        `Informamos que a solicitação de correção do contrato foi enviada ao contratante. Aguarde a resposta.`,
+      );
+
       continue;
     }
   }
