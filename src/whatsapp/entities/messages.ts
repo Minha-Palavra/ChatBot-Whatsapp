@@ -229,4 +229,10 @@ são necessários?`,
     `Com qual parte do contrato você não concorda? Descreva`,
   CONTRACT_HAS_REJECTED_BY_COUNTERPART_DESCRIPTION_CONFIRMATION_REQUEST: () =>
     `Você descreveu corretamente o que não concorda?`,
+  CONTRACT_CORRECTION_BY_OWNER_REQUEST: () => `O que deseja alterar?`,
+  CONTRACT_REFUSAL_REASON_REQUEST: (
+    contractHasRejectedByCounterpartDescription: string,
+  ) =>
+    `O contrato foi recusado pela contraparte. O motivo foi: ${contractHasRejectedByCounterpartDescription}.`,
+  CONTRACT_CORRECTION_BY_OWNER_DESCRIPTION_CONFIRMATION_REQUEST: () => `As alterações estão corretas?`,
 };

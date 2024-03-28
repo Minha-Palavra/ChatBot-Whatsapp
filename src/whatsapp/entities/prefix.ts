@@ -58,5 +58,7 @@ export const prefix = {
   JUDICIAL_RESOLUTION: 'judicial-resolution',
   CONTRACT_APPROVAL: 'contract-approval',
   CONTRACT_COUNTERPART_SIGNATURE: 'contract-counterpart-signature',
-  CONTRACT_HAS_REJECTED_BY_COUNTERPART_DESCRIPTION: '',
+  CONTRACT_HAS_REJECTED_BY_COUNTERPART_DESCRIPTION:
+    'contract-has-rejected-by-counterpart-description',
+  CONTRACT_CORRECTION_BY_OWNER_DESCRIPTION: 'contract-correction-by-owner-description',
 };

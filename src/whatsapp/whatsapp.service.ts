@@ -118,6 +118,15 @@ export class WhatsappService {
     // TODO: Check if the user by the contact id or phone number has a contract open as counterpart.
     const phoneNumber = value.messages[0].from;
 
+    // TODO: Cancelar o ticket.
+    // for (const message of value.messages) {
+    //   if (message.type === 'text') {
+    //     const text = message.text.body;
+    //     if (text === 'cancelar') {
+    //     }
+    //   }
+    // }
+
     // if (this.ticketService.findUserNewestTicketAsCounterpart(phoneNumber)) {
     //   console.log('Hello World');
     // } else {
@@ -451,6 +460,13 @@ export class WhatsappService {
       ticket.judicialResolution,
       ticket.serviceWarranty,
       ticket.warrantyDescription,
+    );
+  }
+
+  public async updateContract(ticket: TicketEntity) {
+    return await this.contractService.updateContract(
+      ticket.contract,
+      ticket.contractCorrection,
     );
   }
 

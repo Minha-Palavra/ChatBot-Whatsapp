@@ -82,7 +82,7 @@ export class ContractCounterpartSignatureState extends MessageState {
         continue;
       }
 
-      if (selectedOption === `${prefix.CONTRACT_APPROVAL}-no`) {
+      if (selectedOption === `${prefix.CONTRACT_COUNTERPART_SIGNATURE}-no`) {
         // TODO: Go to previous state.
         await context.whatsappService.ticketService.save({
           ...ticket,

@@ -49,6 +49,7 @@ import { ContractJudicialState } from '../states/contract-judicial-state';
 import { ContractApprovalState } from '../states/contract-approval-state';
 import { ContractCounterpartSignatureState } from '../states/contract-counterpart-signature-state';
 import { ContractHasRejectedByCounterpartState } from '../states/contract-has-rejected-by-counterpart-state';
+import { ContractCorrectionState } from '../states/contract-correction-state';
 
 export enum TicketState {
   NONE = 'NONE',
@@ -141,6 +142,8 @@ export enum TicketState {
   WAITING_COUNTERPART_SIGNATURE = 'WAITING_COUNTERPART_SIGNATURE',
   WAITING_CONTRACT_HAS_REJECTED_BY_COUNTERPART_DESCRIPTION = 'WAITING_CONTRACT_HAS_REJECTED_BY_COUNTERPART_DESCRIPTION',
   WAITING_CONTRACT_HAS_REJECTED_BY_COUNTERPART_CONFIRMATION = 'WAITING_CONTRACT_HAS_REJECTED_BY_COUNTERPART_CONFIRMATION',
+  WAITING_CONTRACT_CORRECTION_BY_OWNER = 'WAITING_CONTRACT_CORRECTION_BY_OWNER',
+  WAITING_CONTRACT_CORRECTION_BY_OWNER_CONFIRMATION = 'WAITING_CONTRACT_CORRECTION_BY_OWNER_CONFIRMATION',
 }
 
 export const getTicketStateProcessor: Record<TicketState, IMessageState> = {
@@ -284,6 +287,10 @@ export const getTicketStateProcessor: Record<TicketState, IMessageState> = {
     new ContractHasRejectedByCounterpartState(),
   [TicketState.WAITING_CONTRACT_HAS_REJECTED_BY_COUNTERPART_CONFIRMATION]:
     new ContractHasRejectedByCounterpartState(),
+  [TicketState.WAITING_CONTRACT_CORRECTION_BY_OWNER]:
+    new ContractCorrectionState(),
+  [TicketState.WAITING_CONTRACT_CORRECTION_BY_OWNER_CONFIRMATION]:
+    new ContractCorrectionState(),
   [TicketState.WAITING_SERVICE_CONTRACT_CANCEL]: null,
   [TicketState.WAITING_SERVICE_CONTRACT_CANCEL_CONFIRMATION]: null,
   [TicketState.WAITING_SERVICE_CONTRACT_CANCEL_DETAILS]: null,

@@ -191,4 +191,12 @@ export class TicketEntity extends AbstractEntity {
   @ApiProperty()
   @Column({ nullable: true })
   contractHasRejectedByCounterpartDescription: string;
+
+  @ApiProperty()
+  @Column({ nullable: true, default: 'owner' })
+  whoIsEditing: string;
+
+  @ApiProperty()
+  @Column({ nullable: true })
+  contractCorrection: string;
 }

@@ -6,7 +6,7 @@ import { prefix } from '../../whatsapp/entities/prefix';
 import { TicketEntity } from '../entities/ticket.entity';
 import { TicketState } from '../entities/ticket-state';
 
-export class ContractHasRejectedByCounterpartState extends MessageState {
+export class ContractCorrectionState extends MessageState {
   public async processMessages(
     value: ValueObject,
     context: IMessageProcessingContext,
@@ -29,20 +29,19 @@ export class ContractHasRejectedByCounterpartState extends MessageState {
       const phoneNumber = this.formatPhoneNumber(message.from);
 
       if (message.type === 'text') {
-        ticket.contractHasRejectedByCounterpartDescription = message.text.body;
+        ticket.contractCorrection = message.text.body;
 
         // Update the user state.
         await context.whatsappService.ticketService.save({
           ...ticket,
-          state:
-            TicketState.WAITING_CONTRACT_HAS_REJECTED_BY_COUNTERPART_CONFIRMATION,
+          state: TicketState.WAITING_CONTRACT_CORRECTION_BY_OWNER_CONFIRMATION,
         });
 
         // Send the confirmation options.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.CONTRACT_HAS_REJECTED_BY_COUNTERPART_DESCRIPTION_CONFIRMATION_REQUEST(),
-          prefix.CONTRACT_HAS_REJECTED_BY_COUNTERPART_DESCRIPTION,
+          messages.CONTRACT_CORRECTION_BY_OWNER_DESCRIPTION_CONFIRMATION_REQUEST(),
+          prefix.CONTRACT_CORRECTION_BY_OWNER_DESCRIPTION,
           false,
         );
 
@@ -65,18 +64,18 @@ export class ContractHasRejectedByCounterpartState extends MessageState {
       if (
         !this.optionHasPrefix(
           selectedOption,
-          prefix.CONTRACT_HAS_REJECTED_BY_COUNTERPART_DESCRIPTION,
+          prefix.CONTRACT_CORRECTION_BY_OWNER_DESCRIPTION,
         )
       ) {
         context.logger.error(
-          `${selectedOption} is not a valid option for ${prefix.CONTRACT_HAS_REJECTED_BY_COUNTERPART_DESCRIPTION}.`,
+          `${selectedOption} is not a valid option for ${prefix.CONTRACT_CORRECTION_BY_OWNER_DESCRIPTION}.`,
         );
 
         // Send the confirmation options again.
         await context.whatsappService.sendConfirmationOptions(
           phoneNumber,
-          messages.CONTRACT_HAS_REJECTED_BY_COUNTERPART_DESCRIPTION_CONFIRMATION_REQUEST(),
-          prefix.CONTRACT_HAS_REJECTED_BY_COUNTERPART_DESCRIPTION,
+          messages.CONTRACT_CORRECTION_BY_OWNER_DESCRIPTION_CONFIRMATION_REQUEST(),
+          prefix.CONTRACT_CORRECTION_BY_OWNER_DESCRIPTION,
           false,
         );
 
@@ -85,43 +84,40 @@ export class ContractHasRejectedByCounterpartState extends MessageState {
 
       if (
         selectedOption ===
-        `${prefix.CONTRACT_HAS_REJECTED_BY_COUNTERPART_DESCRIPTION}-no`
+        `${prefix.CONTRACT_CORRECTION_BY_OWNER_DESCRIPTION}-no`
       ) {
         // TODO: Go to previous state.
-        ticket.contractHasRejectedByCounterpartDescription = null;
+        ticket.contractCorrection = null;
 
         await context.whatsappService.ticketService.save({
           ...ticket,
-          state:
-            TicketState.WAITING_CONTRACT_HAS_REJECTED_BY_COUNTERPART_DESCRIPTION,
+          state: TicketState.WAITING_CONTRACT_CORRECTION_BY_OWNER,
         });
 
         await context.whatsappService.sendMessage(
           phoneNumber,
-          messages.CONTRACT_HAS_REJECTED_BY_COUNTERPART_DESCRIPTION_REQUEST(),
+          messages.CONTRACT_CORRECTION_BY_OWNER_REQUEST(),
         );
 
         continue;
       }
 
+      const contract = await context.whatsappService.updateContract(ticket);
+
       await context.whatsappService.ticketService.save({
         ...ticket,
-        state: TicketState.WAITING_CONTRACT_CORRECTION_BY_OWNER,
+        contract,
+        state: TicketState.WAITING_CONTRACT_APPROVAL,
       });
 
-      await context.whatsappService.sendMessage(
-        ticket.owner.phoneNumber,
-        messages.CONTRACT_REFUSAL_REASON_REQUEST(
-          ticket.contractHasRejectedByCounterpartDescription,
-        ),
-      );
+      await context.whatsappService.sendMessage(phoneNumber, contract);
 
-      await context.whatsappService.sendMessage(
-        ticket.owner.phoneNumber,
-        messages.CONTRACT_CORRECTION_BY_OWNER_REQUEST(),
+      await context.whatsappService.sendConfirmationOptions(
+        phoneNumber,
+        messages.CONTRACT_APPROVAL_REQUEST(),
+        prefix.CONTRACT_APPROVAL,
+        false,
       );
-
-      continue;
     }
   }
 }

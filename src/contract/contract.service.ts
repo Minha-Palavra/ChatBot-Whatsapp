@@ -1,6 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OpenAI } from 'openai';
 import { ApiConfigService } from '../shared/api-config.service';
+import { TicketEntity } from '../ticket/entities/ticket.entity';
+import { OwnerType } from '../ticket/entities/owner-type';
 
 @Injectable()
 export class ContractService {
@@ -84,6 +86,24 @@ export class ContractService {
     //fazer depois sobre compra materiais
     //multa
 
+    const data = {
+      model: 'gpt-3.5-turbo-instruct',
+      prompt: prompt,
+      temperature: 0.6,
+      max_tokens: 3500,
+      top_p: 1.0,
+      frequency_penalty: 0.0,
+      presence_penalty: 0.0,
+    };
+
+    const response = await this.openai.completions.create(data);
+    this.logger.log(response.choices[0].text);
+    return response.choices[0].text;
+  }
+
+  public async updateContract(contract: string, updates: string) {
+    const prompt = `
+    Atualize o contrato : ${contract} com as seguintes informações: ${updates}`;
     const data = {
       model: 'gpt-3.5-turbo-instruct',
       prompt: prompt,
