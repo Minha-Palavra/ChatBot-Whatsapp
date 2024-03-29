@@ -65,7 +65,7 @@ export class OwnerTypeState extends MessageState {
           `${selectedOption} is not a valid option for ${prefix.TICKET_OWNER_TYPE}.`,
         );
 
-        await context.whatsappService.sendConfirmationOptions(
+        await context.whatsappService.sendContextOptions(
           phoneNumber,
           messages.TICKET_OWNER_TYPE_REQUEST(),
           prefix.TICKET_OWNER_TYPE,

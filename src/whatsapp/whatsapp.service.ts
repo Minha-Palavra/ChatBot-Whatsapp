@@ -139,18 +139,19 @@ export class WhatsappService {
         );
     }
 
-    if (ticket && ticket.state != TicketState.CLOSED) {
-      if (ticket.state == TicketState.WAITING_COUNTERPART_SIGNATURE) {
-        // CONTRAPART EDITANDO.
-        state = getTicketStateProcessor[ticket.state];
-      } else if (
-        ticket.state ==
-        TicketState.WAITING_CONTRACT_HAS_REJECTED_BY_COUNTERPART_DESCRIPTION
+    if (ticket && ticket.state !== TicketState.CLOSED) {
+      if (
+        ticket.state === TicketState.WAITING_COUNTERPART_SIGNATURE ||
+        ticket.state ===
+          TicketState.WAITING_CONTRACT_HAS_REJECTED_BY_COUNTERPART_DESCRIPTION ||
+        ticket.state ===
+          TicketState.WAITING_CONTRACT_HAS_REJECTED_BY_COUNTERPART_CONFIRMATION
       ) {
+        // CONTRAPART EDITANDO.
         state = getTicketStateProcessor[ticket.state];
       } else {
         // Ele precisa aguardar, preciso mandar msg para ele aguardar.
-        await this.sendMessage(
+  await this.sendMessage(
           phoneNumber,
           'Você já tem um contrato em andamento. Aguarde o retorno da sua contraparte.',
         );
@@ -160,14 +161,14 @@ export class WhatsappService {
       // TODO: if user is not found, start user registration process.
       if (!user) {
         state = new UserRegistrationInitialState();
-      } else if (user.state != UserState.REGISTRATION_COMPLETE) {
+      } else if (user.state !== UserState.REGISTRATION_COMPLETE) {
         //
         state = getUserStateProcessor[user.state];
       } else {
         // Conversation flow to select a ticket or create a new one.
         ticket = await this.ticketService.findUserNewestTicket(user);
 
-        if (!ticket || ticket.state == TicketState.CLOSED) {
+        if (!ticket || ticket.state === TicketState.CLOSED) {
           const tickets = await this.ticketService.find({
             where: {
               owner: { id: user.id },
@@ -179,6 +180,7 @@ export class WhatsappService {
           if (tickets.length > 0) {
             // TODO: if user does not have any open ticket. Then I should redirect it to menu flow.
             // TODO: Menu flow allows user to select a ticket or create a new one.
+            // TOOD: CREATE ANOTHER TICKER.
             state = getTicketStateProcessor[TicketState.SELECT_TICKET];
           } else {
             // TODO: If user doesn't have any ticket at all it should go to the first ticket flow.
@@ -187,17 +189,22 @@ export class WhatsappService {
         } else {
           state = getTicketStateProcessor[ticket.state];
         }
-
-        if (
-          ticket.state == TicketState.WAITING_COUNTERPART_SIGNATURE ||
-          ticket.state ==
-            TicketState.WAITING_CONTRACT_HAS_REJECTED_BY_COUNTERPART_DESCRIPTION
-        ) {
-          await this.sendMessage(
-            phoneNumber,
-            'Você já tem um contrato em andamento. Aguarde o retorno da sua contraparte.',
-          );
-          return;
+        if (ticket && ticket.state !== TicketState.CLOSED) {
+          if (
+            (ticket &&
+              ticket.state &&
+              ticket.state === TicketState.WAITING_COUNTERPART_SIGNATURE) ||
+            ticket.state ===
+              TicketState.WAITING_CONTRACT_HAS_REJECTED_BY_COUNTERPART_DESCRIPTION ||
+            ticket.state ===
+              TicketState.WAITING_CONTRACT_HAS_REJECTED_BY_COUNTERPART_CONFIRMATION
+          ) {
+            await this.sendMessage(
+              phoneNumber,
+              'Você já tem um contrato em andamento. Aguarde o retorno da sua contraparte.',
+            );
+            return;
+          }
         }
       }
 
@@ -205,7 +212,7 @@ export class WhatsappService {
       for (const message of value.messages) {
         if (message.type == 'text') {
           const text = message.text.body;
-          if (text == 'cancelar') {
+          if (text === 'cancelar') {
             await this.cancelTicket(phoneNumber, ticket);
           }
         }
