@@ -11,18 +11,20 @@ export class ContractHasRejectedByCounterpartState extends MessageState {
     value: ValueObject,
     context: IMessageProcessingContext,
   ): Promise<void> {
-    const contact = value.contacts[0];
+    // const contact = value.contacts[0];
 
     // Get the user from the database.
-    const user = await context.userService.findOneByWhatsappId(contact.wa_id);
+    // const user = await context.userService.findOneByWhatsappId(contact.wa_id);
     const ticket: TicketEntity =
-      await context.whatsappService.ticketService.findUserNewestTicket(user);
+        await context.whatsappService.ticketService.findUserNewestTicketAsCounterpart(
+            value.messages[0].from,
+        );
 
     // If the user is not registered, do nothing.
-    if (!user) {
-      context.logger.error('User not found.');
-      return;
-    }
+    // if (!user) {
+    //   context.logger.error('User not found.');
+    //   return;
+    // }
 
     // Iterate over the messages.
     for (const message of value.messages) {

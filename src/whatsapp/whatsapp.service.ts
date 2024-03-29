@@ -151,7 +151,7 @@ export class WhatsappService {
         state = getTicketStateProcessor[ticket.state];
       } else {
         // Ele precisa aguardar, preciso mandar msg para ele aguardar.
-  await this.sendMessage(
+        await this.sendMessage(
           phoneNumber,
           'Você já tem um contrato em andamento. Aguarde o retorno da sua contraparte.',
         );
@@ -214,6 +214,7 @@ export class WhatsappService {
           const text = message.text.body;
           if (text === 'cancelar') {
             await this.cancelTicket(phoneNumber, ticket);
+            return;
           }
         }
       }
@@ -561,7 +562,7 @@ export class WhatsappService {
       interactive.action.buttons.push({
         type: 'reply',
         reply: {
-          id: `${prefix}-cancel`,
+          id: `cancel`,
           title: 'Cancelar',
         },
       });
