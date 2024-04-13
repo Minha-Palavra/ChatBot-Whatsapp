@@ -7,7 +7,7 @@ import { TicketEntity } from '../../entities/ticket.entity';
 import { UserEntity } from '../../../user/entities/user.entity';
 import { ContractParty } from '../../entities/contract-party.enum';
 import { HasRejectedByCounterpartState } from './has-rejected-by-counterpart-state';
-import { TicketStatus } from '../../entities/ticket-status.enum';
+import { ContractWasCompletedState } from '../others/contract-was-completed.state.';
 
 export class CounterpartSignatureState extends MessageState {
   public prefix = 'CONTRACT_COUNTERPART_SIGNATURE';
@@ -177,24 +177,16 @@ export class CounterpartSignatureState extends MessageState {
           ...ticket,
           signedByCounterpart: true,
           signedByCounterpartAt: new Date(),
-        });
-        await this.whatsAppService.ticketService.save({
-          ...ticket,
-          signedByCounterpart: true,
-          signedByCounterpartAt: new Date(),
           contractHasRejectedByCounterpartDescription: null,
-          status: TicketStatus.CLOSED,
         });
 
-        await this.whatsAppService.sendMessage(
-          ticket.counterpartPhoneNumber,
-          messages.CONTRACT_WAS_SIGNED(),
-        );
+        this.nextState = new ContractWasCompletedState();
+        this.nextState.whatsAppService = this.whatsAppService;
+        this.nextState.logger = this.logger;
+        this.nextState.userService = this.userService;
 
-        await this.whatsAppService.sendMessage(
-          ticket.owner.phoneNumber,
-          messages.CONTRACT_WAS_SIGNED(),
-        );
+        // go to the next state.
+        await this.toNextState(phoneNumber, null, ticket);
       } else {
         await this.whatsAppService.sendMessage(
           phoneNumber,

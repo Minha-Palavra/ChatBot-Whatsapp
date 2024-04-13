@@ -1,31 +1,36 @@
-import { MessageState } from '../../../whatsapp/states/message-state';
 import { ValueObject } from 'whatsapp/build/types/webhooks';
 import { messages } from '../../../whatsapp/entities/messages';
-import { TicketEntity } from '../../entities/ticket.entity';
+import { MessageState } from '../../../whatsapp/states/message-state';
 import { UserEntity } from '../../../user/entities/user.entity';
+import { TicketEntity } from '../../entities/ticket.entity';
 import { formatPhoneNumber } from '../../../shared/utils';
+import { TicketStatus } from '../../entities/ticket-status.enum';
 import { TicketState } from '../../entities/ticket-state.enum';
 
-export class UpdatingContractState extends MessageState {
-  public prefix = 'UPDATING_CONTRACT';
+export class ContractWasCompletedState extends MessageState {
+  public prefix = 'CONTRACT_WAS_COMPLETED';
 
   public async onStateBegin(
     phoneNumber: string,
     user?: UserEntity,
     ticket?: TicketEntity,
   ) {
-    if (ticket.state !== TicketState.UPDATING_CONTRACT) {
-      this.whatsAppService.updateContract(phoneNumber, user, ticket); //.then(async (contract) => {
-    }
-    // Update the ticket state.
     await this.whatsAppService.ticketService.save({
       ...ticket,
-      state: TicketState.UPDATING_CONTRACT,
+      signedByCounterpart: true,
+      signedByCounterpartAt: new Date(),
+      state: TicketState.CONTRACT_WAS_COMPLETED,
+      status: TicketStatus.CLOSED,
     });
 
     await this.whatsAppService.sendMessage(
-      phoneNumber,
-      messages.UPDATING_CONTRACT(),
+      ticket.counterpartPhoneNumber,
+      messages.CONTRACT_WAS_SIGNED(),
+    );
+
+    await this.whatsAppService.sendMessage(
+      ticket.owner.phoneNumber,
+      messages.CONTRACT_WAS_SIGNED(),
     );
   }
 
@@ -49,11 +54,16 @@ export class UpdatingContractState extends MessageState {
 
       if (
         message.type === 'text' &&
-        ticket.state === TicketState.UPDATING_CONTRACT
+        ticket.state === TicketState.CONTRACT_WAS_COMPLETED
       ) {
         await this.whatsAppService.sendMessage(
-          phoneNumber,
-          messages.UPDATING_CONTRACT(),
+          ticket.counterpartPhoneNumber,
+          messages.CONTRACT_WAS_SIGNED(),
+        );
+
+        await this.whatsAppService.sendMessage(
+          ticket.owner.phoneNumber,
+          messages.CONTRACT_WAS_SIGNED(),
         );
 
         continue;
@@ -62,15 +72,21 @@ export class UpdatingContractState extends MessageState {
       // If the message is not interactive, do nothing.
       if (
         message.type !== 'interactive' ||
-        ticket.state !== TicketState.UPDATING_CONTRACT
+        ticket.state !== TicketState.CONTRACT_WAS_COMPLETED
       ) {
         await this.whatsAppService.sendMessage(
           phoneNumber,
           messages.INVALID_OPTION(),
         );
+
         await this.whatsAppService.sendMessage(
-          phoneNumber,
-          messages.UPDATING_CONTRACT(),
+          ticket.counterpartPhoneNumber,
+          messages.CONTRACT_WAS_SIGNED(),
+        );
+
+        await this.whatsAppService.sendMessage(
+          ticket.owner.phoneNumber,
+          messages.CONTRACT_WAS_SIGNED(),
         );
       }
 
@@ -80,8 +96,13 @@ export class UpdatingContractState extends MessageState {
       );
 
       await this.whatsAppService.sendMessage(
-        phoneNumber,
-        messages.UPDATING_CONTRACT(),
+        ticket.counterpartPhoneNumber,
+        messages.CONTRACT_WAS_SIGNED(),
+      );
+
+      await this.whatsAppService.sendMessage(
+        ticket.owner.phoneNumber,
+        messages.CONTRACT_WAS_SIGNED(),
       );
     }
   }

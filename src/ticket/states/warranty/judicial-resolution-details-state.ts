@@ -7,7 +7,7 @@ import { TicketEntity } from '../../entities/ticket.entity';
 import { formatPhoneNumber } from '../../../shared/utils';
 import { UserEntity } from '../../../user/entities/user.entity';
 import { TicketState } from '../../entities/ticket-state.enum';
-import { GeneratingContractState } from './generating-contract.state';
+import { GeneratingContractState } from '../signature/generating-contract.state';
 
 export class JudicialResolutionDetailsState extends MessageState {
   public prefix = 'JUDICIAL_RESOLUTION_DETAILS';

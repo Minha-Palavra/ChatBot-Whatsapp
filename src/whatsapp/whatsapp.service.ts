@@ -118,19 +118,20 @@ export class whatsAppService {
 
     let ticket: TicketEntity;
     let state: IMessageState;
-    // TODO: Check if the user by the contact id or phone number has a contract open as counterpart.
 
     ticket =
       await this.ticketService.findUserNewestOpenTicketAsCounterpartByPhoneNumber(
         phoneNumber,
       );
 
+    // TODO: Check if the user by the contact id or phone number has a contract open as counterpart.
     if (ticket && ticket.status !== TicketStatus.CLOSED) {
       if (ticket.awaitingResponseFrom !== ContractParty.COUNTERPART) {
         // TODO: Send a message to the user to wait for the owner action.
-        // await this.sendMessage(
-        //
-        // );
+        await this.sendMessage(
+          phoneNumber,
+          'Você já tem um contrato em andamento. Aguarde o retorno da sua contraparte.',
+        );
         return;
       } else {
         state = getTicketStateProcessor[ticket.state];
@@ -175,14 +176,24 @@ export class whatsAppService {
           ticket.status !== TicketStatus.CLOSED &&
           ticket.awaitingResponseFrom !== ContractParty.OWNER
         ) {
-          // TODO: Send a message to the user to wait for the counterpart action.
-          // await this.sendMessage(
-          //
-          // );
+          await this.sendMessage(
+            phoneNumber,
+            'Você já tem um contrato em andamento. Aguarde o retorno da sua contraparte.',
+          );
           return;
         }
       }
-      // TODO: I should pass the whatsAppService to the state to be able to send messages.
+
+      // TODO: Cancelar o ticket.
+      for (const message of data.messages) {
+        if (message.type === 'interactive') {
+          const selectedOption = this.getSelectedOptionFromMessage(message);
+          if (selectedOption === 'cancel') {
+            await this.cancelTicket(phoneNumber, ticket);
+            return;
+          }
+        }
+      }
     }
 
     state.whatsAppService = this;

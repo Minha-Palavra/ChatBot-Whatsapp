@@ -313,7 +313,7 @@ export const messages = {
     return `Por favor aguarde estamos analisando todas as informações e gerando seu contrato.`;
   },
   UPDATING_CONTRACT() {
-    return `Por favor aguarde enquanto atualizamos o contrato.`;
+    return `Por favor aguarde estamos analisando todas as informações e atualizando seu contrato.`;
   },
   CONTRACT_APPROVAL_REQUEST: () =>
     `O contrato está correto? Deseja aprovar, assinar e enviar para a contraparte?`,
@@ -337,4 +337,7 @@ export const messages = {
     `O contrato foi assinado por ambas as partes. Agora o contrato está oficializado.`,
   NEW_TICKET_CONFIRMATION: () => `Deseja criar um novo contrato?`,
   NO_NEW_TICKET: () => `Certo, obrigado!`,
+  WAITING_PAYMENT() {
+    return '';
+  },
 };

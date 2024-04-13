@@ -48,7 +48,7 @@ import { WhatIsContractCancellationDetailsState } from '../states/fees/what-is-c
 import { WarrantyDetailsState } from '../states/warranty/warranty-details-state';
 import { WarrantyTypeState } from '../states/warranty/warranty-type-state';
 import { JudicialResolutionDetailsState } from '../states/warranty/judicial-resolution-details-state';
-import { GeneratingContractState } from '../states/warranty/generating-contract.state';
+import { GeneratingContractState } from '../states/signature/generating-contract.state';
 import { ContractCorrectionState } from '../states/signature/contract-correction-state';
 import { OwnerSignatureState } from '../states/signature/owner-signature-state';
 import { CounterpartSignatureState } from '../states/signature/counterpart-signature-state';
