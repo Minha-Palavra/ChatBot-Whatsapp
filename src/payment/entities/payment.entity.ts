@@ -1,4 +1,6 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { ApiProperty } from '@nestjs/swagger';
+import { TicketEntity } from '../../ticket/entities/ticket.entity';
 
 @Entity()
 export class Payment {
@@ -22,4 +24,8 @@ export class Payment {
 
   @Column({ default: 0 })
   used: number;
+
+  @ApiProperty()
+  @OneToOne(() => TicketEntity, (ticket) => ticket.paymentData)
+  ticket: TicketEntity;
 }

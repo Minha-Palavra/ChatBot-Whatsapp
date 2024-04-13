@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Column, Entity, ManyToOne } from 'typeorm';
+import { Column, Entity, ManyToOne, OneToOne } from 'typeorm';
 import { AbstractEntity } from '../../shared/entities/abstract.entity';
 import { UserEntity } from '../../user/entities/user.entity';
 
@@ -8,6 +8,7 @@ import { CategoryEntity } from '../../category/category.entity';
 import { TicketStatus } from './ticket-status.enum';
 import { ContractParty } from './contract-party.enum';
 import { TicketState } from './ticket-state.enum';
+import { Payment } from '../../payment/entities/payment.entity';
 
 @Entity({ name: 'ticket' })
 export class TicketEntity extends AbstractEntity {
@@ -34,6 +35,10 @@ export class TicketEntity extends AbstractEntity {
   @ApiProperty({ enum: OwnerType })
   @Column({ type: 'enum', enum: OwnerType, default: OwnerType.NONE })
   ownerType: OwnerType;
+
+  @ApiProperty()
+  @OneToOne(() => Payment, (payment) => payment.ticket)
+  paymentData: Payment;
 
   @ApiProperty()
   @Column({ nullable: true })

@@ -12,7 +12,12 @@ export class WaitingPaymentState extends MessageState {
     phoneNumber: string,
     user?: UserEntity,
     ticket?: TicketEntity,
-  ) {}
+  ) {
+    //  TODO VERIFICAR SE O TICKET AINDA NÃO FOI PAGO, SE O BOLETO JÁ FOI GERADO E NÃO TÁ EXPIRADO E ENVIAR PARA O
+    //  USUÁRIO O LINK PARA PAGAMENTO.
+    //  TODO SE O BOLETO JÁ EXPIROU, GERAR UM NOVO BOLETO E ENVIAR O LINK PARA O USUÁRIO.
+    // MANTER MENSAGEM DE AGUARDANDO PAGAMENTO.
+  }
 
   public async processMessages(value: ValueObject): Promise<void> {
     const contact = value.contacts[0];

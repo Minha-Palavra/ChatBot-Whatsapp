@@ -7,6 +7,7 @@ import { TicketEntity } from '../../entities/ticket.entity';
 import { formatPhoneNumber } from '../../../shared/utils';
 import { ContractParty } from '../../entities/contract-party.enum';
 import { TicketStatus } from '../../entities/ticket-status.enum';
+import { TicketState } from '../../entities/ticket-state.enum';
 
 export class PaidTicketState extends MessageState {
   public prefix = 'PAID_TICKET';
@@ -43,6 +44,8 @@ export class PaidTicketState extends MessageState {
 
     // Get the user from the database.
     const user = await this.userService.findOneByWhatsappId(contact.wa_id);
+    const ticket: TicketEntity =
+      await this.whatsAppService.ticketService.findUserNewestTicket(user);
 
     // If the user is not registered, do nothing.
     if (!user) {
@@ -54,99 +57,21 @@ export class PaidTicketState extends MessageState {
     for (const message of value.messages) {
       const phoneNumber = formatPhoneNumber(message.from);
 
-      if (message.type === 'text') {
-        await this.whatsAppService.sendMessage(
-          phoneNumber,
-          `Você já tem mais de 5 contratos em sua conta, iremos gerar um PIX de R$ 4,99 para a realização de cada novo contrato.`,
-        );
-        // Create a new ticket for the user.
-        const ticket = await this.whatsAppService.ticketService.create({
-          owner: user,
-          awaitingResponseFrom: ContractParty.OWNER,
-          status: TicketStatus.OPEN,
-        });
-
-        const response =
-          await this.whatsAppService.paymentService.createPixPayment({
-            order_id: ticket.id,
-            payer_email: user.email,
-            payer_name: user.fullName,
-            payer_cpf_cnpj: user.taxpayerNumber,
-            payer_phone: user.phoneNumber,
-          });
-        await this.whatsAppService.sendMessage(
-          phoneNumber,
-          `Copie o código e cole em seu pix para seguir com o pagamento de R$ 4,99.`,
-        );
-        await this.whatsAppService.sendMessage(phoneNumber, `${response.emv}`);
-        // // TODO: I should not send this message when user is trying to create a ticket.
-        // await this.whatsAppService.sendMessage(
-        //   phoneNumber,
-        //   messages.INVALID_OPTION(),
-        // );
-        //
-        // await this.whatsAppService.sendConfirmationOptions(
-        //   phoneNumber,
-        //   messages.FIRST_TICKET(),
-        //   this.prefix,
-        //   false,
-        // );
-        continue;
+      if (
+        message.type === 'text' &&
+        ticket.state === TicketState.CREATE_TICKET_PIX_PAYMENT
+      ) {
+        await this.onStateBegin(phoneNumber, user, ticket);
       }
 
       // If the message is not interactive, do nothing.
-      if (message.type !== 'interactive') {
-        continue;
+      if (
+        message.type !== 'interactive' ||
+        ticket.state !== TicketState.CREATE_TICKET_PIX_PAYMENT
+      ) {
+        await this.onStateBegin(phoneNumber, user, ticket);
       }
-
-      const selectedOption = this.getSelectedOptionFromMessage(message);
-
-      if (!selectedOption) {
-        this.logger.error('Failed to get selected option from message.');
-        continue;
-      }
-
-      // Check if the selected option is valid.
-      if (!this.optionHasValidPrefix(selectedOption, this.prefix)) {
-        this.logger.error(
-          `${selectedOption} is not a valid option for ${this.prefix}.`,
-        );
-
-        await this.whatsAppService.sendMessage(
-          phoneNumber,
-          messages.INVALID_OPTION(),
-        );
-        // Send the confirmation options.
-        await this.whatsAppService.sendConfirmationOptions(
-          phoneNumber,
-          messages.FIRST_TICKET(),
-          this.prefix,
-          true,
-        );
-
-        continue;
-      }
-
-      if (selectedOption === `${this.prefix}-NO`) {
-        // TODO: Go to previous state.
-        // TODO: Should send a message to the user.
-        continue;
-      }
-
-      // Create a new ticket for the user.
-      const ticket = await this.whatsAppService.ticketService.create({
-        owner: user,
-        awaitingResponseFrom: ContractParty.OWNER,
-        status: TicketStatus.OPEN,
-      });
-
-      this.nextState = new OwnerTypeState();
-      this.nextState.whatsAppService = this.whatsAppService;
-      this.nextState.logger = this.logger;
-      this.nextState.userService = this.userService;
-
-      // go to the next state.
-      await this.toNextState(phoneNumber, user, ticket);
+      await this.onStateBegin(phoneNumber, user, ticket);
     }
   }
 }

@@ -55,6 +55,9 @@ import { CounterpartSignatureState } from '../states/signature/counterpart-signa
 import { HasRejectedByCounterpartState } from '../states/signature/has-rejected-by-counterpart-state';
 import { UpdatingContractState } from '../states/signature/updating-contract.state';
 import { PaidTicketState } from '../states/others/paid-ticket.state';
+import { ContractWasCompletedState } from '../states/others/contract-was-completed.state.';
+import { WaitingPaymentState } from '../states/others/waiting-payment.state';
+import { WasPaidState } from '../states/others/was-paid.state.';
 
 export const getTicketStateProcessor: Record<TicketState, IMessageState> = {
   [TicketState.GENERATING_CONTRACT]: new GeneratingContractState(),
@@ -236,4 +239,10 @@ export const getTicketStateProcessor: Record<TicketState, IMessageState> = {
   [TicketState.SERVICE_CONTRACT_APPROVAL_DESCRIPTION]: null,
   //
   [TicketState.PAID_TICKET]: new PaidTicketState(),
+
+  [TicketState.CONTRACT_WAS_COMPLETED]: new ContractWasCompletedState(),
+
+  [TicketState.WAITING_PAYMENT]: new WaitingPaymentState(),
+  [TicketState.WAS_PAID]: new WasPaidState(),
+  [TicketState.CREATE_TICKET_PIX_PAYMENT]: new PaidTicketState(),
 };
