@@ -34,7 +34,8 @@ export class PaidTicketState extends MessageState {
       phoneNumber,
       `Copie o código e cole em seu pix para seguir com o pagamento de R$ 4,99.`,
     );
-    await this.whatsAppService.sendMessage(phoneNumber, `${response.emv}`);
+    const emv = response.details.emv;
+    await this.whatsAppService.sendMessage(phoneNumber, `${emv}`);
   }
 
   public async processMessages(value: ValueObject): Promise<void> {

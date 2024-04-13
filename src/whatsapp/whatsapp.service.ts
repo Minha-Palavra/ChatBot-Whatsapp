@@ -184,6 +184,7 @@ export class whatsAppService {
       }
       // TODO: I should pass the whatsAppService to the state to be able to send messages.
     }
+
     state.whatsAppService = this;
     state.logger = this.logger;
     state.userService = this.userService;

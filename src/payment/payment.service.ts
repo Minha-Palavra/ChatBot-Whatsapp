@@ -12,7 +12,7 @@ export class PaymentService {
     private httpService: HttpService,
     @InjectRepository(Payment)
     private paymentRepository: Repository<Payment>,
-    private eventEmitter: EventEmitter2  // Injetar o EventEmitter
+    private eventEmitter: EventEmitter2, // Injetar o EventEmitter
   ) {}
 
   async createPixPayment(orderInfo: any): Promise<any> {
@@ -33,8 +33,8 @@ export class PaymentService {
           description: 'MinhaPalavra Bot',
           quantity: '1',
           item_id: '1',
-          price_cents: '499'
-        }
+          price_cents: '499',
+        },
       ],
     };
 
@@ -45,10 +45,15 @@ export class PaymentService {
     };
 
     try {
-      const response = await lastValueFrom(this.httpService.post(apiURL, data, headersRequest));
+      const response = await lastValueFrom(
+        this.httpService.post(apiURL, data, headersRequest),
+      );
       const responseData = response.data;
 
-      if (responseData.pix_create_request && responseData.pix_create_request.result === "success") {
+      if (
+        responseData.pix_create_request &&
+        responseData.pix_create_request.result === 'success'
+      ) {
         const paymentRecord = this.paymentRepository.create({
           order_id: orderInfo.order_id,
           payer_phone: orderInfo.payer_phone,
@@ -61,19 +66,25 @@ export class PaymentService {
 
         return {
           success: true,
-          message: "Pagamento PIX criado e salvo com sucesso.",
+          message: 'Pagamento PIX criado e salvo com sucesso.',
           paymentDetails: {
             transactionId: responseData.pix_create_request.transaction_id,
             status: responseData.pix_create_request.status,
             emv: responseData.pix_create_request.pix_code.emv,
-            qrCodeBase64: responseData.pix_create_request.pix_code.qrcode_base64,
-            qrCodeImageUrl: responseData.pix_create_request.pix_code.qrcode_image_url,
+            qrCodeBase64:
+              responseData.pix_create_request.pix_code.qrcode_base64,
+            qrCodeImageUrl:
+              responseData.pix_create_request.pix_code.qrcode_image_url,
             bacenUrl: responseData.pix_create_request.pix_code.bacen_url,
-            dueDate: responseData.pix_create_request.due_date
-          }
+            dueDate: responseData.pix_create_request.due_date,
+          },
         };
       } else {
-        return { success: false, message: "Falha ao criar pagamento PIX.", details: responseData };
+        return {
+          success: false,
+          message: 'Falha ao criar pagamento PIX.',
+          details: responseData,
+        };
       }
     } catch (error) {
       throw new Error(`Falha ao criar pagamento PIX: ${error.message}`);
@@ -83,19 +94,26 @@ export class PaymentService {
   async handlePaymentNotification(notificationData: any): Promise<any> {
     if (notificationData.transaction_id && notificationData.status === 'paid') {
       const payment = await this.paymentRepository.findOne({
-        where: { transaction_id: notificationData.transaction_id }
+        where: { transaction_id: notificationData.transaction_id },
       });
 
       if (payment) {
         payment.status = 'Pagamento efetuado.';
-        payment.used = 1;  // caso precise usar
+        payment.used = 1; // caso precise usar
         await this.paymentRepository.save(payment);
-        this.eventEmitter.emit('payment.success', payment);  // Emitir evento
+        this.eventEmitter.emit('payment.success', payment); // Emitir evento
         return { success: true, message: 'Pagamento atualizado com sucesso.' };
       } else {
-        return { success: false, message: 'Pagamento não encontrado com o ID da transação fornecido.' };
+        return {
+          success: false,
+          message: 'Pagamento não encontrado com o ID da transação fornecido.',
+        };
       }
     }
-    return { success: false, message: 'Tratamento de notificações concluído, mas nenhuma atualização aplicada.' };
+    return {
+      success: false,
+      message:
+        'Tratamento de notificações concluído, mas nenhuma atualização aplicada.',
+    };
   }
 }
