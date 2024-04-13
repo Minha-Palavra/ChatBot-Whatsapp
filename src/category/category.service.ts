@@ -2,7 +2,10 @@ import { Injectable, Logger } from '@nestjs/common';
 import { CategoryEntity } from './category.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOneOptions, Repository } from 'typeorm';
-import { minhaPalavraSeedData, MinhaPalavraSeedType } from './minhapalavra.seed';
+import {
+  minhaPalavraSeedData,
+  MinhaPalavraSeedType,
+} from './minhapalavra.seed';
 import slugify from 'slugify';
 
 @Injectable()
@@ -14,6 +17,36 @@ export class CategoryService {
     private readonly repository: Repository<CategoryEntity>,
   ) {
     this.seed();
+  }
+
+  public async findOne(
+    options: FindOneOptions<CategoryEntity>,
+  ): Promise<CategoryEntity> {
+    return this.repository.findOne(options);
+  }
+
+  public async fillChildren(
+    category: Partial<CategoryEntity>,
+  ): Promise<CategoryEntity> {
+    let decisionEntity: CategoryEntity;
+
+    if (category.slug && (category.id === undefined || category.id === null)) {
+      decisionEntity = await this.repository.findOne({
+        where: [{ slug: category.slug }],
+      });
+    } else {
+      decisionEntity = category as CategoryEntity;
+    }
+
+    decisionEntity.children = await this.repository.find({
+      where: {
+        parent: {
+          id: decisionEntity.id,
+        },
+      },
+    });
+
+    return decisionEntity;
   }
 
   private async seed() {
@@ -57,35 +90,5 @@ export class CategoryService {
     }
 
     return entity;
-  }
-
-  public async findOne(
-    options: FindOneOptions<CategoryEntity>,
-  ): Promise<CategoryEntity> {
-    return this.repository.findOne(options);
-  }
-
-  public async fillChildren(
-    category: Partial<CategoryEntity>,
-  ): Promise<CategoryEntity> {
-    let decisionEntity: CategoryEntity;
-
-    if (category.slug && (category.id === undefined || category.id === null)) {
-      decisionEntity = await this.repository.findOne({
-        where: [{ slug: category.slug }],
-      });
-    } else {
-      decisionEntity = category as CategoryEntity;
-    }
-
-    decisionEntity.children = await this.repository.find({
-      where: {
-        parent: {
-          id: decisionEntity.id,
-        },
-      },
-    });
-
-    return decisionEntity;
   }
 }

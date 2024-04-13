@@ -1,9 +1,10 @@
 import { TypeOrmCrudService } from '@dataui/crud-typeorm';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { FindOneOptions, Repository } from 'typeorm';
 import { UserEntity } from '../user/entities/user.entity';
 import { TicketEntity } from './entities/ticket.entity';
+import { TicketStatus } from './entities/ticket-status.enum';
 
 @Injectable()
 export class TicketService extends TypeOrmCrudService<TicketEntity> {
@@ -22,24 +23,43 @@ export class TicketService extends TypeOrmCrudService<TicketEntity> {
     return await this.findOne({
       where: {
         owner: { id: user.id },
-        // status: 'open',
       },
       order: { updatedAt: 'DESC' },
       relations: { owner: true, category: true },
     });
   }
 
-  public async findUserNewestTicketAsCounterpart(
+  public async getUserTicketsCount(user: Partial<UserEntity>): Promise<number> {
+    return await this.repository.count({
+      where: {
+        owner: { id: user.id },
+      },
+    });
+  }
+
+  public async findUserNewestOpenTicketAsCounterpartByPhoneNumber(
     phoneNumber: string,
   ): Promise<TicketEntity | null> {
-    return await this.findOne({
+    const options: FindOneOptions<TicketEntity> = {
       where: {
-        // status: 'open',
         counterpartPhoneNumber: phoneNumber,
+        status: TicketStatus.OPEN,
       },
       order: { updatedAt: 'DESC' },
       relations: { owner: true, category: true },
-    });
+    };
+
+    const ticket = await this.findOne(options);
+
+    if (ticket) {
+      return ticket;
+    }
+
+    options.where = {
+      counterpartPhoneNumber: `${phoneNumber.slice(0, 4)}9${phoneNumber.slice(4)}`,
+    };
+
+    return await this.findOne(options);
   }
 
   public async create(data: Partial<TicketEntity>) {

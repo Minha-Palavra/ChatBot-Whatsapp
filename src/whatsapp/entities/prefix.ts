@@ -1,10 +1,4 @@
 export const prefix = {
-  DATA_PRIVACY: 'data-privacy',
-  USER_FULL_NAME: 'user-full-name',
-  USER_TAXPAYER_NUMBER: 'user-taxpayer-number',
-  USER_PHONE_NUMBER: 'user-phone-number',
-  USER_ADDRESS: 'user-address',
-  USER_EMAIL: 'user-email',
   FIRST_TICKET: 'first-contract-confirmation',
   TICKET_OWNER_TYPE: 'owner-type',
   COUNTERPART_NAME: 'counterpart-name',
@@ -45,7 +39,7 @@ export const prefix = {
   MATERIAL_DETAILS_DESCRIPTION: 'material-details-description',
   CONTRACT_HAS_MORE: 'contract-has-more',
   CONTRACT_HAS_MORE_DESCRIPTION: 'contract-has-more-description',
-  CONTRACT_HAS_DEADLINE_MORE: 'contract-has-deadline-more',
+  CONTRACT_HAS_DEADLINE_FEE: 'contract-has-deadline-more',
   CONTRACT_HAS_DEADLINE_MORE_DESCRIPTION:
     'contract-has-deadline-more-description',
   SERVICE_DELIVERY_DESCRIPTION: 'service-delivery-description',
@@ -57,8 +51,10 @@ export const prefix = {
   WARRANTY_DESCRIPTION: 'warranty-description',
   JUDICIAL_RESOLUTION: 'judicial-resolution',
   CONTRACT_APPROVAL: 'contract-approval',
-  CONTRACT_COUNTERPART_SIGNATURE: 'contract-counterpart-signature',
+  COUNTERPART_SIGNATURE: 'contract-counterpart-signature',
   CONTRACT_HAS_REJECTED_BY_COUNTERPART_DESCRIPTION:
     'contract-has-rejected-by-counterpart-description',
-  CONTRACT_CORRECTION_BY_OWNER_DESCRIPTION: 'contract-correction-by-owner-description',
+  CONTRACT_CORRECTION_BY_OWNER_DESCRIPTION:
+    'contract-correction-by-owner-description',
+  NEW_TICKET: 'new-ticket',
 };

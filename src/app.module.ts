@@ -14,6 +14,7 @@ import { CategoryModule } from './category/category.module';
 import { ContractModule } from './contract/contract.module';
 import { ConversationModule } from './conversation/conversation.module';
 import { AgreementModule } from './agreement/agreement.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { AgreementModule } from './agreement/agreement.module';
         return addTransactionalDataSource(new DataSource(options));
       },
     }),
+    EventEmitterModule.forRoot(),
     WhatsappModule,
     TicketModule,
     UserModule,

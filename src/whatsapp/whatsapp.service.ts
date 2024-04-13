@@ -1,4 +1,5 @@
 import {
+  HttpStatus,
   Injectable,
   Logger,
   UnprocessableEntityException,
@@ -8,40 +9,47 @@ import { ConfigService } from '@nestjs/config';
 // import WhatsApp from 'whatsapp';
 import { InteractiveTypesEnum } from 'whatsapp/build/types/enums';
 import { InteractiveObject } from 'whatsapp/build/types/messages';
-import { ValueObject, WebhookObject } from 'whatsapp/build/types/webhooks';
-import { MessageDirection } from '../history/entities/message-direction';
+import {
+  MessagesObject,
+  ValueObject,
+  WebhookObject,
+} from 'whatsapp/build/types/webhooks';
 import { HistoryService } from '../history/history.service';
 import { TicketService } from '../ticket/ticket.service';
-import { getUserStateProcessor, UserState } from '../user/entities/user-state';
-import { UserRegistrationInitialState } from '../user/states/user-registration-initial-state';
 import { UserService } from '../user/user.service';
-import { IMessageState } from './states/message-state.interface';
-import { MessagesProcessingContext } from './states/messages-processing-context';
-import {
-  getTicketStateProcessor,
-  TicketState,
-} from '../ticket/entities/ticket-state';
+import { getTicketStateProcessor } from '../ticket/entities/get-ticket-state-processor';
 import { TicketEntity } from '../ticket/entities/ticket.entity';
 import { CategoryEntity } from '../category/category.entity';
 import { CategoryService } from '../category/category.service';
 import { ContractService } from '../contract/contract.service';
-import { OwnerType } from '../ticket/entities/owner-type';
+import { IMessageState } from './states/message-state.interface';
+import { TicketStatus } from '../ticket/entities/ticket-status.enum';
+import { getUserStateProcessor } from '../user/entities/get-user-state-processor';
+import { ContractParty } from '../ticket/entities/contract-party.enum';
+import { splitString } from '../shared/utils';
+import { TicketState } from '../ticket/entities/ticket-state.enum';
+import { UserState } from '../user/entities/user-state.enum';
+import { ContractGeneratedEvent } from '../contract/contract-generated.event';
+import { OnEvent } from '@nestjs/event-emitter';
+import { UserEntity } from '../user/entities/user.entity';
+import { PaymentService } from '../payment/payment.service';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const WhatsApp = require('whatsapp');
 
 @Injectable()
-export class WhatsappService {
+export class whatsAppService {
+  public readonly logger = new Logger(whatsAppService.name);
   private readonly whatsapp = new WhatsApp(
     this.configService.get('WA_PHONE_NUMBER_ID'),
   );
-  private readonly logger = new Logger(WhatsappService.name);
 
   constructor(
     private configService: ConfigService,
     public categoryService: CategoryService,
     private historyService: HistoryService,
     public contractService: ContractService,
+    public paymentService: PaymentService,
     public ticketService: TicketService,
     public userService: UserService,
   ) {}
@@ -57,22 +65,13 @@ export class WhatsappService {
     }
   }
 
-  private async cancelTicket(phoneNumber: string, ticket: TicketEntity) {
-    ticket.state = TicketState.CLOSED;
-
-    await this.ticketService.save(ticket);
-    await this.sendMessage(
-      phoneNumber,
-      'O ticket foi cancelado com sucesso. Obrigado por usar o nosso serviço.',
-    );
-  }
-
   public async handleWebhook(body: WebhookObject) {
     await this.checkWebhookMinimumRequirements(body);
 
-    await this.historyService.create(body, MessageDirection.INCOMING);
+    // TODO: Save the incoming webhook message to the history.
+    // await this.historyService.create(body, MessageDirection.INCOMING);
 
-    let isMessage = false;
+    this.logger.log('Message Received: ' + JSON.stringify(body));
 
     for (const entry of body.entry) {
       for (const change of entry.changes) {
@@ -81,177 +80,147 @@ export class WhatsappService {
           continue;
         }
 
-        const value = change.value;
+        const data = change.value;
 
-        if (value.messaging_product !== 'whatsapp') {
+        if (data.messaging_product !== 'whatsapp') {
           this.logger.error(
-            `messaging_product is not whatsapp: ${value.messaging_product}`,
+            `messaging_product is not whatsapp: ${data.messaging_product}`,
           );
           continue;
         }
 
-        if (value.statuses) {
-          this.logger.error('status message arrived. not processed.');
+        if (data.statuses) {
+          // Those are status messages. Do not process them.
+          this.logger.warn('An status message arrived. not processed.');
           continue;
         }
 
-        if (value.contacts === undefined || value.contacts.length !== 1) {
+        if (data.contacts === undefined || data.contacts.length !== 1) {
           this.logger.error(
-            `contacts.length is not 1: ${value?.contacts.length}.`,
+            `contacts.length is not 1: ${data?.contacts.length}.`,
           );
           continue;
         }
 
-        if (value.messages && value.messages.length !== 0) {
-          isMessage = true;
-          await this.processMessages(value);
+        if (data.messages && data.messages.length !== 0) {
+          await this.processMessages(data);
         }
       }
     }
-
-    if (isMessage) {
-      this.logger.log('Message Received: ' + JSON.stringify(body));
-    }
-
     return;
   }
 
-  private async processMessages(value: ValueObject) {
-    const contact = value.contacts[0];
+  private async processMessages(data: ValueObject) {
+    const contact = data.contacts[0];
 
-    // TODO: After the user creation if user wanna change the phoneNumber, it should be done by an email verification.
-    const user = await this.userService.findOneByWhatsappId(contact.wa_id);
+    // TODO: wa_id is the same as the phoneNumber in the value.messages[0].from?
+    const phoneNumber = data.messages[0].from;
 
-    let state: IMessageState;
     let ticket: TicketEntity;
-
+    let state: IMessageState;
     // TODO: Check if the user by the contact id or phone number has a contract open as counterpart.
-    const phoneNumber = value.messages[0].from;
-    //
-    ticket =
-      await this.ticketService.findUserNewestTicketAsCounterpart(phoneNumber);
-    if (!ticket) {
-      const newPhoneNumber =
-        phoneNumber.slice(0, 4) + '9' + phoneNumber.slice(4);
-      ticket =
-        await this.ticketService.findUserNewestTicketAsCounterpart(
-          newPhoneNumber,
-        );
-    }
 
-    if (ticket && ticket.state !== TicketState.CLOSED) {
-      if (
-        ticket.state === TicketState.WAITING_COUNTERPART_SIGNATURE ||
-        ticket.state ===
-          TicketState.WAITING_CONTRACT_HAS_REJECTED_BY_COUNTERPART_DESCRIPTION ||
-        ticket.state ===
-          TicketState.WAITING_CONTRACT_HAS_REJECTED_BY_COUNTERPART_CONFIRMATION
-      ) {
-        // CONTRAPART EDITANDO.
-        state = getTicketStateProcessor[ticket.state];
-      } else {
-        // Ele precisa aguardar, preciso mandar msg para ele aguardar.
-        await this.sendMessage(
-          phoneNumber,
-          'Você já tem um contrato em andamento. Aguarde o retorno da sua contraparte.',
-        );
+    ticket =
+      await this.ticketService.findUserNewestOpenTicketAsCounterpartByPhoneNumber(
+        phoneNumber,
+      );
+
+    if (ticket && ticket.status !== TicketStatus.CLOSED) {
+      if (ticket.awaitingResponseFrom !== ContractParty.COUNTERPART) {
+        // TODO: Send a message to the user to wait for the owner action.
+        // await this.sendMessage(
+        //
+        // );
         return;
+      } else {
+        state = getTicketStateProcessor[ticket.state];
       }
     } else {
-      // TODO: if user is not found, start user registration process.
+      // Get the user by the contact's WhatsApp id.
+      // TODO: After the user creation if user wanna change the phoneNumber, it should be done by an email verification.
+      const user = await this.userService.findOneByWhatsappId(contact.wa_id);
+
+      // If user is not found, start user registration process.
       if (!user) {
-        state = new UserRegistrationInitialState();
+        state = getUserStateProcessor[UserState.REGISTRATION_INITIAL];
       } else if (user.state !== UserState.REGISTRATION_COMPLETE) {
-        //
+        // Usar already have completed the registration process.
         state = getUserStateProcessor[user.state];
       } else {
-        // Conversation flow to select a ticket or create a new one.
         ticket = await this.ticketService.findUserNewestTicket(user);
 
-        if (!ticket || ticket.state === TicketState.CLOSED) {
-          const tickets = await this.ticketService.find({
-            where: {
-              owner: { id: user.id },
-            },
-            order: { updatedAt: 'DESC' },
-            relations: { owner: true },
-          });
+        if (!ticket || ticket.status === TicketStatus.CLOSED) {
+          // User does not have any open ticket.
+          const ticketsCount =
+            await this.ticketService.getUserTicketsCount(user);
 
-          if (tickets.length > 0) {
-            // TODO: if user does not have any open ticket. Then I should redirect it to menu flow.
+          if (ticketsCount > 0) {
             // TODO: Menu flow allows user to select a ticket or create a new one.
-            // TOOD: CREATE ANOTHER TICKER.
-            state = getTicketStateProcessor[TicketState.SELECT_TICKET];
+            // ticketState = getTicketStateProcessor[TicketState.SELECT_TICKET];
+            // if (ticketsCount > 5) {
+            // } else {
+            //   state = getTicketStateProcessor[TicketState.NEW_TICKET];
+            // }
+            state = getTicketStateProcessor[TicketState.PAID_TICKET];
           } else {
-            // TODO: If user doesn't have any ticket at all it should go to the first ticket flow.
+            // If user doesn't have any ticket at all it should go to the first ticket flow.
             state = getTicketStateProcessor[TicketState.FIRST_TICKET];
           }
         } else {
           state = getTicketStateProcessor[ticket.state];
         }
-        if (ticket && ticket.state !== TicketState.CLOSED) {
-          if (
-            (ticket &&
-              ticket.state &&
-              ticket.state === TicketState.WAITING_COUNTERPART_SIGNATURE) ||
-            ticket.state ===
-              TicketState.WAITING_CONTRACT_HAS_REJECTED_BY_COUNTERPART_DESCRIPTION ||
-            ticket.state ===
-              TicketState.WAITING_CONTRACT_HAS_REJECTED_BY_COUNTERPART_CONFIRMATION
-          ) {
-            await this.sendMessage(
-              phoneNumber,
-              'Você já tem um contrato em andamento. Aguarde o retorno da sua contraparte.',
-            );
-            return;
-          }
-        }
-      }
 
-      // TODO: Cancelar o ticket.
-      for (const message of value.messages) {
-        if (message.type == 'text') {
-          const text = message.text.body;
-          if (text === 'cancelar') {
-            await this.cancelTicket(phoneNumber, ticket);
-            return;
-          }
+        if (
+          ticket &&
+          ticket.status !== TicketStatus.CLOSED &&
+          ticket.awaitingResponseFrom !== ContractParty.OWNER
+        ) {
+          // TODO: Send a message to the user to wait for the counterpart action.
+          // await this.sendMessage(
+          //
+          // );
+          return;
         }
       }
+      // TODO: I should pass the whatsAppService to the state to be able to send messages.
     }
+    state.whatsAppService = this;
+    state.logger = this.logger;
+    state.userService = this.userService;
 
-    const context = new MessagesProcessingContext(
-      this,
-      this.userService,
-      this.logger,
-      state,
-      ticket,
-    );
-
-    await context.processMessages(value);
+    await state.processMessages(data);
   }
 
   public async sendMessage(
     phoneNumber: string,
     message: string,
+    attempts = 0,
   ): Promise<void> {
-    try {
-      const messageSent = await this.whatsapp.messages.text(
+    if (attempts > 5) {
+      this.logger.error('Error sending message after 5 attempts!');
+      // throw new Error(`Error sending text message: ${message}.`);
+    }
+
+    // If the message is too long, split it into smaller messages.
+    const messages = splitString(message, 4096);
+
+    // Send each message.
+    for (message of messages) {
+      const response = await this.whatsapp.messages.text(
         { body: message },
         phoneNumber,
       );
-      if (messageSent.statusCode() !== 200) {
-        this.logger.error('deu erro no sendPaymentInCashOptions.');
-        this.logger.log(messageSent.responseBodyToJSON());
-        //
-        setTimeout(() => this.sendMessage(phoneNumber, message), 5000);
+
+      if (response.statusCode() !== HttpStatus.OK) {
+        this.logger.warn('Failed to send the text message.');
+        this.logger.warn('Retrying in 5 seconds.');
+        this.logger.error(await response.responseBodyToJSON());
+
+        setTimeout(
+          () => this.sendMessage(phoneNumber, message, attempts + 1),
+          15000,
+        );
       }
-      this.logger.log(`${await messageSent.rawResponse()}`);
-      this.logger.log(
-        `${messageSent.statusCode()} ${messageSent.responseBodyToJSON()}`,
-      );
-    } catch (e) {
-      this.logger.log(JSON.stringify(e));
     }
   }
 
@@ -260,21 +229,30 @@ export class WhatsappService {
     message: string,
     prefix: string,
     cancelable = true,
+    attempts = 0,
   ) {
+    if (attempts > 5) {
+      this.logger.error('Error sending message after 5 attempts!');
+      // throw new Error(`Error sending text message: ${message}.`);
+    }
+
+    // Generate the confirmation options using the prefix.
     const options = await this.generateConfirmationOptions(
       message,
       prefix,
       cancelable,
     );
 
-    const messageSent = await this.whatsapp.messages.interactive(
+    const response = await this.whatsapp.messages.interactive(
       options,
       phoneNumber,
     );
-    if (messageSent.statusCode() !== 200) {
-      this.logger.error('deu erro no sendPaymentInCashOptions.');
-      this.logger.log(messageSent.responseBodyToJSON());
-      //
+
+    if (response.statusCode() !== HttpStatus.OK) {
+      this.logger.warn('Failed to send the text message.');
+      this.logger.warn('Retrying in 5 seconds.');
+      this.logger.error(await response.responseBodyToJSON());
+
       setTimeout(
         () =>
           this.sendConfirmationOptions(
@@ -282,76 +260,87 @@ export class WhatsappService {
             message,
             prefix,
             cancelable,
+            attempts + 1,
           ),
-        5000,
+        15000,
       );
     }
-    this.logger.log(
-      `${messageSent.statusCode()} ${messageSent.responseBodyToJSON()}`,
-    );
-
-    return true;
   }
 
-  public async sendContextOptions(
+  public async sendContractPartyOptions(
     phoneNumber: string,
     message: string,
     prefix: string,
     cancelable = true,
+    attempts = 0,
   ) {
+    if (attempts > 5) {
+      this.logger.error('Error sending message after 5 attempts!');
+      throw new Error(`Error sending text message: ${message}.`);
+    }
+
     // Generate the confirmation options using the prefix.
-    const options = await this.generateContextOptions(
+    const options = await this.generateContractPartyOptions(
       message,
       prefix,
       cancelable,
     );
 
-    const messageSent = await this.whatsapp.messages.interactive(
+    const response = await this.whatsapp.messages.interactive(
       options,
       phoneNumber,
     );
 
-    if (messageSent.statusCode() !== 200) {
-      this.logger.error('deu erro no sendPaymentInCashOptions.');
-      this.logger.log(messageSent.responseBodyToJSON());
-      //
-      setTimeout(() =>
-        this.sendContextOptions(phoneNumber, message, prefix, cancelable),
+    if (response.statusCode() !== HttpStatus.OK) {
+      this.logger.warn('Failed to send the text message.');
+      this.logger.warn('Retrying in 5 seconds.');
+      this.logger.error(await response.responseBodyToJSON());
+
+      setTimeout(
+        () =>
+          this.sendContractPartyOptions(
+            phoneNumber,
+            message,
+            prefix,
+            cancelable,
+            attempts + 1,
+          ),
+        15000,
       );
     }
-
-    this.logger.log(
-      `${messageSent.statusCode()} ${messageSent.responseBodyToJSON()}`,
-    );
-
-    return true;
   }
 
   public async sendCategoryOptions(
     phoneNumber: string,
     category: CategoryEntity,
+    attempts = 0,
   ): Promise<boolean> {
-    const optionList =
-      await this.generateInteractiveObjectFromCategory(category);
+    if (attempts > 5) {
+      this.logger.error('Error sending message after 5 attempts!');
+      throw new Error(`Error sending category: ${category.title}.`);
+    }
 
-    if (!optionList) {
+    // Generate the confirmation options using the prefix.
+    const options = await this.generateInteractiveObjectFromCategory(category);
+
+    if (!options) {
       return false;
     }
-
-    const messageSent = await this.whatsapp.messages.interactive(
-      optionList,
+    const response = await this.whatsapp.messages.interactive(
+      options,
       phoneNumber,
     );
-    if (messageSent.statusCode() !== 200) {
-      this.logger.error('deu erro no sendPaymentInCashOptions.');
-      this.logger.log(messageSent.responseBodyToJSON());
-      //
-      setTimeout(() => this.sendCategoryOptions(phoneNumber, category), 5000);
-    }
 
-    this.logger.log(
-      `${messageSent.statusCode()} ${messageSent.responseBodyToJSON()}`,
-    );
+    if (response.statusCode() !== HttpStatus.OK) {
+      this.logger.warn('Failed to send the text message.');
+      this.logger.warn('Retrying in 5 seconds.');
+      this.logger.error(await response.responseBodyToJSON());
+
+      setTimeout(
+        () => this.sendCategoryOptions(phoneNumber, category, attempts + 1),
+        15000,
+      );
+    }
 
     return true;
   }
@@ -360,272 +349,123 @@ export class WhatsappService {
     phoneNumber: string,
     message: string,
     prefix: string,
-    cancelable = true,
+    attempts = 0,
   ) {
-    // Generate the confirmation options using the prefix.
-    const options = await this.generatePaymentMethodsOptions(
-      message,
-      prefix,
-      cancelable,
-    );
+    if (attempts > 5) {
+      this.logger.error('Error sending message after 5 attempts!');
+      throw new Error(`Error sending text message: ${message}.`);
+    }
 
-    const messageSent = await this.whatsapp.messages.interactive(
+    // Generate the confirmation options using the prefix.
+    const options = await this.generatePaymentMethodsOptions(message, prefix);
+
+    const response = await this.whatsapp.messages.interactive(
       options,
       phoneNumber,
     );
-    if (messageSent.statusCode() !== 200) {
-      this.logger.error('deu erro no sendPaymentInCashOptions.');
-      this.logger.log(messageSent.responseBodyToJSON());
-      //
+
+    if (response.statusCode() !== HttpStatus.OK) {
+      this.logger.warn('Failed to send the text message.');
+      this.logger.warn('Retrying in 5 seconds.');
+      this.logger.error(await response.responseBodyToJSON());
+
       setTimeout(
         () =>
           this.sendPaymentMethodsOptions(
             phoneNumber,
             message,
             prefix,
-            cancelable,
+            attempts + 1,
           ),
-        5000,
+        15000,
       );
     }
-
-    this.logger.log(
-      `${messageSent.statusCode()} ${messageSent.responseBodyToJSON()}`,
-    );
-
-    return true;
-  }
-
-  public async sendPaymentInInstallmentsOptions(
-    phoneNumber: string,
-    message: string,
-    prefix: string,
-    cancelable = true,
-  ) {
-    // Generate the confirmation options using the prefix.
-    const options = await this.generatePaymentInInstallmentsOptions(
-      message,
-      prefix,
-      cancelable,
-    );
-
-    const messageSent = await this.whatsapp.messages.interactive(
-      options,
-      phoneNumber,
-    );
-    if (messageSent.statusCode() !== 200) {
-      this.logger.error('deu erro no sendPaymentInCashOptions.');
-      this.logger.log(messageSent.responseBodyToJSON());
-      //
-      setTimeout(
-        () =>
-          this.sendPaymentInInstallmentsOptions(
-            phoneNumber,
-            message,
-            prefix,
-            cancelable,
-          ),
-        5000,
-      );
-    }
-    this.logger.log(
-      `${messageSent.statusCode()} ${messageSent.responseBodyToJSON()}`,
-    );
-
-    return true;
   }
 
   public async sendPaymentInCashOptions(
     phoneNumber: string,
     message: string,
     prefix: string,
-    cancelable = true,
+    attempts = 0,
   ) {
-    // Generate the confirmation options using the prefix.
-    const options = await this.generatePaymentInCashOptions(
-      message,
-      prefix,
-      cancelable,
-    );
+    if (attempts > 5) {
+      this.logger.error('Error sending message after 5 attempts!');
+      throw new Error(`Error sending text message: ${message}.`);
+    }
 
-    const messageSent = await this.whatsapp.messages.interactive(
+    // Generate the confirmation options using the prefix.
+    const options = await this.generatePaymentInCashOptions(message, prefix);
+
+    const response = await this.whatsapp.messages.interactive(
       options,
       phoneNumber,
     );
 
-    if (messageSent.statusCode() !== 200) {
-      this.logger.error('deu erro no sendPaymentInCashOptions.');
-      this.logger.log(messageSent.responseBodyToJSON());
-      //
+    if (response.statusCode() !== HttpStatus.OK) {
+      this.logger.warn('Failed to send the text message.');
+      this.logger.warn('Retrying in 5 seconds.');
+      this.logger.error(await response.responseBodyToJSON());
+
       setTimeout(
         () =>
           this.sendPaymentInCashOptions(
             phoneNumber,
             message,
             prefix,
-            cancelable,
+            attempts + 1,
           ),
-        5000,
+        15000,
       );
     }
-
-    this.logger.log(
-      `${messageSent.statusCode()} ${messageSent.responseBodyToJSON()}`,
-    );
-
-    return true;
   }
 
-  public async generateContract(ticket: TicketEntity) {
-    return await this.contractService.generateProposal(
-      ticket.category.title,
-      ticket.serviceDetails,
-      ticket.serviceDetails,
-      ticket.serviceStartDate,
-      ticket.serviceEndDate,
-      ticket.servicePaymentMethodDescription,
-      ticket.servicePaymentAmount,
-      ticket.servicePaymentMethodDescription,
-      ticket.servicePaymentDates,
-      ticket.serviceContractCancelDetails,
-      ticket.whatIsContractCancellation,
-      ticket.ownerType == OwnerType.SERVICE_PROVIDER
-        ? ticket.owner.fullName
-        : ticket.counterpartName,
-      ticket.ownerType == OwnerType.SERVICE_PROVIDER
-        ? ticket.owner.phoneNumber
-        : ticket.counterpartPhoneNumber,
-      ticket.ownerType == OwnerType.SERVICE_PROVIDER
-        ? ticket.owner.email
-        : ticket.counterpartEmail,
-      ticket.ownerType == OwnerType.SERVICE_PROVIDER
-        ? ticket.owner.taxpayerNumber
-        : ticket.counterpartTaxpayerNumber,
-      ticket.ownerType == OwnerType.CUSTOMER
-        ? ticket.owner.fullName
-        : ticket.counterpartName,
-      ticket.ownerType == OwnerType.CUSTOMER
-        ? ticket.owner.phoneNumber
-        : ticket.counterpartPhoneNumber,
-      ticket.ownerType == OwnerType.CUSTOMER
-        ? ticket.owner.email
-        : ticket.counterpartEmail,
-      ticket.ownerType == OwnerType.CUSTOMER
-        ? ticket.owner.taxpayerNumber
-        : ticket.counterpartTaxpayerNumber,
-      ticket.serviceEndDate,
-      ticket.judicialResolution,
-      ticket.serviceWarranty,
-      ticket.warrantyDescription,
-    );
-  }
-
-  public async updateContract(ticket: TicketEntity) {
-    return await this.contractService.updateContract(
-      ticket.contract,
-      ticket.contractCorrection,
-    );
-  }
-
-  private async generateConfirmationOptions(
+  public async sendPaymentInInstallmentsOptions(
+    phoneNumber: string,
     message: string,
     prefix: string,
-    cancelable = true,
-  ): Promise<InteractiveObject> {
-    const interactive: InteractiveObject = {
-      action: {
-        buttons: [],
-      },
-      type: InteractiveTypesEnum.Button,
-      body: {
-        text: message,
-      },
-    };
-
-    interactive.action.buttons.push({
-      type: 'reply',
-      reply: {
-        id: `${prefix}-yes`,
-        title: 'Sim',
-      },
-    });
-
-    interactive.action.buttons.push({
-      type: 'reply',
-      reply: {
-        id: `${prefix}-no`,
-        title: 'Não',
-      },
-    });
-
-    if (cancelable) {
-      interactive.action.buttons.push({
-        type: 'reply',
-        reply: {
-          id: `cancel`,
-          title: 'Cancelar',
-        },
-      });
+    attempts = 0,
+  ) {
+    if (attempts > 5) {
+      this.logger.error('Error sending message after 5 attempts!');
+      throw new Error(`Error sending text message: ${message}.`);
     }
 
-    return interactive;
-  }
+    // Generate the confirmation options using the prefix.
+    const options = await this.generatePaymentInInstallmentsOptions(
+      message,
+      prefix,
+    );
 
-  private async generateContextOptions(
-    message: string,
-    prefix: string,
-    cancelable = true,
-  ): Promise<InteractiveObject> {
-    const interactive: InteractiveObject = {
-      action: {
-        buttons: [],
-      },
-      type: InteractiveTypesEnum.Button,
-      body: {
-        text: message,
-      },
-    };
+    const response = await this.whatsapp.messages.interactive(
+      options,
+      phoneNumber,
+    );
 
-    interactive.action.buttons.push({
-      type: 'reply',
-      reply: {
-        id: `${prefix}-provider`,
-        title: 'Contratado',
-      },
-    });
+    if (response.statusCode() !== HttpStatus.OK) {
+      this.logger.warn('Failed to send the text message.');
+      this.logger.warn('Retrying in 5 seconds.');
+      this.logger.error(await response.responseBodyToJSON());
 
-    interactive.action.buttons.push({
-      type: 'reply',
-      reply: {
-        id: `${prefix}-customer`,
-        title: 'Contratante',
-      },
-    });
-
-    if (cancelable) {
-      interactive.action.buttons.push({
-        type: 'reply',
-        reply: {
-          id: `${prefix}-cancel`,
-          title: 'Cancelar',
-        },
-      });
+      setTimeout(
+        () =>
+          this.sendPaymentInInstallmentsOptions(
+            phoneNumber,
+            message,
+            prefix,
+            attempts + 1,
+          ),
+        15000,
+      );
     }
-    return interactive;
   }
 
   public async sendWarrantyOptions(
     phoneNumber: string,
     message: string,
     prefix: string,
-    cancelable = true,
   ) {
     // Generate the confirmation options using the prefix.
-    const options = await this.generateWarrantyOptions(
-      message,
-      prefix,
-      cancelable,
-    );
+    const options = await this.generateWarrantyOptions(message, prefix);
 
     const messageSent = await this.whatsapp.messages.interactive(
       options,
@@ -637,7 +477,7 @@ export class WhatsappService {
       this.logger.log(messageSent.responseBodyToJSON());
       //
       setTimeout(() =>
-        this.sendContextOptions(phoneNumber, message, prefix, cancelable),
+        this.sendContractPartyOptions(phoneNumber, message, prefix),
       );
     }
 
@@ -648,207 +488,61 @@ export class WhatsappService {
     return true;
   }
 
-  private async generateWarrantyOptions(
-    message: string,
-    prefix: string,
-    cancelable = true,
-  ): Promise<InteractiveObject> {
-    const interactive: InteractiveObject = {
-      action: {
-        buttons: [],
-      },
-      type: InteractiveTypesEnum.Button,
-      body: {
-        text: message,
-      },
-    };
-
-    interactive.action.buttons.push({
-      type: 'reply',
-      reply: {
-        id: `${prefix}-total`,
-        title: 'Total',
-      },
-    });
-
-    interactive.action.buttons.push({
-      type: 'reply',
-      reply: {
-        id: `${prefix}-parcial`,
-        title: 'Parcial',
-      },
-    });
-
-    interactive.action.buttons.push({
-      type: 'reply',
-      reply: {
-        id: `${prefix}-none`,
-        title: 'Sem Garantia',
-      },
-    });
-    if (cancelable) {
-      interactive.action.buttons.push({
-        type: 'reply',
-        reply: {
-          id: `${prefix}-cancel`,
-          title: 'Cancelar',
-        },
-      });
-    }
-    return interactive;
+  public async generateContract(
+    phoneNumber: string,
+    user: UserEntity,
+    ticket: TicketEntity,
+  ) {
+    return await this.contractService.generateProposal(
+      phoneNumber,
+      user,
+      ticket,
+    );
   }
 
-  private async generatePaymentMethodsOptions(
-    message: string,
-    prefix: string,
-    cancelable = true,
-  ): Promise<InteractiveObject> {
-    const interactive: InteractiveObject = {
-      action: {
-        buttons: [],
-      },
-      type: InteractiveTypesEnum.Button,
-      body: {
-        text: message,
-      },
-    };
-
-    interactive.action.buttons.push({
-      type: 'reply',
-      reply: {
-        id: `${prefix}-in-cash`,
-        title: 'A vista',
-      },
-    });
-
-    interactive.action.buttons.push({
-      type: 'reply',
-      reply: {
-        id: `${prefix}-in-installments`,
-        title: 'Parcelado',
-      },
-    });
-
-    interactive.action.buttons.push({
-      type: 'reply',
-      reply: {
-        id: `${prefix}-others`,
-        title: 'Outros',
-      },
-    });
-
-    if (cancelable) {
-      interactive.action.buttons.push({
-        type: 'reply',
-        reply: {
-          id: `${prefix}-cancel`,
-          title: 'Cancelar',
-        },
-      });
-    }
-    return interactive;
+  public async updateContract(
+    phoneNumber: string,
+    user: UserEntity,
+    ticket: TicketEntity,
+  ) {
+    return await this.contractService.updateContract(phoneNumber, user, ticket);
   }
 
-  private async generatePaymentInCashOptions(
-    message: string,
-    prefix: string,
-    cancelable = true,
-  ): Promise<InteractiveObject> {
-    const interactive: InteractiveObject = {
-      action: {
-        buttons: [],
-      },
-      type: InteractiveTypesEnum.Button,
-      body: {
-        text: message,
-      },
-    };
-
-    interactive.action.buttons.push({
-      type: 'reply',
-      reply: {
-        id: `${prefix}-money`,
-        title: 'Dinheiro',
-      },
+  @OnEvent('contract.generated', { async: true })
+  async handleContractGeneratedEvent(payload: ContractGeneratedEvent) {
+    await this.ticketService.save({
+      ...payload.ticket,
+      contract: payload.contract,
+      state: TicketState.OWNER_SIGNATURE,
     });
-
-    interactive.action.buttons.push({
-      type: 'reply',
-      reply: {
-        id: `${prefix}-pix`,
-        title: 'PIX',
-      },
-    });
-
-    interactive.action.buttons.push({
-      type: 'reply',
-      reply: {
-        id: `${prefix}-others`,
-        title: 'Outros',
-      },
-    });
-
-    if (cancelable) {
-      interactive.action.buttons.push({
-        type: 'reply',
-        reply: {
-          id: `${prefix}-cancel`,
-          title: 'Cancelar',
-        },
-      });
-    }
-    return interactive;
   }
 
-  private async generatePaymentInInstallmentsOptions(
-    message: string,
-    prefix: string,
-    cancelable = true,
-  ): Promise<InteractiveObject> {
-    const interactive: InteractiveObject = {
-      action: {
-        buttons: [],
-      },
-      type: InteractiveTypesEnum.Button,
-      body: {
-        text: message,
-      },
-    };
-
-    interactive.action.buttons.push({
-      type: 'reply',
-      reply: {
-        id: `${prefix}-credit-card`,
-        title: 'Cartão',
-      },
+  @OnEvent('contract.updated', { async: true })
+  async handleContractUpdatedEvent(payload: ContractGeneratedEvent) {
+    await this.ticketService.save({
+      ...payload.ticket,
+      contract: payload.contract,
+      state: TicketState.OWNER_SIGNATURE,
     });
+  }
 
-    interactive.action.buttons.push({
-      type: 'reply',
-      reply: {
-        id: `${prefix}-bank-slip`,
-        title: 'Boleto',
-      },
-    });
+  protected getSelectedOptionFromMessage(
+    message: MessagesObject,
+  ): string | null {
+    const interaction: any = message.interactive;
 
-    interactive.action.buttons.push({
-      type: 'reply',
-      reply: {
-        id: `${prefix}-others`,
-        title: 'Outros',
-      },
-    });
-
-    if (cancelable) {
-      interactive.action.buttons.push({
-        type: 'reply',
-        reply: {
-          id: `${prefix}-cancel`,
-          title: 'Cancelar',
-        },
-      });
+    if ('list_reply' in interaction) {
+      return interaction.list_reply.id;
+    } else if ('button_reply' in interaction) {
+      return interaction.button_reply.id;
+    } else {
+      return null;
     }
-    return interactive;
+  }
+
+  protected clampString(str: string, max: number): string {
+    if (!str) return '.';
+    return str.length > max ? str.substr(0, max - 4) + '...' : str;
   }
 
   protected async generateInteractiveObjectFromCategory(
@@ -911,8 +605,266 @@ export class WhatsappService {
     return interactive;
   }
 
-  protected clampString(str: string, max: number): string {
-    if (!str) return '.';
-    return str.length > max ? str.substr(0, max - 4) + '...' : str;
+  private async generateContractPartyOptions(
+    message: string,
+    prefix: string,
+    cancelable = true,
+  ): Promise<InteractiveObject> {
+    const interactive: InteractiveObject = {
+      action: {
+        buttons: [],
+      },
+      type: InteractiveTypesEnum.Button,
+      body: {
+        text: message,
+      },
+    };
+
+    interactive.action.buttons.push({
+      type: 'reply',
+      reply: {
+        id: `${prefix}-PROVIDER`,
+        title: 'Contratado',
+      },
+    });
+
+    interactive.action.buttons.push({
+      type: 'reply',
+      reply: {
+        id: `${prefix}-CUSTOMER`,
+        title: 'Contratante',
+      },
+    });
+
+    if (cancelable) {
+      interactive.action.buttons.push({
+        type: 'reply',
+        reply: {
+          id: `CANCEL`,
+          title: 'Cancelar contrato',
+        },
+      });
+    }
+    return interactive;
+  }
+
+  private async generateConfirmationOptions(
+    message: string,
+    prefix: string,
+    cancelable = true,
+  ): Promise<InteractiveObject> {
+    const interactive: InteractiveObject = {
+      action: {
+        buttons: [],
+      },
+      type: InteractiveTypesEnum.Button,
+      body: {
+        text: message,
+      },
+    };
+
+    interactive.action.buttons.push({
+      type: 'reply',
+      reply: {
+        id: `${prefix}-YES`,
+        title: 'Sim',
+      },
+    });
+
+    interactive.action.buttons.push({
+      type: 'reply',
+      reply: {
+        id: `${prefix}-NO`,
+        title: 'Não',
+      },
+    });
+
+    if (cancelable) {
+      interactive.action.buttons.push({
+        type: 'reply',
+        reply: {
+          id: `CANCEL`,
+          title: 'Cancelar Contrato',
+        },
+      });
+    }
+
+    return interactive;
+  }
+
+  private async generatePaymentMethodsOptions(
+    message: string,
+    prefix: string,
+  ): Promise<InteractiveObject> {
+    const interactive: InteractiveObject = {
+      action: {
+        buttons: [],
+      },
+      type: InteractiveTypesEnum.Button,
+      body: {
+        text: message,
+      },
+    };
+
+    interactive.action.buttons.push({
+      type: 'reply',
+      reply: {
+        id: `${prefix}-IN-CASH`,
+        title: 'A vista',
+      },
+    });
+
+    interactive.action.buttons.push({
+      type: 'reply',
+      reply: {
+        id: `${prefix}-IN-INSTALLMENTS`,
+        title: 'Parcelado',
+      },
+    });
+
+    interactive.action.buttons.push({
+      type: 'reply',
+      reply: {
+        id: `${prefix}-OTHER`,
+        title: 'Outros',
+      },
+    });
+
+    return interactive;
+  }
+
+  private async generatePaymentInCashOptions(
+    message: string,
+    prefix: string,
+  ): Promise<InteractiveObject> {
+    const interactive: InteractiveObject = {
+      action: {
+        buttons: [],
+      },
+      type: InteractiveTypesEnum.Button,
+      body: {
+        text: message,
+      },
+    };
+
+    interactive.action.buttons.push({
+      type: 'reply',
+      reply: {
+        id: `${prefix}-CASH`,
+        title: 'Dinheiro',
+      },
+    });
+
+    interactive.action.buttons.push({
+      type: 'reply',
+      reply: {
+        id: `${prefix}-PIX`,
+        title: 'PIX',
+      },
+    });
+
+    interactive.action.buttons.push({
+      type: 'reply',
+      reply: {
+        id: `${prefix}-OTHER`,
+        title: 'Outros',
+      },
+    });
+
+    return interactive;
+  }
+
+  private async generatePaymentInInstallmentsOptions(
+    message: string,
+    prefix: string,
+  ): Promise<InteractiveObject> {
+    const interactive: InteractiveObject = {
+      action: {
+        buttons: [],
+      },
+      type: InteractiveTypesEnum.Button,
+      body: {
+        text: message,
+      },
+    };
+
+    interactive.action.buttons.push({
+      type: 'reply',
+      reply: {
+        id: `${prefix}-CREDIT-CARD`,
+        title: 'Cartão',
+      },
+    });
+
+    interactive.action.buttons.push({
+      type: 'reply',
+      reply: {
+        id: `${prefix}-BANK-SLIP`,
+        title: 'Boleto',
+      },
+    });
+
+    interactive.action.buttons.push({
+      type: 'reply',
+      reply: {
+        id: `${prefix}-OTHER`,
+        title: 'Outros',
+      },
+    });
+
+    return interactive;
+  }
+
+  private async generateWarrantyOptions(
+    message: string,
+    prefix: string,
+  ): Promise<InteractiveObject> {
+    const interactive: InteractiveObject = {
+      action: {
+        buttons: [],
+      },
+      type: InteractiveTypesEnum.Button,
+      body: {
+        text: message,
+      },
+    };
+
+    interactive.action.buttons.push({
+      type: 'reply',
+      reply: {
+        id: `${prefix}-TOTAL`,
+        title: 'Total',
+      },
+    });
+
+    interactive.action.buttons.push({
+      type: 'reply',
+      reply: {
+        id: `${prefix}-PARCIAL`,
+        title: 'Parcial',
+      },
+    });
+
+    interactive.action.buttons.push({
+      type: 'reply',
+      reply: {
+        id: `${prefix}-NONE`,
+        title: 'Sem Garantia',
+      },
+    });
+
+    return interactive;
+  }
+
+  private async cancelTicket(phoneNumber: string, ticket: TicketEntity) {
+    await this.ticketService.save({
+      ...ticket,
+      status: TicketStatus.CLOSED,
+    });
+
+    await this.sendMessage(
+      phoneNumber,
+      'O ticket foi cancelado com sucesso. Obrigado por usar o nosso serviço.',
+    );
   }
 }

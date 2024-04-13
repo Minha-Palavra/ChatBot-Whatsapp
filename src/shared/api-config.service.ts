@@ -57,7 +57,7 @@ export class ApiConfigService {
       type: 'postgres',
       host: this.getString('DB_HOST') || 'localhost',
       port: this.getNumber('DB_PORT') || 5432,
-      database: this.getString('DB_DATABASE') || 'postgres',
+      database: this.getString('DB_DATABASE') || 'minha_palavra',
       username: this.getString('DB_USERNAME') || 'postgres',
       password: this.getString('DB_PASSWORD') || 'postgres',
       dropSchema: false, //this.isTest,

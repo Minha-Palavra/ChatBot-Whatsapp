@@ -2,7 +2,8 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Column, Entity, OneToMany } from 'typeorm';
 import { AbstractEntity } from '../../shared/entities/abstract.entity';
 import { TicketEntity } from '../../ticket/entities/ticket.entity';
-import { UserState } from './user-state';
+
+import { UserState } from './user-state.enum';
 
 @Entity({ name: 'user' })
 export class UserEntity extends AbstractEntity {

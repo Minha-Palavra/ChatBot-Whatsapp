@@ -9,6 +9,7 @@ import { MessageDirection } from './entities/message-direction';
 @Injectable()
 export class HistoryService extends TypeOrmCrudService<HistoryEntity> {
   private readonly logger = new Logger(HistoryService.name);
+
   constructor(
     @InjectRepository(HistoryEntity)
     private readonly repository: Repository<HistoryEntity>,

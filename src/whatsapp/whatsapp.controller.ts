@@ -14,7 +14,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { ApiBody } from '@nestjs/swagger';
 import { WebhookObject } from 'whatsapp/build/types/webhooks';
-import { WhatsappService } from './whatsapp.service';
+import { whatsAppService } from './whatsapp.service';
 
 @Controller('whatsapp')
 export class WhatsappController {
@@ -22,7 +22,7 @@ export class WhatsappController {
 
   constructor(
     private configService: ConfigService,
-    private service: WhatsappService,
+    private service: whatsAppService,
   ) {}
 
   @Get('webhook')
