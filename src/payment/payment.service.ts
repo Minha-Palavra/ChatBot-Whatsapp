@@ -19,7 +19,7 @@ export class PaymentService {
     private configService: ConfigService,
   ) {
     const api = require('api')('@paghiper/v1.3#zrtr3r0laa0be7t');
-    this.sdk = api.notificaEsAutomTicaDeStatusRetornoAutomTicoPix1;
+    this.sdk = api.consultaDeStatusDoBoletoPix;
   }
 
   async createPixPayment(orderInfo: any): Promise<any> {
