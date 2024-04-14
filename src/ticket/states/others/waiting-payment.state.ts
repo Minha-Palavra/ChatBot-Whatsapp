@@ -6,6 +6,7 @@ import { formatPhoneNumber } from '../../../shared/utils';
 import { TicketState } from '../../entities/ticket-state.enum';
 import { PaidTicketState } from './paid-ticket.state';
 import { messages } from '../../../whatsapp/entities/messages';
+import { WasPaidState } from './was-paid.state.';
 
 export class WaitingPaymentState extends MessageState {
   public prefix = 'WAITING_PAYMENT';
@@ -28,6 +29,7 @@ export class WaitingPaymentState extends MessageState {
       relations: { owner: true, category: true, paymentData: true },
     });
 
+
     if (!ticket.paymentData) {
       this.nextState = new PaidTicketState();
       this.nextState.whatsAppService = this.whatsAppService;
@@ -36,8 +38,14 @@ export class WaitingPaymentState extends MessageState {
 
       // go to the next state.
       await this.toNextState(phoneNumber, user, ticket);
+      return;
     }
     if (ticket.paymentData.status === 'paid') {
+      this.nextState = new WasPaidState();
+      this.nextState.whatsAppService = this.whatsAppService;
+      this.nextState.logger = this.logger;
+      this.nextState.userService = this.userService;
+      await this.toNextState(phoneNumber, user, ticket);
       return;
     }
     const dueDate = new Date(ticket.paymentData.dueDate);

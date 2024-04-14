@@ -31,7 +31,7 @@ export class OwnerTypeState extends MessageState {
     );
 
     await this.whatsAppService.sendContractPartyOptions(
-      user.phoneNumber,
+      phoneNumber,
       messages.TICKET_OWNER_TYPE_REQUEST(),
       this.prefix,
     );
