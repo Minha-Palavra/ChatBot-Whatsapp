@@ -107,26 +107,26 @@ export const messages = {
   // TODO:
   SERVICE_CATEGORY_REQUEST: () => 'Qual é a categoria do serviço?',
   SERVICE_ADDRESS_REQUEST: () => {
-    return 'Qual é o endereço para a prestação do serviço?';
+    return 'Qual é o endereço para a realização do serviço ou atividade comercial?';
   },
   SERVICE_ADDRESS_CONFIRMATION_REQUEST: (serviceAddress: string) => {
-    return `O endereço, ${serviceAddress}, para a prestação do serviço está correto?`;
+    return `O endereço, ${serviceAddress}, está correto?`;
   },
   SERVICE_DESCRIPTION_REQUEST: () => {
-    return 'Descreva o serviço que está sendo oferecido. Escreva todos os detalhes do serviço a ser prestado.';
+    return 'Descreva com detalhes o que está sendo oferecido.';
   },
   SERVICE_DESCRIPTION_CONFIRMATION_REQUEST: () => {
-    return 'A descrição do serviço está correta?';
+    return 'A descrição está correta?';
   },
-  SERVICE_START_DATE_REQUEST: () => 'Quando será iniciado o serviço?',
+  SERVICE_START_DATE_REQUEST: () => 'Quando será iniciado o serviço ou a compra do produto?',
   SERVICE_START_DATE_CONFIRMATION_REQUEST: (serviceStartDate: string) => {
-    return `A data ${serviceStartDate}, para início do serviço está correta?`;
+    return `A data ${serviceStartDate}, está correta?`;
   },
   SERVICE_END_DATE_REQUEST: () => {
-    return 'Quando será terminado do serviço?';
+    return 'Quando será concluído o serviço ou a entrega do produto?';
   },
   SERVICE_END_DATE_CONFIRMATION_REQUEST: (serviceStartDate: string) => {
-    return `A data ${serviceStartDate}, para término do serviço está correta?`;
+    return `A data ${serviceStartDate}, está correta?`;
   },
   SERVICE_HAS_STEPS_REQUEST: () => {
     return 'Existe números de etapas no processo?';
@@ -135,7 +135,7 @@ export const messages = {
     return `Descreva as etapas do processo.`;
   },
   SERVICE_HAS_WORK_HOURS_REQUEST: () => {
-    return `Gostaria de definir os horários`;
+    return `Gostaria de definir os horários?`;
   },
   SERVICE_STEPS_DESCRIPTION_CONFIRMATION_REQUEST: () => {
     return `As etapas do processo estão corretas?`;
@@ -247,21 +247,21 @@ export const messages = {
     return `A multa prevista por atraso de pagamento é ${contractHasMoreDescription}, está correta?`;
   },
   HAS_DEADLINE_FEE_REQUEST: () => {
-    return `Existirá multa prevista por atraso na entrega do serviço?`;
+    return `Existirá multa prevista por atraso na entrega?`;
   },
   DEADLINE_FEE_REQUEST: () => {
-    return `Descreva a multa prevista por atraso na entrega do serviço`;
+    return `Descreva a multa prevista por atraso na entrega`;
   },
   DEADLINE_FEE_CONFIRMATION_REQUEST: (
     contractHasDeadlineMoreDescription: string,
   ) => {
-    return `A multa prevista por atraso na entrega do serviço é ${contractHasDeadlineMoreDescription}, está correta?`;
+    return `A multa prevista por atraso na entrega é ${contractHasDeadlineMoreDescription}, está correta?`;
   },
   SERVICE_DELIVERY_REQUEST: () => {
-    return `Como será registrada a finalização do serviço?`;
+    return `Como será registrada a conclusão do serviço ou venda?`;
   },
   SERVICE_DELIVERY_CONFIRMATION_REQUEST: () => {
-    return `A forma de registro da entrega da prestação está correta?`;
+    return `A forma de registro da entrega está correta?`;
   },
   HAS_CANCELLATION_FEE_REQUEST: () => {
     return `Terá penalidade caso de cancelamento do contrato?`;
@@ -282,15 +282,15 @@ export const messages = {
     return `O cancelamento de contrato será considerado ${serviceContractCancel}, está correto?`;
   },
   WHAT_IS_CONTRACT_CANCELLATION_DETAILS_REQUEST: () => {
-    return `Descreva em detalhes as práticas exigidas para cancelamentos de contratos em andamento do seu serviço prestado, bem como, como devem ser feitas as avaliações da qualidade dos serviços prestados.`;
+    return `Descreva em detalhes as práticas exigidas para o cancelamento de contratos em andamento, seja de serviços ou vendas. Inclua também como devem ser realizadas as avaliações da qualidade do que é oferecido.`;
   },
   WHAT_IS_CONTRACT_CANCELLATION_DETAILS_CONFIRMATION_REQUEST: () => {
-    return `As práticas exigidas para cancelamentos de contratos em andamento do seu serviço prestado, bem como, como devem ser feitas as avaliações da qualidade dos serviços prestados, estão corretas?`;
+    return `As práticas exigidas para cancelamentos do contrato está correta?`;
   },
   SERVICE_CONTRACT_CANCEL_DETAILS_REQUEST: () =>
-    `Descreva em detalhes as práticas exigidas para cancelamentos de contratos em andamento do seu serviço prestado, bem como, como devem ser feitas as avaliações da qualidade dos serviços prestados.`,
+    `Descreva em detalhes as práticas exigidas para o cancelamento de contratos em andamento, seja de serviços ou vendas. Inclua também como devem ser realizadas as avaliações da qualidade do que é oferecido.`,
   SERVICE_CONTRACT_CANCEL_DETAILS_CONFIRMATION_REQUEST: () =>
-    `As práticas exigidas para cancelamentos de contratos em andamento do seu serviço prestado, bem como, como devem ser feitas as avaliações da qualidade dos serviços prestados, estão corretas?`,
+    `As práticas exigidas para cancelamentos do contrato está correta?`,
   SERVICE_MATERIAL_HOW_MUCH_REQUEST: () => `Tem valor pré determinado?`,
   SERVICE_MATERIAL_HOW_MUCH_CONFIRMATION_REQUEST: (
     serviceMaterialHowMuch: any,
@@ -304,7 +304,7 @@ export const messages = {
     return `A garantia e prazos de garantia estão corretos?`;
   },
   JUDICIAL_RESOLUTION_REQUEST: () => {
-    return `Em caso de desacordo qual o foro escolhido? (ideal ser na cidade onde se é prestado o serviço)`;
+    return `Em caso de desacordo, qual o foro escolhido para a resolução de conflitos? (idealmente, na cidade onde foi firmada o acordo)`;
   },
   JUDICIAL_RESOLUTION_CONFIRMATION_REQUEST: (judicialResolution: string) => {
     return `O foro escolhido é ${judicialResolution}, está correto?`;
@@ -318,7 +318,7 @@ export const messages = {
   CONTRACT_APPROVAL_REQUEST: () =>
     `O contrato está correto? Deseja aprovar, assinar e enviar para a contraparte?`,
   CONTRACT_SIGNATURE_REQUEST: (name: string) =>
-    `O ${name} enviou um contrato para vocês para que possam oficializar a prestação do serviço. Por favor, revise e assine o contrato.`,
+    `O ${name} enviou um contrato para vocês para que possam oficializar o acordo. Por favor, revise e assine o contrato.`,
   CONTRACT_HAS_SENT_TO_COUNTERPART: (counterpartName: string) =>
     `O contrato foi enviado para ${counterpartName}. Por favor, aguarde a assinatura.`,
   COUNTERPART_SIGNATURE_REQUEST: () => `Deseja assinar o contrato?`,
