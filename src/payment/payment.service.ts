@@ -61,8 +61,7 @@ export class PaymentService {
           status: responseData.pix_create_request.status,
           emv: responseData.pix_create_request.pix_code.emv,
           qrCodeBase64: responseData.pix_create_request.pix_code.qrcode_base64,
-          qrCodeImageUrl:
-            responseData.pix_create_request.pix_code.qrcode_image_url,
+          qrCodeImageUrl: responseData.pix_create_request.pix_code.qrcode_image_url,
           bacenUrl: responseData.pix_create_request.pix_code.bacen_url,
           dueDate: new Date().toISOString(),
         });
@@ -87,29 +86,54 @@ export class PaymentService {
   }
 
   async handlePaymentNotification(notificationData: any): Promise<any> {
-    if (notificationData.transaction_id && (notificationData.status === 'paid'|| notificationData.status === 'completed')) {
-      const payment = await this.paymentRepository.findOne({
-        where: { transaction_id: notificationData.transaction_id },
-        relations: { ticket: true },
-      });
+    if (notificationData.transaction_id) {
+      const statusResponse = await this.fetchPaymentStatus(notificationData.transaction_id);
 
-      if (payment) {
-        payment.status = 'Pagamento efetuado.';
-        payment.used = 1; // caso precise usar
-        await this.paymentRepository.save(payment);
-        this.eventEmitter.emit('payment.success', payment); // Emitir evento
-        return { success: true, message: 'Pagamento atualizado com sucesso.' };
+      if (statusResponse.status === 'paid' || statusResponse.status === 'completed') {
+        const payment = await this.paymentRepository.findOne({
+          where: { transaction_id: notificationData.transaction_id },
+        });
+
+        if (payment) {
+          payment.status = 'Pagamento efetuado.';
+          payment.used = 1;  // caso precise usar
+          await this.paymentRepository.save(payment);
+          this.eventEmitter.emit('payment.success', payment);  // Emitir evento
+          return { success: true, message: 'Pagamento atualizado com sucesso.' };
+        } else {
+          return { success: false, message: 'Pagamento não encontrado com o ID da transação fornecido.' };
+        }
       } else {
         return {
           success: false,
-          message: 'Pagamento não encontrado com o ID da transação fornecido.',
+          message: 'O status do pagamento na PagHiper não indica que foi efetuado.',
+          statusResponse: statusResponse  // debug resposta da API
         };
       }
     }
     return {
       success: false,
-      message:
-        'Tratamento de notificações concluído, mas nenhuma atualização aplicada.',
+      message: 'Dados de notificação insuficientes para processamento.',
     };
+  }
+
+  async fetchPaymentStatus(transactionId: string): Promise<any> {
+    const statusCheckUrl = 'https://pix.paghiper.com/invoice/status/';
+    const params = {
+      apiKey: process.env.PAGHIPER_API_KEY,
+      transaction_id: transactionId,
+    };
+
+    try {
+      const response = await lastValueFrom(
+        this.httpService.post(statusCheckUrl, params, {
+          headers: { 'Content-Type': 'application/json' },
+        })
+      );
+      return response.data;  // resposta da API com o status do pagamento
+    } catch (error) {
+      console.error('Erro ao buscar o status do pagamento:', error);
+      throw new Error(`Falha ao buscar o status do pagamento: ${error.message}`);
+    }
   }
 }
