@@ -472,6 +472,9 @@ export class whatsAppService {
     });
 
     const state = getTicketStateProcessor[ticket.state];
+    state.whatsAppService = this;
+    state.logger = this.logger;
+    state.userService = this.userService;
     await state.onStateBegin(ticket.owner.phoneNumber, ticket.owner, ticket);
   }
 
@@ -484,6 +487,9 @@ export class whatsAppService {
     });
 
     const state = getTicketStateProcessor[ticket.state];
+    state.whatsAppService = this;
+    state.logger = this.logger;
+    state.userService = this.userService;
     await state.onStateBegin(ticket.owner.phoneNumber, ticket.owner, ticket);
   }
 
@@ -494,6 +500,9 @@ export class whatsAppService {
       relations: { owner: true, category: true, paymentData: true },
     });
     const state = getTicketStateProcessor[ticket.state];
+    state.whatsAppService = this;
+    state.logger = this.logger;
+    state.userService = this.userService;
     await state.onStateBegin(ticket.owner.phoneNumber, ticket.owner, ticket);
   }
 
