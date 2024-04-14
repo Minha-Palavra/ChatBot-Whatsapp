@@ -29,7 +29,6 @@ export class WaitingPaymentState extends MessageState {
       relations: { owner: true, category: true, paymentData: true },
     });
 
-
     if (!ticket.paymentData) {
       this.nextState = new PaidTicketState();
       this.nextState.whatsAppService = this.whatsAppService;
@@ -41,7 +40,9 @@ export class WaitingPaymentState extends MessageState {
       return;
     }
 
-    const data = await this.whatsAppService.paymentService.checkPaymentStatus(ticket.paymentData.transaction_id);
+    const data = await this.whatsAppService.paymentService.checkPaymentStatus(
+      ticket.paymentData.transaction_id,
+    );
 
     if (data.status === 'paid') {
       this.nextState = new WasPaidState();
