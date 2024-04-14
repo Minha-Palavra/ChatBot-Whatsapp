@@ -599,13 +599,7 @@ export class whatsAppService {
             await this.ticketService.getUserTicketsCount(user);
 
           if (ticketsCount > 0) {
-            // TODO: Menu flow allows user to select a ticket or create a new one.
-            // ticketState = getTicketStateProcessor[TicketState.SELECT_TICKET];
-            // if (ticketsCount > 5) {
-            // } else {
-            //   state = getTicketStateProcessor[TicketState.NEW_TICKET];
-            // }
-            state = getTicketStateProcessor[TicketState.PAID_TICKET];
+            state = getTicketStateProcessor[TicketState.NEW_TICKET];
           } else {
             // If user doesn't have any ticket at all it should go to the first ticket flow.
             state = getTicketStateProcessor[TicketState.FIRST_TICKET];
@@ -626,8 +620,6 @@ export class whatsAppService {
           return;
         }
       }
-
-      // TODO: Cancelar o ticket.
       for (const message of data.messages) {
         if (message.type === 'interactive') {
           const selectedOption = this.getSelectedOptionFromMessage(message);
@@ -639,7 +631,6 @@ export class whatsAppService {
       }
     }
     await this.processData(state, data);
-
   }
 
   private async processData(state: IMessageState, data: ValueObject) {
