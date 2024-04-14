@@ -26,7 +26,8 @@ export class PaymentService {
       payer_name: orderInfo.payer_name,
       payer_cpf_cnpj: orderInfo.payer_cpf_cnpj,
       payer_phone: orderInfo.payer_phone,
-      notification_url: 'https://conversation-exposed-extensions-bruce.trycloudflare.com/payment/feedback',
+      notification_url:
+        'https://conversation-exposed-extensions-bruce.trycloudflare.com/payment/feedback',
       days_due_date: 1,
       items: [
         {
@@ -110,6 +111,32 @@ export class PaymentService {
           statusResponse: statusResponse  // debug resposta da API
         };
       }
+
+      if (
+        response.data.status === 'paid' ||
+        response.data.status === 'completed'
+      ) {
+        const payment = await this.paymentRepository.findOne({
+          where: { transaction_id: response.data.transaction_id },
+          relations: { ticket: true },
+        });
+
+        if (payment) {
+          payment.status = response.data.status;
+          payment.paidDate = new Date().toISOString();
+          payment.used = 1; // caso precise usar
+          await this.paymentRepository.save(payment);
+          this.eventEmitter.emit('payment.success', payment); // Emitir evento
+          return {
+            success: true,
+            message: 'Pagamento atualizado com sucesso.',
+          };
+        }
+      }
+    } catch (error) {
+      throw new Error(
+        `Falha ao processar notificação de pagamento: ${error.message}`,
+      );
     }
     return {
       success: false,

@@ -34,6 +34,9 @@ export class Payment {
   dueDate: string;
 
   @Column({ nullable: true })
+  paidDate: string;
+
+  @Column({ nullable: true })
   qrCodeBase64: string;
 
   @Column({ nullable: true })
