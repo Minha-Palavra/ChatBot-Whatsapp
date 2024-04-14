@@ -28,4 +28,16 @@ export class Payment {
   @ApiProperty()
   @OneToOne(() => TicketEntity, (ticket) => ticket.paymentData)
   ticket: TicketEntity;
+
+  @Column({ nullable: true })
+  dueDate:string;
+
+  @Column({ nullable: true })
+  qrCodeBase64:string;
+
+  @Column({ nullable: true })
+  qrCodeImageUrl:string;
+
+  @Column({ nullable: true })
+  bacenUrl:string;
 }

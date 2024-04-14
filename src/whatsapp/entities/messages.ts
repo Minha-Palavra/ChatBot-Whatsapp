@@ -338,6 +338,9 @@ export const messages = {
   NEW_TICKET_CONFIRMATION: () => `Deseja criar um novo contrato?`,
   NO_NEW_TICKET: () => `Certo, obrigado!`,
   WAITING_PAYMENT() {
-    return '';
+    return 'Efetue o pagamento para continuar.';
+  },
+  WAS_PAID() {
+    return 'Recebemos o pagamento.';
   },
 };

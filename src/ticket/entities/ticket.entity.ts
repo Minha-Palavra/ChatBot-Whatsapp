@@ -41,6 +41,10 @@ export class TicketEntity extends AbstractEntity {
   paymentData: Payment;
 
   @ApiProperty()
+  @Column({ nullable: true, default: false })
+  paid: boolean;
+
+  @ApiProperty()
   @Column({ nullable: true })
   counterpartName: string; // OK
 

@@ -60,6 +60,11 @@ export class PaymentService {
           transaction_id: responseData.pix_create_request.transaction_id,
           status: responseData.pix_create_request.status,
           emv: responseData.pix_create_request.pix_code.emv,
+          qrCodeBase64: responseData.pix_create_request.pix_code.qrcode_base64,
+          qrCodeImageUrl:
+            responseData.pix_create_request.pix_code.qrcode_image_url,
+          bacenUrl: responseData.pix_create_request.pix_code.bacen_url,
+          dueDate: new Date().toISOString(),
         });
 
         await this.paymentRepository.save(paymentRecord);
@@ -67,17 +72,7 @@ export class PaymentService {
         return {
           success: true,
           message: 'Pagamento PIX criado e salvo com sucesso.',
-          paymentDetails: {
-            transactionId: responseData.pix_create_request.transaction_id,
-            status: responseData.pix_create_request.status,
-            emv: responseData.pix_create_request.pix_code.emv,
-            qrCodeBase64:
-              responseData.pix_create_request.pix_code.qrcode_base64,
-            qrCodeImageUrl:
-              responseData.pix_create_request.pix_code.qrcode_image_url,
-            bacenUrl: responseData.pix_create_request.pix_code.bacen_url,
-            dueDate: responseData.pix_create_request.due_date,
-          },
+          paymentDetails: paymentRecord,
         };
       } else {
         return {

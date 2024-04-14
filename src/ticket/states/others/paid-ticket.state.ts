@@ -1,13 +1,10 @@
 import { ValueObject } from 'whatsapp/build/types/webhooks';
-import { messages } from '../../../whatsapp/entities/messages';
 import { MessageState } from '../../../whatsapp/states/message-state';
-import { OwnerTypeState } from './owner-type.state';
 import { UserEntity } from '../../../user/entities/user.entity';
 import { TicketEntity } from '../../entities/ticket.entity';
 import { formatPhoneNumber } from '../../../shared/utils';
-import { ContractParty } from '../../entities/contract-party.enum';
-import { TicketStatus } from '../../entities/ticket-status.enum';
 import { TicketState } from '../../entities/ticket-state.enum';
+import { WaitingPaymentState } from './waiting-payment.state';
 
 export class PaidTicketState extends MessageState {
   public prefix = 'PAID_TICKET';
@@ -17,26 +14,42 @@ export class PaidTicketState extends MessageState {
     user?: UserEntity,
     ticket?: TicketEntity,
   ) {
-    await this.whatsAppService.sendMessage(
-      phoneNumber,
-      `Você já tem mais de 5 contratos em sua conta, iremos gerar um PIX de R$ 4,99 para a realização de cada novo contrato.`,
-    );
+    if (!ticket.paymentData) {
+      await this.whatsAppService.sendMessage(
+        phoneNumber,
+        `Você já tem mais de 5 contratos em sua conta, iremos gerar um PIX de R$ 4,99 para a realização de cada novo contrato.`,
+      );
+      const response =
+        await this.whatsAppService.paymentService.createPixPayment({
+          order_id: ticket.id,
+          payer_email: user.email,
+          payer_name: user.fullName,
+          payer_cpf_cnpj: user.taxpayerNumber,
+          payer_phone: user.phoneNumber,
+        });
 
-    const response = await this.whatsAppService.paymentService.createPixPayment(
-      {
-        order_id: ticket.id,
-        payer_email: user.email,
-        payer_name: user.fullName,
-        payer_cpf_cnpj: user.taxpayerNumber,
-        payer_phone: user.phoneNumber,
-      },
-    );
-    await this.whatsAppService.sendMessage(
-      phoneNumber,
-      `Copie o código e cole em seu pix para seguir com o pagamento de R$ 4,99.`,
-    );
-    const emv = response.details.emv;
-    await this.whatsAppService.sendMessage(phoneNumber, `${emv}`);
+      ticket.paymentData = response.paymentDetails;
+
+      await this.whatsAppService.ticketService.save(ticket);
+
+      await this.whatsAppService.sendMessage(
+        phoneNumber,
+        `Copie o código e cole em seu pix para seguir com o pagamento de R$ 4,99.`,
+      );
+
+      await this.whatsAppService.sendMessage(
+        phoneNumber,
+        `${response.paymentDetails.emv}`,
+      );
+    }
+
+    this.nextState = new WaitingPaymentState();
+    this.nextState.whatsAppService = this.whatsAppService;
+    this.nextState.logger = this.logger;
+    this.nextState.userService = this.userService;
+
+    // go to the next state.
+    await this.toNextState(phoneNumber, user, ticket);
   }
 
   public async processMessages(value: ValueObject): Promise<void> {

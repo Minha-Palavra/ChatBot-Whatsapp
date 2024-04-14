@@ -5,6 +5,7 @@ import { TicketEntity } from '../../entities/ticket.entity';
 import { formatPhoneNumber } from '../../../shared/utils';
 import { TicketState } from '../../entities/ticket-state.enum';
 import { OwnerTypeState } from './owner-type.state';
+import { messages } from '../../../whatsapp/entities/messages';
 
 export class WasPaidState extends MessageState {
   public prefix = 'was_PAID_TICKET';
@@ -14,8 +15,16 @@ export class WasPaidState extends MessageState {
     user?: UserEntity,
     ticket?: TicketEntity,
   ) {
-    // TODO REGISTRAR QUE O PAGAMENTO FOI EFETUADO NO TICKET E SALVAR NO BANCO DE DADOS.
-    // TODO INFORMAR AO USUÁRIO QUE O TICKET FOI PAGO. E SEGUIR PARA CRIAÇÃO DO TICKET NORMALMENTE.
+    await this.whatsAppService.ticketService.save({
+      ...ticket,
+      paid: true,
+      state: TicketState.WAS_PAID,
+    });
+
+    await this.whatsAppService.sendMessage(
+      phoneNumber,
+      messages.WAS_PAID(),
+    );
 
     this.nextState = new OwnerTypeState();
     this.nextState.whatsAppService = this.whatsAppService;

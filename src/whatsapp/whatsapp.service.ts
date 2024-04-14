@@ -868,7 +868,7 @@ export class whatsAppService {
     return interactive;
   }
 
-  private async cancelTicket(phoneNumber: string, ticket: TicketEntity) {
+  public async cancelTicket(phoneNumber: string, ticket: TicketEntity) {
     await this.ticketService.save({
       ...ticket,
       status: TicketStatus.CLOSED,
