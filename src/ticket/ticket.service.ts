@@ -46,7 +46,7 @@ export class TicketService extends TypeOrmCrudService<TicketEntity> {
         status: TicketStatus.OPEN,
       },
       order: { updatedAt: 'DESC' },
-      relations: { owner: true, category: true, paymentData: true  },
+      relations: { owner: true, category: true, paymentData: true },
     };
 
     const ticket = await this.findOne(options);

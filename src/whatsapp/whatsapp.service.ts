@@ -33,6 +33,7 @@ import { ContractGeneratedEvent } from '../contract/contract-generated.event';
 import { OnEvent } from '@nestjs/event-emitter';
 import { UserEntity } from '../user/entities/user.entity';
 import { PaymentService } from '../payment/payment.service';
+import { Payment } from '../payment/entities/payment.entity';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const WhatsApp = require('whatsapp');
@@ -108,99 +109,6 @@ export class whatsAppService {
       }
     }
     return;
-  }
-
-  private async processMessages(data: ValueObject) {
-    const contact = data.contacts[0];
-
-    // TODO: wa_id is the same as the phoneNumber in the value.messages[0].from?
-    const phoneNumber = data.messages[0].from;
-
-    let ticket: TicketEntity;
-    let state: IMessageState;
-
-    ticket =
-      await this.ticketService.findUserNewestOpenTicketAsCounterpartByPhoneNumber(
-        phoneNumber,
-      );
-
-    // TODO: Check if the user by the contact id or phone number has a contract open as counterpart.
-    if (ticket && ticket.status !== TicketStatus.CLOSED) {
-      if (ticket.awaitingResponseFrom !== ContractParty.COUNTERPART) {
-        // TODO: Send a message to the user to wait for the owner action.
-        await this.sendMessage(
-          phoneNumber,
-          'Você já tem um contrato em andamento. Aguarde o retorno da sua contraparte.',
-        );
-        return;
-      } else {
-        state = getTicketStateProcessor[ticket.state];
-      }
-    } else {
-      // Get the user by the contact's WhatsApp id.
-      // TODO: After the user creation if user wanna change the phoneNumber, it should be done by an email verification.
-      const user = await this.userService.findOneByWhatsappId(contact.wa_id);
-
-      // If user is not found, start user registration process.
-      if (!user) {
-        state = getUserStateProcessor[UserState.REGISTRATION_INITIAL];
-      } else if (user.state !== UserState.REGISTRATION_COMPLETE) {
-        // Usar already have completed the registration process.
-        state = getUserStateProcessor[user.state];
-      } else {
-        ticket = await this.ticketService.findUserNewestTicket(user);
-
-        if (!ticket || ticket.status === TicketStatus.CLOSED) {
-          // User does not have any open ticket.
-          const ticketsCount =
-            await this.ticketService.getUserTicketsCount(user);
-
-          if (ticketsCount > 0) {
-            // TODO: Menu flow allows user to select a ticket or create a new one.
-            // ticketState = getTicketStateProcessor[TicketState.SELECT_TICKET];
-            // if (ticketsCount > 5) {
-            // } else {
-            //   state = getTicketStateProcessor[TicketState.NEW_TICKET];
-            // }
-            state = getTicketStateProcessor[TicketState.PAID_TICKET];
-          } else {
-            // If user doesn't have any ticket at all it should go to the first ticket flow.
-            state = getTicketStateProcessor[TicketState.FIRST_TICKET];
-          }
-        } else {
-          state = getTicketStateProcessor[ticket.state];
-        }
-
-        if (
-          ticket &&
-          ticket.status !== TicketStatus.CLOSED &&
-          ticket.awaitingResponseFrom !== ContractParty.OWNER
-        ) {
-          await this.sendMessage(
-            phoneNumber,
-            'Você já tem um contrato em andamento. Aguarde o retorno da sua contraparte.',
-          );
-          return;
-        }
-      }
-
-      // TODO: Cancelar o ticket.
-      for (const message of data.messages) {
-        if (message.type === 'interactive') {
-          const selectedOption = this.getSelectedOptionFromMessage(message);
-          if (selectedOption === 'cancel') {
-            await this.cancelTicket(phoneNumber, ticket);
-            return;
-          }
-        }
-      }
-    }
-
-    state.whatsAppService = this;
-    state.logger = this.logger;
-    state.userService = this.userService;
-
-    await state.processMessages(data);
   }
 
   public async sendMessage(
@@ -521,21 +429,49 @@ export class whatsAppService {
   }
 
   @OnEvent('contract.generated', { async: true })
-  async handleContractGeneratedEvent(payload: ContractGeneratedEvent) {
-    await this.ticketService.save({
+  public async handleContractGeneratedEvent(payload: ContractGeneratedEvent) {
+    const ticket = await this.ticketService.save({
       ...payload.ticket,
       contract: payload.contract,
       state: TicketState.OWNER_SIGNATURE,
     });
+
+    const state = getTicketStateProcessor[ticket.state];
+    await state.onStateBegin(ticket.owner.phoneNumber, ticket.owner, ticket);
   }
 
   @OnEvent('contract.updated', { async: true })
-  async handleContractUpdatedEvent(payload: ContractGeneratedEvent) {
-    await this.ticketService.save({
+  public async handleContractUpdatedEvent(payload: ContractGeneratedEvent) {
+    const ticket = await this.ticketService.save({
       ...payload.ticket,
       contract: payload.contract,
       state: TicketState.OWNER_SIGNATURE,
     });
+
+    const state = getTicketStateProcessor[ticket.state];
+    await state.onStateBegin(ticket.owner.phoneNumber, ticket.owner, ticket);
+  }
+
+  @OnEvent('payment.success', { async: true })
+  public async handlePixPaid(payment: Payment) {
+    const ticket = await this.ticketService.findOne({
+      where: { id: payment.ticket.id },
+      relations: { owner: true, category: true, paymentData: true },
+    });
+    const state = getTicketStateProcessor[ticket.state];
+    await state.onStateBegin(ticket.owner.phoneNumber, ticket.owner, ticket);
+  }
+
+  public async cancelTicket(phoneNumber: string, ticket: TicketEntity) {
+    await this.ticketService.save({
+      ...ticket,
+      status: TicketStatus.CLOSED,
+    });
+
+    await this.sendMessage(
+      phoneNumber,
+      'O ticket foi cancelado com sucesso. Obrigado por usar o nosso serviço.',
+    );
   }
 
   protected getSelectedOptionFromMessage(
@@ -615,6 +551,103 @@ export class whatsAppService {
       // }
     }
     return interactive;
+  }
+
+  private async processMessages(data: ValueObject) {
+    const contact = data.contacts[0];
+
+    // TODO: wa_id is the same as the phoneNumber in the value.messages[0].from?
+    const phoneNumber = data.messages[0].from;
+
+    let ticket: TicketEntity;
+    let state: IMessageState;
+
+    ticket =
+      await this.ticketService.findUserNewestOpenTicketAsCounterpartByPhoneNumber(
+        phoneNumber,
+      );
+
+    // TODO: Check if the user by the contact id or phone number has a contract open as counterpart.
+    if (ticket && ticket.status !== TicketStatus.CLOSED) {
+      if (ticket.awaitingResponseFrom !== ContractParty.COUNTERPART) {
+        // TODO: Send a message to the user to wait for the owner action.
+        await this.sendMessage(
+          phoneNumber,
+          'Você já tem um contrato em andamento. Aguarde o retorno da sua contraparte.',
+        );
+        return;
+      } else {
+        state = getTicketStateProcessor[ticket.state];
+      }
+    } else {
+      // Get the user by the contact's WhatsApp id.
+      // TODO: After the user creation if user wanna change the phoneNumber, it should be done by an email verification.
+      const user = await this.userService.findOneByWhatsappId(contact.wa_id);
+
+      // If user is not found, start user registration process.
+      if (!user) {
+        state = getUserStateProcessor[UserState.REGISTRATION_INITIAL];
+      } else if (user.state !== UserState.REGISTRATION_COMPLETE) {
+        // Usar already have completed the registration process.
+        state = getUserStateProcessor[user.state];
+      } else {
+        ticket = await this.ticketService.findUserNewestTicket(user);
+
+        if (!ticket || ticket.status === TicketStatus.CLOSED) {
+          // User does not have any open ticket.
+          const ticketsCount =
+            await this.ticketService.getUserTicketsCount(user);
+
+          if (ticketsCount > 0) {
+            // TODO: Menu flow allows user to select a ticket or create a new one.
+            // ticketState = getTicketStateProcessor[TicketState.SELECT_TICKET];
+            // if (ticketsCount > 5) {
+            // } else {
+            //   state = getTicketStateProcessor[TicketState.NEW_TICKET];
+            // }
+            state = getTicketStateProcessor[TicketState.PAID_TICKET];
+          } else {
+            // If user doesn't have any ticket at all it should go to the first ticket flow.
+            state = getTicketStateProcessor[TicketState.FIRST_TICKET];
+          }
+        } else {
+          state = getTicketStateProcessor[ticket.state];
+        }
+
+        if (
+          ticket &&
+          ticket.status !== TicketStatus.CLOSED &&
+          ticket.awaitingResponseFrom !== ContractParty.OWNER
+        ) {
+          await this.sendMessage(
+            phoneNumber,
+            'Você já tem um contrato em andamento. Aguarde o retorno da sua contraparte.',
+          );
+          return;
+        }
+      }
+
+      // TODO: Cancelar o ticket.
+      for (const message of data.messages) {
+        if (message.type === 'interactive') {
+          const selectedOption = this.getSelectedOptionFromMessage(message);
+          if (selectedOption === 'cancel') {
+            await this.cancelTicket(phoneNumber, ticket);
+            return;
+          }
+        }
+      }
+    }
+    await this.processData(state, data);
+
+  }
+
+  private async processData(state: IMessageState, data: ValueObject) {
+    state.whatsAppService = this;
+    state.logger = this.logger;
+    state.userService = this.userService;
+
+    await state.processMessages(data);
   }
 
   private async generateContractPartyOptions(
@@ -866,17 +899,5 @@ export class whatsAppService {
     });
 
     return interactive;
-  }
-
-  public async cancelTicket(phoneNumber: string, ticket: TicketEntity) {
-    await this.ticketService.save({
-      ...ticket,
-      status: TicketStatus.CLOSED,
-    });
-
-    await this.sendMessage(
-      phoneNumber,
-      'O ticket foi cancelado com sucesso. Obrigado por usar o nosso serviço.',
-    );
   }
 }

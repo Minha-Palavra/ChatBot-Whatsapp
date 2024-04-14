@@ -118,7 +118,8 @@ export const messages = {
   SERVICE_DESCRIPTION_CONFIRMATION_REQUEST: () => {
     return 'A descrição está correta?';
   },
-  SERVICE_START_DATE_REQUEST: () => 'Quando será iniciado o serviço ou a compra do produto?',
+  SERVICE_START_DATE_REQUEST: () =>
+    'Quando será iniciado o serviço ou a compra do produto?',
   SERVICE_START_DATE_CONFIRMATION_REQUEST: (serviceStartDate: string) => {
     return `A data ${serviceStartDate}, está correta?`;
   },

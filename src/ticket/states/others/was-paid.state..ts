@@ -21,10 +21,7 @@ export class WasPaidState extends MessageState {
       state: TicketState.WAS_PAID,
     });
 
-    await this.whatsAppService.sendMessage(
-      phoneNumber,
-      messages.WAS_PAID(),
-    );
+    await this.whatsAppService.sendMessage(phoneNumber, messages.WAS_PAID());
 
     this.nextState = new OwnerTypeState();
     this.nextState.whatsAppService = this.whatsAppService;

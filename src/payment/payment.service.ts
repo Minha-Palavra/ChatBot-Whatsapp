@@ -90,6 +90,7 @@ export class PaymentService {
     if (notificationData.transaction_id && notificationData.status === 'paid') {
       const payment = await this.paymentRepository.findOne({
         where: { transaction_id: notificationData.transaction_id },
+        relations: { ticket: true },
       });
 
       if (payment) {

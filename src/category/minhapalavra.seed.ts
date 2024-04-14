@@ -91,37 +91,44 @@ export const minhaPalavraSeedData: MinhaPalavraSeedType = {
         {
           title: 'Eletroeletrônicos',
           slug: 'eletroeletronicos',
-          description: 'Profissionais na venda de dispositivos e equipamentos eletrônicos.',
+          description:
+            'Profissionais na venda de dispositivos e equipamentos eletrônicos.',
         },
         {
           title: 'Livros, filmes, músicas e jogos',
           slug: 'livros-filmes-musicas-jogos',
-          description: 'Venda de produtos culturais como livros, filmes, músicas e jogos.',
+          description:
+            'Venda de produtos culturais como livros, filmes, músicas e jogos.',
         },
         {
           title: 'Perfumaria e cosméticos',
           slug: 'perfumaria-cosmeticos',
-          description: 'Profissionais especializados na venda de perfumes e cosméticos.',
+          description:
+            'Profissionais especializados na venda de perfumes e cosméticos.',
         },
         {
           title: 'Alimentos, bebidas e suplementos',
           slug: 'alimentos-bebidas-suplementos',
-          description: 'Venda de alimentos, bebidas e suplementos nutricionais.',
+          description:
+            'Venda de alimentos, bebidas e suplementos nutricionais.',
         },
         {
           title: 'Bicicletas, patinetes e similares',
           slug: 'bicicletas-patinetes-similares',
-          description: 'Especialistas em vendas de bicicletas, patinetes e equipamentos similares.',
+          description:
+            'Especialistas em vendas de bicicletas, patinetes e equipamentos similares.',
         },
         {
           title: 'Produtos clínicos e hospitalares',
           slug: 'produtos-clinicos-hospitalares',
-          description: 'Venda de produtos utilizados em ambientes clínicos e hospitalares.',
+          description:
+            'Venda de produtos utilizados em ambientes clínicos e hospitalares.',
         },
         {
           title: 'Materiais de construção civil',
           slug: 'materiais-de-construcao-civil',
-          description: 'Especialistas em vendas de materiais para construção civil.',
+          description:
+            'Especialistas em vendas de materiais para construção civil.',
         },
         {
           title: 'Materiais escolares',
@@ -131,7 +138,8 @@ export const minhaPalavraSeedData: MinhaPalavraSeedType = {
         {
           title: 'Móveis e objetos',
           slug: 'moveis-objetos',
-          description: 'Profissionais que comercializam móveis e objetos decorativos.',
+          description:
+            'Profissionais que comercializam móveis e objetos decorativos.',
         },
         {
           title: 'Cama, mesa e banho',
@@ -141,7 +149,8 @@ export const minhaPalavraSeedData: MinhaPalavraSeedType = {
         {
           title: 'Outros',
           slug: 'outros-vendedores',
-          description: 'Outros profissionais especializados em vendas diversas.',
+          description:
+            'Outros profissionais especializados em vendas diversas.',
         },
       ],
     },

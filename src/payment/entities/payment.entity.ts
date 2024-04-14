@@ -30,14 +30,14 @@ export class Payment {
   ticket: TicketEntity;
 
   @Column({ nullable: true })
-  dueDate:string;
+  dueDate: string;
 
   @Column({ nullable: true })
-  qrCodeBase64:string;
+  qrCodeBase64: string;
 
   @Column({ nullable: true })
-  qrCodeImageUrl:string;
+  qrCodeImageUrl: string;
 
   @Column({ nullable: true })
-  bacenUrl:string;
+  bacenUrl: string;
 }
