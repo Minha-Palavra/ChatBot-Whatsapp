@@ -1,4 +1,4 @@
-import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { TicketEntity } from '../../ticket/entities/ticket.entity';
 
@@ -27,6 +27,7 @@ export class Payment {
 
   @ApiProperty()
   @OneToOne(() => TicketEntity, (ticket) => ticket.paymentData)
+  @JoinColumn()
   ticket: TicketEntity;
 
   @Column({ nullable: true })

@@ -37,8 +37,8 @@ export class TicketEntity extends AbstractEntity {
   ownerType: OwnerType;
 
   @ApiProperty()
-  @OneToOne(() => Payment, (payment) => payment.ticket)
-  paymentData: Payment;
+  @OneToOne(() => Payment, (payment) => payment.ticket, {nullable: true})
+  paymentData?: Payment;
 
   @ApiProperty()
   @Column({ nullable: true, default: false })

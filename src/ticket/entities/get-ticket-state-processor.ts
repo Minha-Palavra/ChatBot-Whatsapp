@@ -58,13 +58,14 @@ import { PaidTicketState } from '../states/others/paid-ticket.state';
 import { ContractWasCompletedState } from '../states/others/contract-was-completed.state.';
 import { WaitingPaymentState } from '../states/others/waiting-payment.state';
 import { WasPaidState } from '../states/others/was-paid.state.';
+import { NewTicketState } from '../states/others/new-ticket.state';
 
 export const getTicketStateProcessor: Record<TicketState, IMessageState> = {
   [TicketState.GENERATING_CONTRACT]: new GeneratingContractState(),
   //
   [TicketState.NONE]: null,
   //
-  [TicketState.NEW_TICKET]: null,
+  [TicketState.NEW_TICKET]: new NewTicketState(),
   [TicketState.FIRST_TICKET]: new FirstTicketState(),
   [TicketState.SELECT_TICKET]: null,
   //

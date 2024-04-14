@@ -7,9 +7,10 @@ import { TicketEntity } from '../../entities/ticket.entity';
 import { formatPhoneNumber } from '../../../shared/utils';
 import { ContractParty } from '../../entities/contract-party.enum';
 import { TicketStatus } from '../../entities/ticket-status.enum';
+import { PaidTicketState } from './paid-ticket.state';
 
-export class FirstTicketState extends MessageState {
-  public prefix = 'FIRST_TICKET';
+export class NewTicketState extends MessageState {
+  public prefix = 'NEW_TICKET';
 
   public async onStateBegin(
     phoneNumber: string,
@@ -18,7 +19,7 @@ export class FirstTicketState extends MessageState {
   ) {
     await this.whatsAppService.sendConfirmationOptions(
       phoneNumber,
-      messages.FIRST_TICKET(),
+      messages.NEW_TICKET_CONFIRMATION(),
       this.prefix,
       false,
     );
@@ -49,7 +50,7 @@ export class FirstTicketState extends MessageState {
 
         await this.whatsAppService.sendConfirmationOptions(
           phoneNumber,
-          messages.FIRST_TICKET(),
+          messages.NEW_TICKET_CONFIRMATION(),
           this.prefix,
           false,
         );
@@ -81,7 +82,7 @@ export class FirstTicketState extends MessageState {
         // Send the confirmation options.
         await this.whatsAppService.sendConfirmationOptions(
           phoneNumber,
-          messages.FIRST_TICKET(),
+          messages.NEW_TICKET_CONFIRMATION(),
           this.prefix,
           true,
         );
@@ -101,14 +102,25 @@ export class FirstTicketState extends MessageState {
         awaitingResponseFrom: ContractParty.OWNER,
         status: TicketStatus.OPEN,
       });
+      const ticketsCount =
+        await this.whatsAppService.ticketService.getUserTicketsCount(user);
+      if (ticketsCount > 1) {
+        this.nextState = new PaidTicketState();
+        this.nextState.whatsAppService = this.whatsAppService;
+        this.nextState.logger = this.logger;
+        this.nextState.userService = this.userService;
 
-      this.nextState = new OwnerTypeState();
-      this.nextState.whatsAppService = this.whatsAppService;
-      this.nextState.logger = this.logger;
-      this.nextState.userService = this.userService;
+        // go to the next state.
+        await this.toNextState(phoneNumber, user, ticket);
+      } else {
+        this.nextState = new OwnerTypeState();
+        this.nextState.whatsAppService = this.whatsAppService;
+        this.nextState.logger = this.logger;
+        this.nextState.userService = this.userService;
 
-      // go to the next state.
-      await this.toNextState(phoneNumber, user, ticket);
+        // go to the next state.
+        await this.toNextState(phoneNumber, user, ticket);
+      }
     }
   }
 }
