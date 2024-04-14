@@ -667,7 +667,7 @@ export class whatsAppService {
       for (const message of data.messages) {
         if (message.type === 'interactive') {
           const selectedOption = this.getSelectedOptionFromMessage(message);
-          if (selectedOption === 'cancel') {
+          if (selectedOption === 'CANCEL') {
             await this.cancelTicket(phoneNumber, ticket);
             return;
           }

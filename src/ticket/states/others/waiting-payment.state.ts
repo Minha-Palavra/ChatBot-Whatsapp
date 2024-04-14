@@ -69,6 +69,55 @@ export class WaitingPaymentState extends MessageState {
       this.whatsAppService.cancelTicket(phoneNumber, ticket);
       return;
     }
+  }
+
+  private async processState(
+    ticket: TicketEntity,
+    phoneNumber: string,
+    user: UserEntity,
+  ) {
+    ticket = await this.whatsAppService.ticketService.findOne({
+      where: {
+        id: ticket.id,
+      },
+      order: { updatedAt: 'DESC' },
+      relations: { owner: true, category: true, paymentData: true },
+    });
+
+    if (!ticket.paymentData) {
+      this.nextState = new PaidTicketState();
+      this.nextState.whatsAppService = this.whatsAppService;
+      this.nextState.logger = this.logger;
+      this.nextState.userService = this.userService;
+
+      // go to the next state.
+      await this.toNextState(phoneNumber, user, ticket);
+      return;
+    }
+
+    const data = await this.whatsAppService.paymentService.checkPaymentStatus(
+      ticket.paymentData.transaction_id,
+    );
+
+    if (data.status === 'paid') {
+      this.nextState = new WasPaidState();
+      this.nextState.whatsAppService = this.whatsAppService;
+      this.nextState.logger = this.logger;
+      this.nextState.userService = this.userService;
+      await this.toNextState(phoneNumber, user, ticket);
+      return;
+    }
+    const dueDate = new Date(ticket.paymentData.dueDate);
+    const now = new Date();
+
+    const difference = Math.abs(now.getTime() - dueDate.getTime());
+    const hours = difference / (1000 * 60 * 60);
+
+    if (hours > 24) {
+      // MANTER MENSAGEM DE AGUARDANDO PAGAMENTO.
+      this.whatsAppService.cancelTicket(phoneNumber, ticket);
+      return;
+    }
 
     // MANTER MENSAGEM DE AGUARDANDO PAGAMENTO.
     await this.whatsAppService.sendMessage(

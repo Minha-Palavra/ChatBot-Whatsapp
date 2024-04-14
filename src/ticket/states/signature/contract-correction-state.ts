@@ -135,8 +135,9 @@ export class ContractCorrectionState extends MessageState {
       }
 
       if (selectedOption === `${this.prefix}-NO`) {
-        await this.onStateBegin(phoneNumber, user, ticket);
+        // await this.onStateBegin(phoneNumber, user, ticket);
         // TODO: CANCELAR ESTA PORRA.
+        await this.whatsAppService.cancelTicket(phoneNumber, ticket);
       } else if (selectedOption === `${this.prefix}-YES`) {
         this.nextState = new UpdatingContractState();
         this.nextState.whatsAppService = this.whatsAppService;
