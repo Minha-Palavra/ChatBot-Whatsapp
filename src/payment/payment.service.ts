@@ -99,40 +99,68 @@ export class PaymentService {
     };
 
     try {
-      const response = await lastValueFrom(this.httpService.post(statusCheckUrl, params, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-      }));
+      const response = await lastValueFrom(
+        this.httpService.post(statusCheckUrl, params, {
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+        }),
+      );
       const paymentDetails = response.data;
 
-      if (paymentDetails.status_request && paymentDetails.status_request.result === 'success') {
+      if (
+        paymentDetails.status_request &&
+        paymentDetails.status_request.result === 'success'
+      ) {
         const payment = await this.paymentRepository.findOne({
-          where: { transaction_id: paymentDetails.status_request.transaction_id },
+          where: {
+            transaction_id: paymentDetails.status_request.transaction_id,
+          },
+          relations: { ticket: true },
         });
 
-        if (payment && (paymentDetails.status_request.status === 'paid' || paymentDetails.status_request.status === 'completed')) {
+        if (
+          payment &&
+          (paymentDetails.status_request.status === 'paid' ||
+            paymentDetails.status_request.status === 'completed')
+        ) {
           payment.status = paymentDetails.status_request.status;
           payment.used = 1;
           await this.paymentRepository.save(payment);
           this.eventEmitter.emit('payment.success', payment);
-          return { success: true, message: 'Pagamento atualizado com sucesso.' };
+          return {
+            success: true,
+            message: 'Pagamento atualizado com sucesso.',
+          };
         } else {
-          return { success: false, message: 'Pagamento não encontrado ou status não é pago/completado.', details: paymentDetails };
+          return {
+            success: false,
+            message:
+              'Pagamento não encontrado ou status não é pago/completado.',
+            details: paymentDetails,
+          };
         }
       } else {
-        return { success: false, message: 'Falha ao confirmar status do pagamento.', details: paymentDetails };
+        return {
+          success: false,
+          message: 'Falha ao confirmar status do pagamento.',
+          details: paymentDetails,
+        };
       }
     } catch (error) {
       console.error('Erro ao processar notificação de pagamento:', error);
-      return { success: false, message: `Erro ao processar notificação: ${error.message}` };
+      return {
+        success: false,
+        message: `Erro ao processar notificação: ${error.message}`,
+      };
     }
   }
 
   async checkPaymentStatus(transactionId: string): Promise<any> {
     const payment = await this.paymentRepository.findOne({
       where: { transaction_id: transactionId },
+      relations: { ticket: true },
     });
     const paymentDetails = await this.fetchPaymentStatus(transactionId);
 

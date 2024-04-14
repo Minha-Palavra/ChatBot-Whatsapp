@@ -111,7 +111,17 @@ export class ContractService {
     });
     this.logger.log(response.choices[0].message.content);
     // return response.choices[0].message.content;
-
+    await this.ticketService.save({
+      ...ticket,
+      contract: response.choices[0].message.content,
+    });
+    await this.ticketService.findOne({
+      where: {
+        id: ticket.id,
+      },
+      order: { updatedAt: 'DESC' },
+      relations: { owner: true, category: true, paymentData: true },
+    });
     this.eventEmitter.emit(
       'contract.generated',
       new ContractGeneratedEvent(
@@ -146,7 +156,17 @@ export class ContractService {
       presence_penalty: 0.0,
     });
     this.logger.log(response.choices[0].message.content);
-
+    await this.ticketService.save({
+      ...ticket,
+      contract: response.choices[0].message.content,
+    });
+    await this.ticketService.findOne({
+      where: {
+        id: ticket.id,
+      },
+      order: { updatedAt: 'DESC' },
+      relations: { owner: true, category: true, paymentData: true },
+    });
     this.eventEmitter.emit(
       'contract.updated',
       new ContractGeneratedEvent(

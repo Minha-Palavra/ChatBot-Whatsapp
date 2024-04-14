@@ -1,12 +1,12 @@
 import { TypeOrmCrudService } from '@dataui/crud-typeorm';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Scope } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOneOptions, Repository } from 'typeorm';
 import { UserEntity } from '../user/entities/user.entity';
 import { TicketEntity } from './entities/ticket.entity';
 import { TicketStatus } from './entities/ticket-status.enum';
 
-@Injectable()
+@Injectable({ scope: Scope.DEFAULT })
 export class TicketService extends TypeOrmCrudService<TicketEntity> {
   private readonly logger = new Logger(TicketService.name);
 

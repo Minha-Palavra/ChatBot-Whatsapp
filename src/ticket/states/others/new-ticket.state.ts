@@ -104,7 +104,7 @@ export class NewTicketState extends MessageState {
       });
       const ticketsCount =
         await this.whatsAppService.ticketService.getUserTicketsCount(user);
-      if (ticketsCount > 1) {
+      if (ticketsCount > 5) {
         this.nextState = new PaidTicketState();
         this.nextState.whatsAppService = this.whatsAppService;
         this.nextState.logger = this.logger;
