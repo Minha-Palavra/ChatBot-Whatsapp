@@ -28,8 +28,7 @@ export class PaymentService {
       payer_name: orderInfo.payer_name,
       payer_cpf_cnpj: orderInfo.payer_cpf_cnpj,
       payer_phone: orderInfo.payer_phone,
-      notification_url:
-        'https://conversation-exposed-extensions-bruce.trycloudflare.com/payment/feedback',
+      notification_url: 'https://wp.tolstenko.net/payment/feedback',
       days_due_date: 1,
       items: [
         {
