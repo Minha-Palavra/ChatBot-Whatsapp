@@ -20,7 +20,13 @@ export class WaitingPaymentState extends MessageState {
       ...ticket,
       state: TicketState.WAITING_PAYMENT,
     });
+  }
 
+  private async processState(
+    ticket: TicketEntity,
+    phoneNumber: string,
+    user: UserEntity,
+  ) {
     ticket = await this.whatsAppService.ticketService.findOne({
       where: {
         id: ticket.id,
@@ -98,7 +104,8 @@ export class WaitingPaymentState extends MessageState {
         message.type === 'text' &&
         ticket.state === TicketState.WAITING_PAYMENT
       ) {
-        await this.onStateBegin(phoneNumber, user, ticket);
+        await this.processState(ticket, phoneNumber, user);
+        return;
       }
 
       // If the message is not interactive, do nothing.
@@ -106,9 +113,10 @@ export class WaitingPaymentState extends MessageState {
         message.type !== 'interactive' ||
         ticket.state !== TicketState.WAITING_PAYMENT
       ) {
-        await this.onStateBegin(phoneNumber, user, ticket);
+        await this.processState(ticket, phoneNumber, user);
+        return;
       }
-      await this.onStateBegin(phoneNumber, user, ticket);
+      await this.processState(ticket, phoneNumber, user);
     }
   }
 }
