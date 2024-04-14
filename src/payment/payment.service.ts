@@ -5,15 +5,22 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Payment } from './entities/payment.entity';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class PaymentService {
+  private sdk: any;
+
   constructor(
     private httpService: HttpService,
     @InjectRepository(Payment)
     private paymentRepository: Repository<Payment>,
     private eventEmitter: EventEmitter2, // Injetar o EventEmitter
-  ) {}
+    private configService: ConfigService,
+  ) {
+    const api = require('api')('@paghiper/v1.3#zrtr3r0laa0be7t');
+    this.sdk = api.notificaEsAutomTicaDeStatusRetornoAutomTicoPix1;
+  }
 
   async createPixPayment(orderInfo: any): Promise<any> {
     const apiURL = 'https://pix.paghiper.com/invoice/create/';
@@ -86,40 +93,60 @@ export class PaymentService {
   }
 
   async handlePaymentNotification(notificationData: any): Promise<any> {
-    if (notificationData.transaction_id) {
-      const statusResponse = await this.fetchPaymentStatus(notificationData.transaction_id);
+    try {
+      const details = await this.sdk({
+        token: process.env.PAGHIPER_TOKEN,
+        apiKey: notificationData.apiKey,
+        transaction_id: notificationData.transaction_id,
+        notification_id: notificationData.notification_id
+      });
 
-      if (statusResponse.status === 'paid' || statusResponse.status === 'completed') {
+      const paymentDetails = details.data;
+      if (paymentDetails.status_request && paymentDetails.status_request.result === 'success') {
         const payment = await this.paymentRepository.findOne({
-          where: { transaction_id: notificationData.transaction_id },
+          where: { transaction_id: paymentDetails.status_request.transaction_id },
         });
 
-        if (payment) {
-          payment.status = 'Pagamento efetuado.';
-          payment.used = 1;  // caso precise usar
+        // o status atual do pagamento
+        if (payment && (paymentDetails.status_request.status === 'paid' || paymentDetails.status_request.status === 'completed')) {
+          payment.status = paymentDetails.status_request.status;
+          payment.used = 1;
           await this.paymentRepository.save(payment);
-          this.eventEmitter.emit('payment.success', payment);  // Emitir evento
+          this.eventEmitter.emit('payment.success', payment);
           return { success: true, message: 'Pagamento atualizado com sucesso.' };
         } else {
-          return { success: false, message: 'Pagamento não encontrado com o ID da transação fornecido.' };
+          return { success: false, message: 'Pagamento não encontrado ou status não é pago/completado.', details: paymentDetails };
         }
       } else {
-        return {
-          success: false,
-          message: 'O status do pagamento na PagHiper não indica que foi efetuado.',
-          statusResponse: statusResponse  // debug resposta da API
-        };
+        return { success: false, message: 'Falha ao confirmar status do pagamento.', details: paymentDetails };
       }
+    } catch (error) {
+      console.error('Erro ao processar notificação de pagamento:', error);
+      return { success: false, message: `Erro ao processar notificação: ${error.message}` };
     }
-    return {
-      success: false,
-      message: 'Dados de notificação insuficientes para processamento.',
-    };
   }
 
-  async fetchPaymentStatus(transactionId: string): Promise<any> {
+  async checkPaymentStatus(transactionId: string): Promise<any>{
+    const paymentDetails = await this.fetchPaymentStatus(transactionId);
+    if(paymentDetails.status_request && paymentDetails.status_request.result === 'success'){
+      return{
+        success: true,
+        status: paymentDetails.status_request.status,
+        details: paymentDetails.status_request,
+        message: 'Status recebido com sucesso.'
+      };
+    } else {
+      return{
+        success: false,
+        details: paymentDetails,
+        message: 'Status não recebido.'
+      };
+    }
+  }
+  private async fetchPaymentStatus(transactionId: string): Promise<any> {
     const statusCheckUrl = 'https://pix.paghiper.com/invoice/status/';
     const params = {
+      token: process.env.PAGHIPER_TOKEN,
       apiKey: process.env.PAGHIPER_API_KEY,
       transaction_id: transactionId,
     };
@@ -127,13 +154,13 @@ export class PaymentService {
     try {
       const response = await lastValueFrom(
         this.httpService.post(statusCheckUrl, params, {
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         })
       );
-      return response.data;  // resposta da API com o status do pagamento
+      return response.data;
     } catch (error) {
-      console.error('Erro ao buscar o status do pagamento:', error);
-      throw new Error(`Falha ao buscar o status do pagamento: ${error.message}`);
+      console.error('Erro no fetchPaymentStatus:', error);
+      throw new Error(`Erro no fetchPaymentStatus: ${error.message}`);
     }
   }
 }
