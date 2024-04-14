@@ -40,7 +40,10 @@ export class WaitingPaymentState extends MessageState {
       await this.toNextState(phoneNumber, user, ticket);
       return;
     }
-    if (ticket.paymentData.status === 'paid') {
+
+    const data = await this.whatsAppService.paymentService.checkPaymentStatus(ticket.paymentData.transaction_id);
+
+    if (data.status === 'paid') {
       this.nextState = new WasPaidState();
       this.nextState.whatsAppService = this.whatsAppService;
       this.nextState.logger = this.logger;
