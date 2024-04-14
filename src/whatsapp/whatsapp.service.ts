@@ -339,6 +339,41 @@ export class whatsAppService {
     }
   }
 
+  public async sendTemplate(
+    phoneNumber: string,
+    name: string,
+    parameters?: any,
+  ) {
+    try {
+      const sentMessage = await this.whatsapp.messages.template(
+        {
+          namespace: '1ceacd4d_95b2_4134_858a_39ee2f4734c6',
+          name: name,
+          //TODO: Parametros da msg
+          components: [
+            {
+              type: 'body',
+              parameters: parameters,
+            },
+          ],
+          language: {
+            code: 'pt_BR',
+          },
+        },
+
+        phoneNumber,
+      );
+      // this.logger.log(JSON.stringify(sentMessage));
+      this.logger.log(
+        `${sentMessage.statusCode()}: ${JSON.stringify(
+          sentMessage.responseBodyToJSON(),
+        )}`,
+      );
+    } catch (error) {
+      throw error;
+    }
+  }
+
   public async sendPaymentInInstallmentsOptions(
     phoneNumber: string,
     message: string,

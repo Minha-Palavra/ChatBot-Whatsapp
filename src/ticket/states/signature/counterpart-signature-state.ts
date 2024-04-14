@@ -29,6 +29,14 @@ export class CounterpartSignatureState extends MessageState {
       ticket.counterpartPhoneNumber,
       messages.CONTRACT_SIGNATURE_REQUEST(ticket.owner.fullName),
     );
+    await this.whatsAppService.sendTemplate(
+      ticket.counterpartPhoneNumber,
+      'envio_contrato ',
+      {
+        type: 'text',
+        text: ticket.owner.fullName,
+      },
+    );
 
     await this.whatsAppService.sendMessage(
       ticket.counterpartPhoneNumber,

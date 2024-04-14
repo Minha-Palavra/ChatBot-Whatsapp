@@ -26,7 +26,7 @@ export class PaymentService {
       payer_name: orderInfo.payer_name,
       payer_cpf_cnpj: orderInfo.payer_cpf_cnpj,
       payer_phone: orderInfo.payer_phone,
-      notification_url: 'https://wp.tolstenko.net/payment/feedback',
+      notification_url: 'https://conversation-exposed-extensions-bruce.trycloudflare.com/payment/feedback',
       days_due_date: 1,
       items: [
         {
@@ -87,7 +87,7 @@ export class PaymentService {
   }
 
   async handlePaymentNotification(notificationData: any): Promise<any> {
-    if (notificationData.transaction_id && notificationData.status === 'paid') {
+    if (notificationData.transaction_id && (notificationData.status === 'paid'|| notificationData.status === 'completed')) {
       const payment = await this.paymentRepository.findOne({
         where: { transaction_id: notificationData.transaction_id },
         relations: { ticket: true },
