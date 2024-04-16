@@ -83,88 +83,88 @@ export const minhaPalavraSeedData: MinhaPalavraSeedType = {
       title: 'Vendedor(a)',
       slug: 'vendedor',
       description: 'Faça contratos personalizados.',
-      hasMaterialFlow: true,
+      hasMaterialFlow: false,
       children: [
         {
           title: 'Roupas, Calçados e Acessórios',
           slug: 'roupas-calcados-acessorios',
           description: 'Especialistas em vendas de moda e acessórios variados.',
-          hasMaterialFlow: true,
+          hasMaterialFlow: false,
         },
         {
           title: 'Eletroeletrônicos',
           slug: 'eletroeletronicos',
           description:
             'Profissionais na venda de dispositivos e equipamentos eletrônicos.',
-          hasMaterialFlow: true,
+          hasMaterialFlow: false,
         },
         {
           title: 'Livros, filmes, músicas e jogos',
           slug: 'livros-filmes-musicas-jogos',
           description:
             'Venda de produtos culturais como livros, filmes, músicas e jogos.',
-          hasMaterialFlow: true,
+          hasMaterialFlow: false,
         },
         {
           title: 'Perfumaria e cosméticos',
           slug: 'perfumaria-cosmeticos',
           description:
             'Profissionais especializados na venda de perfumes e cosméticos.',
-          hasMaterialFlow: true,
+          hasMaterialFlow: false,
         },
         {
           title: 'Alimentos, bebidas e suplementos',
           slug: 'alimentos-bebidas-suplementos',
           description:
             'Venda de alimentos, bebidas e suplementos nutricionais.',
-          hasMaterialFlow: true,
+          hasMaterialFlow: false,
         },
         {
           title: 'Bicicletas, patinetes e similares',
           slug: 'bicicletas-patinetes-similares',
           description:
             'Especialistas em vendas de bicicletas, patinetes e equipamentos similares.',
-          hasMaterialFlow: true,
+          hasMaterialFlow: false,
         },
         {
           title: 'Produtos clínicos e hospitalares',
           slug: 'produtos-clinicos-hospitalares',
           description:
             'Venda de produtos utilizados em ambientes clínicos e hospitalares.',
-          hasMaterialFlow: true,
+          hasMaterialFlow: false,
         },
         {
           title: 'Materiais de construção civil',
           slug: 'materiais-de-construcao-civil',
           description:
             'Especialistas em vendas de materiais para construção civil.',
-          hasMaterialFlow: true,
+          hasMaterialFlow: false,
         },
         {
           title: 'Materiais escolares',
           slug: 'materiais-escolares',
           description: 'Venda de produtos e materiais escolares.',
-          hasMaterialFlow: true,
+          hasMaterialFlow: false,
         },
         {
           title: 'Móveis e objetos',
           slug: 'moveis-objetos',
           description:
             'Profissionais que comercializam móveis e objetos decorativos.',
-          hasMaterialFlow: true,
+          hasMaterialFlow: false,
         },
         {
           title: 'Cama, mesa e banho',
           slug: 'cama-mesa-banho',
           description: 'Venda de produtos para cama, mesa e banho.',
-          hasMaterialFlow: true,
+          hasMaterialFlow: false,
         },
         {
           title: 'Outros',
           slug: 'outros-vendedores',
           description:
             'Outros profissionais especializados em vendas diversas.',
-          hasMaterialFlow: true,
+          hasMaterialFlow: false,
         },
       ],
     },

@@ -43,7 +43,6 @@ export class ContractService {
       Os materiais serão entrege no endereço ${ticket.whereMaterialsWillBeDelivered} no dia ${ticket.materialsDeliverySchedule}.
       ${ticket.materiaAreRefundableState !== null ? `Os materiais são reembolsáveis, e será feito da seguinte forma ${ticket.materiaAreRefundableState}` : ''}.
       Os materiais tem um valor pre determinado: ${ticket.materialsPreDeterminedValue}
-     
       `;
     }
 
