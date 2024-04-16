@@ -35,6 +35,7 @@ export class ContractService {
     });
     this.logger.log(dataFormatada);
     let materiais = ``;
+    let prompt;
 
     if (ticket.materialIsPartOfContract) {
       materiais = `O ${ticket.whoWillBuyTheMaterials === ContractParty.OWNER && ticket.ownerType === OwnerType.CUSTOMER ? 'cliente' : 'prestador de serviço'} será responsável pela compra dos materiais
@@ -44,55 +45,97 @@ export class ContractService {
       ${ticket.materiaAreRefundableState !== null ? `Os materiais são reembolsáveis, e será feito da seguinte forma ${ticket.materiaAreRefundableState}` : ''}.
       Os materiais tem um valor pre determinado: ${ticket.materialsPreDeterminedValue}
       `;
+      prompt = `
+        Crie um contrato de prestação de serviço utilizando os seguintes dados:
+    
+        *Detalhes do Contratado*:
+        - *Nome*: ${ticket.ownerType === OwnerType.SERVICE_PROVIDER ? ticket.owner.fullName : ticket.counterpartName} 
+        - *E-mail*: ${ticket.ownerType === OwnerType.SERVICE_PROVIDER ? ticket.owner.email : ticket.counterpartEmail} 
+        - *Telefone*: ${ticket.ownerType === OwnerType.SERVICE_PROVIDER ? ticket.owner.phoneNumber : ticket.counterpartPhoneNumber} 
+        - *CPF/CNPJ*:${ticket.ownerType === OwnerType.SERVICE_PROVIDER ? ticket.owner.taxpayerNumber : ticket.counterpartTaxpayerNumber} 
+        - *Endereço*:${ticket.ownerType === OwnerType.SERVICE_PROVIDER ? ticket.owner.address : ticket.counterpartAddress} 
+        
+        *Detalhes do Contratante*:
+        - *Nome*: ${ticket.ownerType === OwnerType.CUSTOMER ? ticket.owner.fullName : ticket.counterpartName} 
+        - *E-mail*: ${ticket.ownerType === OwnerType.CUSTOMER ? ticket.owner.email : ticket.counterpartEmail} 
+        - *Telefone*: ${ticket.ownerType === OwnerType.CUSTOMER ? ticket.owner.phoneNumber : ticket.counterpartPhoneNumber} 
+        - *CPF/CNPJ*:${ticket.ownerType === OwnerType.CUSTOMER ? ticket.owner.taxpayerNumber : ticket.counterpartTaxpayerNumber} 
+        - *Endereço*:${ticket.ownerType === OwnerType.CUSTOMER ? ticket.owner.address : ticket.counterpartAddress} 
+        
+        Leve em consideração que:
+        *Categoria do Serviço*: ${ticket.category}
+        *Descrição do Serviço*: ${ticket.serviceDescription}
+        
+        O início da prestação será ${ticket.serviceStartDate} e término ${ticket.serviceEndDate},
+        O o serviço será realizado no endereço ${ticket.serviceAddress},
+        O o serviço será realizado em etapas: ${ticket.serviceStepsDescription}, ${ticket.serviceWorkHoursDescription !== null ? `com horários de trabalho ${ticket.serviceWorkHoursDescription}` : ''}
+    
+        O valor total do contrato será ${ticket.paymentAmount}, e a forma de pagamento ${ticket.paymentMethod}, ${ticket.installmentCount !== null ? `será parcelado em ${ticket.installmentCount} vezes` : ''}
+        as datas de pagamento para ${ticket.paymentDueDates}.
+        ${ticket.materialIsPartOfContract ? materiais : ''}.
+        
+        Como será registrada a entrega: ${ticket.serviceDeliveryDescription}
+        
+        *Garantia*: ${ticket.serviceWarranty}, ${ticket.warrantyDescription}
+        
+        Será considerado um cancelamento ${ticket.whatIsContractCancellation}.
+        A multa em caso de atraso${ticket.deadlineFee}.
+        A multa em caso de cancelamento${ticket.cancellationFee}.
+        A multa em caso de atraso no pagamento ${ticket.paymentFee}.
+        Aqui estão detalhes as práticas exigidas para cancelamentos de contratos em andamento do seu serviço prestado, bem como, como devem ser feitas as avaliações da qualidade dos serviços prestados ${ticket.whatIsContractCancellationDetails}. 
+        
+        
+        *Foro para Resolução de Disputas*: ${ticket.judicialResolution}
+        
+        *Data do Contrato:* ${dataFormatada}
+        Observações: Este contrato não incluirá detalhes sobre endereço do contratante e contratado, nacionalidade, estado civil ou profissão. O contrato será validado pelo apertar do botão "Sim" enviado via WhatsApp número +55 (11) 91238-5500. Formate o contrato usando * para trechos em negrito e ** para trechos em itálico. Não inclua espaços para preenchimento manual da assinatura.    
+        `;
+    }else{
+      prompt = `
+        Crie um contrato para venda utilizando os seguintes dados:
+    
+        *Detalhes do Contratado*:
+        - *Nome*: ${ticket.ownerType === OwnerType.SERVICE_PROVIDER ? ticket.owner.fullName : ticket.counterpartName} 
+        - *E-mail*: ${ticket.ownerType === OwnerType.SERVICE_PROVIDER ? ticket.owner.email : ticket.counterpartEmail} 
+        - *Telefone*: ${ticket.ownerType === OwnerType.SERVICE_PROVIDER ? ticket.owner.phoneNumber : ticket.counterpartPhoneNumber} 
+        - *CPF/CNPJ*:${ticket.ownerType === OwnerType.SERVICE_PROVIDER ? ticket.owner.taxpayerNumber : ticket.counterpartTaxpayerNumber} 
+        - *Endereço*:${ticket.ownerType === OwnerType.SERVICE_PROVIDER ? ticket.owner.address : ticket.counterpartAddress} 
+        
+        *Detalhes do Contratante*:
+        - *Nome*: ${ticket.ownerType === OwnerType.CUSTOMER ? ticket.owner.fullName : ticket.counterpartName} 
+        - *E-mail*: ${ticket.ownerType === OwnerType.CUSTOMER ? ticket.owner.email : ticket.counterpartEmail} 
+        - *Telefone*: ${ticket.ownerType === OwnerType.CUSTOMER ? ticket.owner.phoneNumber : ticket.counterpartPhoneNumber} 
+        - *CPF/CNPJ*:${ticket.ownerType === OwnerType.CUSTOMER ? ticket.owner.taxpayerNumber : ticket.counterpartTaxpayerNumber} 
+        - *Endereço*:${ticket.ownerType === OwnerType.CUSTOMER ? ticket.owner.address : ticket.counterpartAddress} 
+        
+        Leve em consideração que:
+        *Categoria do Serviço*: ${ticket.category}
+        *Descrição do Serviço*: ${ticket.serviceDescription}
+        
+        A data da compra será ${ticket.serviceStartDate} e a entrega do produto ${ticket.serviceEndDate},
+        O endereço da compra ${ticket.serviceAddress},
+        O serviço será realizado em etapas: ${ticket.serviceStepsDescription}, ${ticket.serviceWorkHoursDescription !== null ? `com horários de ${ticket.serviceWorkHoursDescription}` : ''}
+    
+        O valor total do contrato será ${ticket.paymentAmount}, e a forma de pagamento ${ticket.paymentMethod}, ${ticket.installmentCount !== null ? `será parcelado em ${ticket.installmentCount} vezes` : ''}
+        as datas de pagamento para ${ticket.paymentDueDates}.
+        ${ticket.materialIsPartOfContract ? materiais : ''}.
+        
+        Como será registrada a entrega: ${ticket.serviceDeliveryDescription}
+        
+        *Garantia*: ${ticket.serviceWarranty}, ${ticket.warrantyDescription}
+        
+        Será considerado um cancelamento ${ticket.whatIsContractCancellation}.
+        A multa em caso de atraso${ticket.deadlineFee}.
+        A multa em caso de cancelamento${ticket.cancellationFee}.
+        A multa em caso de atraso no pagamento ${ticket.paymentFee}.
+        Aqui estão detalhes as práticas exigidas para cancelamentos de contratos em andamento do seu serviço prestado, bem como, como devem ser feitas as avaliações da qualidade dos serviços prestados ${ticket.whatIsContractCancellationDetails}. 
+        
+        *Foro para Resolução de Disputas*: ${ticket.judicialResolution}
+        
+        *Data do Contrato:* ${dataFormatada}
+        Observações: Este contrato não incluirá detalhes sobre endereço do contratante e contratado, nacionalidade, estado civil ou profissão. O contrato será validado pelo apertar do botão "Sim" enviado via WhatsApp número +55 (11) 91238-5500. Formate o contrato usando * para trechos em negrito e ** para trechos em itálico. Não inclua espaços para preenchimento manual da assinatura.    
+        `;
     }
-
-    const prompt = `
-    Crie um contrato de prestação de serviço utilizando os seguintes dados:
-
-    *Detalhes do Contratado*:
-    - *Nome*: ${ticket.ownerType === OwnerType.SERVICE_PROVIDER ? ticket.owner.fullName : ticket.counterpartName} 
-    - *E-mail*: ${ticket.ownerType === OwnerType.SERVICE_PROVIDER ? ticket.owner.email : ticket.counterpartEmail} 
-    - *Telefone*: ${ticket.ownerType === OwnerType.SERVICE_PROVIDER ? ticket.owner.phoneNumber : ticket.counterpartPhoneNumber} 
-    - *CPF/CNPJ*:${ticket.ownerType === OwnerType.SERVICE_PROVIDER ? ticket.owner.taxpayerNumber : ticket.counterpartTaxpayerNumber} 
-    - *Endereço*:${ticket.ownerType === OwnerType.SERVICE_PROVIDER ? ticket.owner.address : ticket.counterpartAddress} 
-    
-    *Detalhes do Contratante*:
-    - *Nome*: ${ticket.ownerType === OwnerType.CUSTOMER ? ticket.owner.fullName : ticket.counterpartName} 
-    - *E-mail*: ${ticket.ownerType === OwnerType.CUSTOMER ? ticket.owner.email : ticket.counterpartEmail} 
-    - *Telefone*: ${ticket.ownerType === OwnerType.CUSTOMER ? ticket.owner.phoneNumber : ticket.counterpartPhoneNumber} 
-    - *CPF/CNPJ*:${ticket.ownerType === OwnerType.CUSTOMER ? ticket.owner.taxpayerNumber : ticket.counterpartTaxpayerNumber} 
-    - *Endereço*:${ticket.ownerType === OwnerType.CUSTOMER ? ticket.owner.address : ticket.counterpartAddress} 
-    
-    Leve em consideração que:
-    *Categoria do Serviço*: ${ticket.category}
-    *Descrição do Serviço*: ${ticket.serviceDescription}
-    
-    O início da prestação será ${ticket.serviceStartDate} e término ${ticket.serviceEndDate},
-    O o serviço será realizado no endereço ${ticket.serviceAddress},
-    O o serviço será realizado em etapas: ${ticket.serviceStepsDescription}, ${ticket.serviceWorkHoursDescription !== null ? `com horários de trabalho ${ticket.serviceWorkHoursDescription}` : ''}
-
-    O valor total do contrato será ${ticket.paymentAmount}, e a forma de pagamento ${ticket.paymentMethod}, ${ticket.installmentCount !== null ? `será parcelado em ${ticket.installmentCount} vezes` : ''}
-    as datas de pagamento para ${ticket.paymentDueDates}.
-    ${ticket.materialIsPartOfContract ? materiais : ''}.
-    
-    Como será registrada a entrega: ${ticket.serviceDeliveryDescription}
-    
-    *Garantia*: ${ticket.serviceWarranty}, ${ticket.warrantyDescription}
-    
-   
-    
-    Será considerado um cancelamento ${ticket.whatIsContractCancellation}.
-    A multa em caso de atraso${ticket.deadlineFee}.
-    A multa em caso de cancelamento${ticket.cancellationFee}.
-    A multa em caso de atraso no pagamento ${ticket.paymentFee}.
-    Aqui estão detalhes as práticas exigidas para cancelamentos de contratos em andamento do seu serviço prestado, bem como, como devem ser feitas as avaliações da qualidade dos serviços prestados ${ticket.whatIsContractCancellationDetails}. 
-    
-    
-    *Foro para Resolução de Disputas*: ${ticket.judicialResolution}
-    
-    *Data do Contrato:* ${dataFormatada}
-    Observações: Este contrato não incluirá detalhes sobre endereço do contratante e contratado, nacionalidade, estado civil ou profissão. O contrato será validado pelo apertar do botão "Sim" enviado via WhatsApp número +55 (11) 91238-5500. Formate o contrato usando * para trechos em negrito e ** para trechos em itálico. Não inclua espaços para preenchimento manual da assinatura.    
-    `;
 
     const response = await this.openai.chat.completions.create({
       model: 'gpt-4-turbo-preview',
@@ -100,7 +143,7 @@ export class ContractService {
         {
           role: 'system',
           content:
-            'Você é um advogado especialista na crianção de contratos de prestação de serviços. com base nas informações que serão passadas irá criar um contrato de prestação de serviço, com um texto claro, consistente e objetivo.',
+            'Você é um advogado especialista na crianção de contratos, com base nas informações que serão passadas irá criar um contrato, com um texto claro, consistente e objetivo, caso não tenha a informação ou ela for NULL, por favor ignore e não insira no contrato.',
         },
         { role: 'user', content: prompt },
       ],
@@ -146,7 +189,7 @@ export class ContractService {
         {
           role: 'system',
           content:
-            'Você é um advogado especialista na crianção de contratos de prestação de serviços',
+            'Você é um advogado especialista na crianção de contratos',
         },
         { role: 'user', content: prompt },
       ],
