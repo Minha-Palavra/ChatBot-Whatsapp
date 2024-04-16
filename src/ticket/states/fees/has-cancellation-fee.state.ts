@@ -6,7 +6,7 @@ import { formatPhoneNumber } from '../../../shared/utils';
 import { TicketState } from '../../entities/ticket-state.enum';
 import { UserEntity } from '../../../user/entities/user.entity';
 import { CancellationFeeState } from './cancellation-fee.state';
-import { WhatIsContractCancellationState } from './what-is-contract-cancellation.state';
+import { WarrantyTypeState } from '../warranty/warranty-type-state';
 
 export class HasCancellationFeeState extends MessageState {
   public prefix = 'HAS_CANCELLATION_FEE';
@@ -111,7 +111,7 @@ export class HasCancellationFeeState extends MessageState {
       }
 
       if (selectedOption === `${this.prefix}-NO`) {
-        this.nextState = new WhatIsContractCancellationState();
+        this.nextState = new WarrantyTypeState();
         this.nextState.whatsAppService = this.whatsAppService;
         this.nextState.logger = this.logger;
         this.nextState.userService = this.userService;
