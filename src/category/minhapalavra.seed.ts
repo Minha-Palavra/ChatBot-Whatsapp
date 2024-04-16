@@ -16,66 +16,79 @@ export const minhaPalavraSeedData: MinhaPalavraSeedType = {
       title: 'Construção Civil',
       slug: 'construcao-civil',
       description: 'Faça contratos personalizados.',
+      hasMaterialFlow: true,
       children: [
         {
           title: 'Mestre de Obras',
           slug: 'mestre-de-obras',
           description: 'Profissional responsável pela obra.',
+          hasMaterialFlow: true,
         },
         {
           title: 'Carpinteiro',
           slug: 'carpinteiro',
           description: 'Profissional que trabalha com madeira.',
+          hasMaterialFlow: true,
         },
         {
           title: 'Encarregado',
           slug: 'encarregado',
           description: 'Profissional responsável pela equipe.',
+          hasMaterialFlow: true,
         },
         {
           title: 'Pedreiro',
           slug: 'pedreiro',
           description: 'Profissional que trabalha com alvenaria.',
+          hasMaterialFlow: true,
         },
         {
           title: 'Armador',
           slug: 'armador',
           description: 'Profissional que trabalha com ferro.',
+          hasMaterialFlow: true,
         },
         {
           title: 'Serralheiro',
           slug: 'serralheiro',
           description: 'Profissional que trabalha com metal.',
+          hasMaterialFlow: true,
         },
         {
           title: 'Servente',
           slug: 'servente',
           description: 'Profissional que auxilia na obra.',
+          hasMaterialFlow: true,
         },
         {
           title: 'Encanador',
           slug: 'encanador',
           description: 'Profissional que trabalha com tubulações.',
+          hasMaterialFlow: true,
         },
         {
           title: 'Eletricista',
           slug: 'eletricista',
           description: 'Profissional que trabalha com instalações elétricas.',
+          hasMaterialFlow: true,
         },
         {
           title: 'Pintor',
           slug: 'pintor',
           description: 'Profissional que trabalha com pintura.',
+          hasMaterialFlow: true,
         },
         {
           title: 'Gesseiro',
           slug: 'gesseiro',
           description: 'Profissional que trabalha com gesso.',
+          hasMaterialFlow: true,
         },
         {
           title: 'Outros',
           slug: 'outros',
           description: 'Outros profissionais da construção civil.',
+          hasMaterialFlow: true,
         },
       ],
     },
@@ -120,13 +133,6 @@ export const minhaPalavraSeedData: MinhaPalavraSeedType = {
           hasMaterialFlow: false,
         },
         {
-          title: 'Bicicletas, patinetes e similares',
-          slug: 'bicicletas-patinetes-similares',
-          description:
-            'Especialistas em vendas de bicicletas, patinetes e equipamentos similares.',
-          hasMaterialFlow: false,
-        },
-        {
           title: 'Produtos clínicos e hospitalares',
           slug: 'produtos-clinicos-hospitalares',
           description:
@@ -138,25 +144,6 @@ export const minhaPalavraSeedData: MinhaPalavraSeedType = {
           slug: 'materiais-de-construcao-civil',
           description:
             'Especialistas em vendas de materiais para construção civil.',
-          hasMaterialFlow: false,
-        },
-        {
-          title: 'Materiais escolares',
-          slug: 'materiais-escolares',
-          description: 'Venda de produtos e materiais escolares.',
-          hasMaterialFlow: false,
-        },
-        {
-          title: 'Móveis e objetos',
-          slug: 'moveis-objetos',
-          description:
-            'Profissionais que comercializam móveis e objetos decorativos.',
-          hasMaterialFlow: false,
-        },
-        {
-          title: 'Cama, mesa e banho',
-          slug: 'cama-mesa-banho',
-          description: 'Venda de produtos para cama, mesa e banho.',
           hasMaterialFlow: false,
         },
         {
