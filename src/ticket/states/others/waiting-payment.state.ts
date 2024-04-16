@@ -1,12 +1,11 @@
-import { ValueObject } from 'whatsapp/build/types/webhooks';
 import { MessageState } from '../../../whatsapp/states/message-state';
 import { UserEntity } from '../../../user/entities/user.entity';
 import { TicketEntity } from '../../entities/ticket.entity';
-import { formatPhoneNumber } from '../../../shared/utils';
 import { TicketState } from '../../entities/ticket-state.enum';
 import { PaidTicketState } from './paid-ticket.state';
-import { messages } from '../../../whatsapp/entities/messages';
 import { WasPaidState } from './was-paid.state.';
+import { ValueObject } from 'whatsapp/build/types/webhooks';
+import { formatPhoneNumber } from '../../../shared/utils';
 
 export class WaitingPaymentState extends MessageState {
   public prefix = 'WAITING_PAYMENT';
@@ -69,66 +68,6 @@ export class WaitingPaymentState extends MessageState {
       this.whatsAppService.cancelTicket(phoneNumber, ticket);
       return;
     }
-  }
-
-  private async processState(
-    ticket: TicketEntity,
-    phoneNumber: string,
-    user: UserEntity,
-  ) {
-    ticket = await this.whatsAppService.ticketService.findOne({
-      where: {
-        id: ticket.id,
-      },
-      order: { updatedAt: 'DESC' },
-      relations: { owner: true, category: true, paymentData: true },
-    });
-
-    if (!ticket.paymentData) {
-      this.nextState = new PaidTicketState();
-      this.nextState.whatsAppService = this.whatsAppService;
-      this.nextState.logger = this.logger;
-      this.nextState.userService = this.userService;
-
-      // go to the next state.
-      await this.toNextState(phoneNumber, user, ticket);
-      return;
-    }
-
-    const data = await this.whatsAppService.paymentService.checkPaymentStatus(
-      ticket.paymentData.transaction_id,
-    );
-
-    if (data.status === 'paid') {
-      this.nextState = new WasPaidState();
-      this.nextState.whatsAppService = this.whatsAppService;
-      this.nextState.logger = this.logger;
-      this.nextState.userService = this.userService;
-      await this.toNextState(phoneNumber, user, ticket);
-      return;
-    }
-    const dueDate = new Date(ticket.paymentData.dueDate);
-    const now = new Date();
-
-    const difference = Math.abs(now.getTime() - dueDate.getTime());
-    const hours = difference / (1000 * 60 * 60);
-
-    if (hours > 24) {
-      // MANTER MENSAGEM DE AGUARDANDO PAGAMENTO.
-      this.whatsAppService.cancelTicket(phoneNumber, ticket);
-      return;
-    }
-
-    // MANTER MENSAGEM DE AGUARDANDO PAGAMENTO.
-    await this.whatsAppService.sendMessage(
-      phoneNumber,
-      messages.WAITING_PAYMENT(),
-    );
-
-    await this.whatsAppService.sendMessage(
-      phoneNumber,
-      `${ticket.paymentData.emv}`,
-    );
   }
 
   public async processMessages(value: ValueObject): Promise<void> {

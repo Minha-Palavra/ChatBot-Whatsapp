@@ -7,6 +7,7 @@ import { messages } from '../../../whatsapp/entities/messages';
 import { prefix } from '../../../whatsapp/entities/prefix';
 import { UserEntity } from '../../../user/entities/user.entity';
 import { MaterialsArePartOfContractState } from '../material/materials-are-part-of-contract.state';
+import { HasPaymentFeeState } from '../fees/has-payment-fee-state';
 
 export class PaymentDueDatesState extends MessageState {
   public prefix = 'PAYMENT_DUE_DATES';
@@ -139,13 +140,23 @@ export class PaymentDueDatesState extends MessageState {
       if (selectedOption === `${prefix.SERVICE_PAYMENT_DATES}-NO`) {
         await this.onStateBegin(phoneNumber, user, ticket);
       } else if (selectedOption === `${prefix.SERVICE_PAYMENT_DATES}-YES`) {
-        this.nextState = new MaterialsArePartOfContractState();
-        this.nextState.whatsAppService = this.whatsAppService;
-        this.nextState.logger = this.logger;
-        this.nextState.userService = this.userService;
+        if (ticket.category.hasMaterialFlow) {
+          this.nextState = new MaterialsArePartOfContractState();
+          this.nextState.whatsAppService = this.whatsAppService;
+          this.nextState.logger = this.logger;
+          this.nextState.userService = this.userService;
 
-        // go to the next state.
-        await this.toNextState(phoneNumber, user, ticket);
+          // go to the next state.
+          await this.toNextState(phoneNumber, user, ticket);
+        } else {
+          this.nextState = new HasPaymentFeeState();
+          this.nextState.whatsAppService = this.whatsAppService;
+          this.nextState.logger = this.logger;
+          this.nextState.userService = this.userService;
+
+          // go to the next state.
+          await this.toNextState(phoneNumber, user, ticket);
+        }
       } else {
         await this.whatsAppService.sendMessage(
           phoneNumber,

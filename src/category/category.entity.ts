@@ -25,6 +25,10 @@ export class CategoryEntity extends AbstractEntity {
   @Column({ nullable: true })
   description: string;
 
+  @ApiProperty()
+  @Column({ nullable: true })
+  hasMaterialFlow: boolean;
+
   @ApiProperty({ type: () => CategoryEntity })
   @ManyToMany(() => CategoryEntity, (category) => category.children)
   @JoinTable()
