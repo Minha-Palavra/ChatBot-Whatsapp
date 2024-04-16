@@ -29,7 +29,7 @@ export const messages = {
     return `O seu nome completo é *${name}?*`;
   },
   USER_TAXPAYER_NUMBER_REQUEST: () => {
-    return 'Qual é o seu CPF ou CNPJ?';
+    return 'Qual é o seu CPF ou CNPJ? Exemplo: 123.456.789-10';
   },
   USER_TAXPAYER_NUMBER_CONFIRMATION_REQUEST: (taxpayerNumber: string) => {
     return `O ${taxpayerNumber.length === 14 ? 'CPF' : 'CNPJ'} *${taxpayerNumber}*, está correto?`;
@@ -41,7 +41,7 @@ export const messages = {
     return `O seu e-mail é *${email}*?`;
   },
   USER_PHONE_NUMBER_REQUEST: () => {
-    return 'Agora precisaremos do seu número de telefone. Por favor, digite o seu número de telefone.';
+    return 'Agora precisaremos do seu número de telefone. Por favor, digite o seu número de telefone com DDD.';
   },
   USER_PHONE_NUMBER_CONFIRMATION_REQUEST: (phoneNumber: string) => {
     return `O número *${phoneNumber}*, está correto?`;
@@ -72,7 +72,7 @@ export const messages = {
     return `O nome do ${owner === OwnerType.CUSTOMER ? 'contratado' : 'contratante'}, *${counterpartName}* está correto?`;
   },
   COUNTERPART_TAXPAYER_NUMBER_REQUEST: (owner: OwnerType) => {
-    return `Qual é o CPF ou CNPJ do ${owner === OwnerType.CUSTOMER ? 'contratado' : 'contratante'}?`;
+    return `Qual é o CPF ou CNPJ do ${owner === OwnerType.CUSTOMER ? 'contratado' : 'contratante'}? Exemplo: 123.456.789-10`;
   },
   COUNTERPART_TAXPAYER_NUMBER_CONFIRMATION_REQUEST: (
     owner: OwnerType,
@@ -96,7 +96,7 @@ export const messages = {
     return `O e-mail *${email}* do ${owner === OwnerType.CUSTOMER ? 'contratado' : 'contratante'}, está correto?`;
   },
   COUNTERPART_ADDRESS_REQUEST: (owner: OwnerType) => {
-    return `Qual é o endereço do ${owner === OwnerType.CUSTOMER ? 'contratado' : 'contratante'}?`;
+    return `Qual é o endereço do ${owner === OwnerType.CUSTOMER ? 'contratado' : 'contratante'}? Exemplo: Rua/Número/Cidade/Estado.`;
   },
   COUNTERPART_ADDRESS_CONFIRMATION_REQUEST: (
     owner: OwnerType,
@@ -107,7 +107,7 @@ export const messages = {
   // TODO:
   SERVICE_CATEGORY_REQUEST: () => 'Qual é a categoria do serviço?',
   SERVICE_ADDRESS_REQUEST: () => {
-    return 'Qual é o endereço para a realização do serviço ou atividade comercial?';
+    return 'Qual é o endereço para a realização do serviço ou atividade comercial? Exemplo: Rua/Número/Cidade/Estado.';
   },
   SERVICE_ADDRESS_CONFIRMATION_REQUEST: (serviceAddress: string) => {
     return `O endereço, ${serviceAddress}, está correto?`;
@@ -119,12 +119,12 @@ export const messages = {
     return 'A descrição está correta?';
   },
   SERVICE_START_DATE_REQUEST: () =>
-    'Quando será iniciado o serviço ou a compra do produto?',
+    'Quando será iniciado o serviço ou a compra do produto? Exemplo: 20/04/24',
   SERVICE_START_DATE_CONFIRMATION_REQUEST: (serviceStartDate: string) => {
     return `A data ${serviceStartDate}, está correta?`;
   },
   SERVICE_END_DATE_REQUEST: () => {
-    return 'Quando será concluído o serviço ou a entrega do produto?';
+    return 'Quando será concluído o serviço ou a entrega do produto? Exemplo: 21/04/24';
   },
   SERVICE_END_DATE_CONFIRMATION_REQUEST: (serviceStartDate: string) => {
     return `A data ${serviceStartDate}, está correta?`;
@@ -142,16 +142,16 @@ export const messages = {
     return `As etapas do processo estão corretas?`;
   },
   SERVICE_WORK_HOURS_DESCRIPTION_REQUEST: () => {
-    return `Descreva os horários`;
+    return `Descreva os horários. Exemplo: 09:00`;
   },
   SERVICE_WORK_HOURS_DESCRIPTION_CONFIRMATION_REQUEST: () => {
     return `Os horários estão corretos?`;
   },
   //
-  PAYMENT_AMOUNT_REQUEST: () => 'Qual o valor total do pagamento?',
+  PAYMENT_AMOUNT_REQUEST: () => 'Qual o valor total do pagamento? Exemplo: R$ 10,00',
   PAYMENT_AMOUNT_CONFIRMATION_REQUEST: (servicePaymentAmount: string) =>
     `O valor total ${servicePaymentAmount}, está correto?`,
-  PAYMENT_DUE_DATES_REQUEST: () => 'Quais são as datas de pagamento?',
+  PAYMENT_DUE_DATES_REQUEST: () => 'Quais são as datas de pagamento?  Exemplo: 20/04/24',
   SERVICE_PAYMENT_DATES_CONFIRMATION_REQUEST: (servicePaymentDates: string) =>
     `As datas de pagamento ${servicePaymentDates}, estão corretas?`,
 
@@ -181,7 +181,7 @@ export const messages = {
   ) =>
     `A forma de pagamento é ${servicePaymentMethodDescription}, está correto?`,
   OTHER_PAYMENT_METHOD_REQUEST: () => `Descreva a forma de pagamento`,
-  MATERIALS_DELIVERY_SCHEDULE_REQUEST: () => `Qual o prazo de entrega?`,
+  MATERIALS_DELIVERY_SCHEDULE_REQUEST: () => `Qual o prazo de entrega? Exemplo: 21/04/24`,
   MATERIALS_DELIVERY_SCHEDULE_CONFIRMATION_REQUEST: (
     serviceMaterialDate: string,
   ) => `O prazo de entrega ${serviceMaterialDate}, está correto?`,
@@ -218,7 +218,7 @@ export const messages = {
     return `O valor pré determinado dos materiais, está correto?`;
   },
   MATERIALS_HAVE_PRE_DETERMINED_VALUE_REQUEST: () => {
-    return `Qual é o valor pré determinado?`;
+    return `Qual é o valor pré determinado?  Exemplo: R$ 10,00`;
   },
   MATERIALS_WHO_WILL_PAY_REQUEST: () => {
     return `Quem irá pagar pelo material?`;
