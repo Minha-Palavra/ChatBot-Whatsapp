@@ -76,6 +76,7 @@ export class CategoryService {
       title: seed.title,
       slug: seed.slug,
       description: seed.description,
+      hasMaterialFlow: seed.hasMaterialFlow,
       parent: parent,
     });
 
