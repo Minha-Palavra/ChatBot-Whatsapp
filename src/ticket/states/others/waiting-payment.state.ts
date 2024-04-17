@@ -19,6 +19,7 @@ export class WaitingPaymentState extends MessageState {
       ...ticket,
       state: TicketState.WAITING_PAYMENT,
     });
+    await this.processState(ticket, phoneNumber, user);
   }
 
   private async processState(

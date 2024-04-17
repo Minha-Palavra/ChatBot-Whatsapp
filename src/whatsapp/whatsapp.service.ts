@@ -493,6 +493,7 @@ export class whatsAppService {
 
   @OnEvent('payment.success', { async: true })
   public async handlePixPaid(payment: Payment) {
+    console.log('CALABRESO PIX PAGO');
     const ticket = await this.ticketService.findOne({
       where: { id: payment.ticket.id },
       relations: { owner: true, category: true, paymentData: true },
