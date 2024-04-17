@@ -11,6 +11,7 @@ export const minhaPalavraSeedData: MinhaPalavraSeedType = {
   slug: 'root',
   description:
     'Navegue por nossas categorias e escolha aquela que melhor representa o serviço que você deseja.',
+  hasMaterialFlow: true,
   children: [
     {
       title: 'Construção Civil',

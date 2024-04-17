@@ -140,7 +140,7 @@ export class PaymentDueDatesState extends MessageState {
       if (selectedOption === `${prefix.SERVICE_PAYMENT_DATES}-NO`) {
         await this.onStateBegin(phoneNumber, user, ticket);
       } else if (selectedOption === `${prefix.SERVICE_PAYMENT_DATES}-YES`) {
-        if (ticket.category.hasMaterialFlow) {
+        if (ticket.category.hasMaterialFlow === true) {
           this.nextState = new MaterialsArePartOfContractState();
           this.nextState.whatsAppService = this.whatsAppService;
           this.nextState.logger = this.logger;
