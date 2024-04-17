@@ -431,9 +431,7 @@ export class whatsAppService {
       this.logger.error('deu erro no sendPaymentInCashOptions.');
       this.logger.log(messageSent.responseBodyToJSON());
       //
-      setTimeout(() =>
-        this.sendContractPartyOptions(phoneNumber, message, prefix),
-      );
+      setTimeout(() => this.sendWarrantyOptions(phoneNumber, message, prefix));
     }
 
     this.logger.log(
