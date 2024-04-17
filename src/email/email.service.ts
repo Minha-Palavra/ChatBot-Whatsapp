@@ -2,8 +2,24 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as sendGridEmail from '@sendgrid/mail';
 
-const EMAIL_TEMPLATE = (contract: string) => {
-  return `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+@Injectable()
+export class EmailService {
+  private readonly logger = new Logger(EmailService.name);
+
+  constructor(private configService: ConfigService) {
+    sendGridEmail.setApiKey(this.configService.get('SENDGRID_API_KEY'));
+  }
+
+  private EMAIL_TEMPLATE(contract: string): string {
+    // Transformando para html
+    const htmlContract = contract
+      .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')  // Negrito
+      .replace(/\n/g, '<br>')                 // Quebras de linha
+      .replace(/<br>\*/g, '<br><i>')          //  itálico
+      .replace(/\*<br>/g, '</i><br>')         // Finaliza itálico
+      .replace(/<\/i>\./g, '.</i>');          // Ajusta ponto final em itálico
+
+    return `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html data-editor-version="2" class="sg-campaigns" xmlns="http://www.w3.org/1999/xhtml">
     <head>
       <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -158,13 +174,13 @@ const EMAIL_TEMPLATE = (contract: string) => {
       <tr>
         <td style="padding:18px 0px 18px 0px; line-height:22px; text-align:inherit;" height="100%" valign="top" bgcolor="" role="module-content"><div><div style="font-family: inherit; text-align: inherit">Olá! Tudo bem?</div>
 <div style="font-family: inherit; text-align: inherit">Você está recebendo o contrato criado pela Minha Palavra!</div>
-<div style="font-family: inherit; text-align: inherit"><strong>Abaixo o contrato:</strong></div><div></div></div></td>
+<div style="font-family: inherit; text-align: inherit"><strong>Segue o contrato assinado por ambas as partes:</strong></div><div></div></div></td>
       </tr>
     </tbody>
   </table><table class="module" role="module" data-type="text" border="0" cellpadding="0" cellspacing="0" width="100%" style="table-layout: fixed;" data-muid="dcfab329-0f35-4460-ac8e-99fd0ba2bfde" data-mc-module-version="2019-10-22">
     <tbody>
       <tr>
-        <td style="padding:18px 0px 18px 0px; line-height:22px; text-align:inherit;" height="100%" valign="top" bgcolor="" role="module-content"><div><div style="font-family: inherit; text-align: inherit">${contract}</div><div></div></div></td>
+        <td style="padding:18px 0px 18px 0px; line-height:22px; text-align:inherit;" height="100%" valign="top" bgcolor="" role="module-content"><div><div style="font-family: inherit; text-align: inherit">${htmlContract}</div><div></div></div></td>
       </tr>
     </tbody>
   </table><table class="module" role="module" data-type="divider" border="0" cellpadding="0" cellspacing="0" width="100%" style="table-layout: fixed;" data-muid="88c2ed76-b166-441a-8888-273f59c4d33e">
@@ -210,14 +226,6 @@ const EMAIL_TEMPLATE = (contract: string) => {
       </center>
     </body>
   </html>`;
-};
-
-@Injectable()
-export class EmailService {
-  private readonly logger = new Logger(EmailService.name);
-
-  constructor(private configService: ConfigService) {
-    sendGridEmail.setApiKey(this.configService.get('SENDGRID_API_KEY'));
   }
 
   public async send(data: {
@@ -227,22 +235,29 @@ export class EmailService {
     text: string;
     html: string;
   }): Promise<void> {
-    await sendGridEmail.send({
-      to: data.to,
-      from: data.from,
-      subject: data.subject,
-      text: data.text,
-      html: data.html,
-    });
+    try {
+      await sendGridEmail.send({
+        to: data.to,
+        from: data.from,
+        subject: data.subject,
+        text: data.text,
+        html: data.html,
+      });
+      this.logger.log('Email enviado com sucesso');
+    } catch (error) {
+      this.logger.error('Erro envio de email', error);
+      throw error;
+    }
   }
 
   public async sendContract(contract: string, to: string): Promise<void> {
+    const formattedHtml = this.EMAIL_TEMPLATE(contract);  // Formatando o contrato
     await this.send({
       to,
       from: this.configService.get('EMAIL_FROM'),
       subject: 'Contrato Minha Palavra',
-      text: 'Contrato Minha Palavra',
-      html: EMAIL_TEMPLATE(contract),
+      text: 'Contrato Minha Palavra.',
+      html: formattedHtml,  // HTML formatado
     });
   }
 }
