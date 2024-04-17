@@ -15,6 +15,7 @@ import { ContractModule } from './contract/contract.module';
 import { ConversationModule } from './conversation/conversation.module';
 import { AgreementModule } from './agreement/agreement.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { EmailModule } from './email/email.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     ContractModule,
     ConversationModule,
     AgreementModule,
+    EmailModule,
   ],
   controllers: [AppController],
   providers: [],

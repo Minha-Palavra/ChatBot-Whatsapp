@@ -28,9 +28,29 @@ export class ContractWasCompletedState extends MessageState {
       messages.CONTRACT_WAS_SIGNED(),
     );
 
+    await this.whatsAppService.emailService.sendContract(
+      ticket.contract,
+      ticket.owner.email,
+    );
+
     await this.whatsAppService.sendMessage(
       ticket.owner.phoneNumber,
       messages.CONTRACT_WAS_SIGNED(),
+    );
+
+    await this.whatsAppService.emailService.sendContract(
+      ticket.contract,
+      ticket.counterpartEmail,
+    );
+
+    await this.whatsAppService.sendMessage(
+      ticket.counterpartPhoneNumber,
+      `O contrato foi enviado para os emails de ambos os envolvidos.`,
+    );
+
+    await this.whatsAppService.sendMessage(
+      ticket.owner.phoneNumber,
+      `O contrato foi enviado para os emails de ambos os envolvidos.`,
     );
   }
 

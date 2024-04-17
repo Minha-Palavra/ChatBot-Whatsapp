@@ -34,6 +34,7 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { UserEntity } from '../user/entities/user.entity';
 import { PaymentService } from '../payment/payment.service';
 import { Payment } from '../payment/entities/payment.entity';
+import { EmailService } from '../email/email.service';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const WhatsApp = require('whatsapp');
@@ -53,6 +54,7 @@ export class whatsAppService {
     public paymentService: PaymentService,
     public ticketService: TicketService,
     public userService: UserService,
+    public emailService: EmailService,
   ) {}
 
   public async checkWebhookMinimumRequirements(body: WebhookObject) {

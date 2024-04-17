@@ -8,6 +8,7 @@ import { whatsAppService } from './whatsapp.service';
 import { CategoryModule } from '../category/category.module';
 import { ContractModule } from '../contract/contract.module';
 import { PaymentModule } from '../payment/payment.module';
+import { EmailModule } from '../email/email.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { PaymentModule } from '../payment/payment.module';
     UserModule,
     ContractModule,
     PaymentModule,
+    EmailModule,
   ],
   controllers: [WhatsappController],
   providers: [whatsAppService],
