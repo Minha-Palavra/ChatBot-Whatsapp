@@ -96,7 +96,7 @@ export class PaymentService {
       transaction_id: notificationData.transaction_id,
       notification_id: notificationData.notification_id,
     };
-
+    console.warn(`CALABRESO: ${notificationData}`);
     try {
       const response = await lastValueFrom(
         this.httpService.post(statusCheckUrl, params, {
