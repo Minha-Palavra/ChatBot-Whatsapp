@@ -493,15 +493,23 @@ export class whatsAppService {
 
   @OnEvent('payment.success', { async: true })
   public async handlePixPaid(payment: Payment) {
+    console.log('CALABRESO PIX PAGO');
     const ticket = await this.ticketService.findOne({
       where: { id: payment.ticket.id },
       relations: { owner: true, category: true, paymentData: true },
     });
-    const state = getTicketStateProcessor[ticket.state];
-    state.whatsAppService = this;
-    state.logger = this.logger;
-    state.userService = this.userService;
-    await state.onStateBegin(ticket.owner.phoneNumber, ticket.owner, ticket);
+
+    if (!ticket.confirmedPayment) {
+      await this.ticketService.save({
+        ...ticket,
+        confirmedPayment: true,
+      });
+      const state = getTicketStateProcessor[ticket.state];
+      state.whatsAppService = this;
+      state.logger = this.logger;
+      state.userService = this.userService;
+      await state.onStateBegin(ticket.owner.phoneNumber, ticket.owner, ticket);
+    }
   }
 
   public async cancelTicket(phoneNumber: string, ticket: TicketEntity) {

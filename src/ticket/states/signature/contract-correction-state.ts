@@ -24,12 +24,14 @@ export class ContractCorrectionState extends MessageState {
       awaitingResponseFrom: ContractParty.OWNER,
     });
 
-    await this.whatsAppService.sendMessage(
-      ticket.owner.phoneNumber,
-      messages.CONTRACT_REFUSAL_REASON_REQUEST(
-        ticket.contractHasRejectedByCounterpartDescription,
-      ),
-    );
+    if (ticket.contractHasRejectedByCounterpartDescription) {
+      await this.whatsAppService.sendMessage(
+        ticket.owner.phoneNumber,
+        messages.CONTRACT_REFUSAL_REASON_REQUEST(
+          ticket.contractHasRejectedByCounterpartDescription,
+        ),
+      );
+    }
     //
     await this.whatsAppService.sendMessage(
       ticket.owner.phoneNumber,
