@@ -254,7 +254,7 @@ export class EmailService {
     const formattedHtml = this.EMAIL_TEMPLATE(contract);  // Formatando o contrato
     await this.send({
       to,
-      from: this.configService.get('EMAIL_FROM'),
+      from: `"Minha Palavra" <${this.configService.get('EMAIL_FROM')}>`,
       subject: 'Contrato Minha Palavra',
       text: 'Contrato Minha Palavra.',
       html: formattedHtml,  // HTML formatado
