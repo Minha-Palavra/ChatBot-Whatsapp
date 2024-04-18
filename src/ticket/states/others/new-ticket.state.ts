@@ -118,7 +118,7 @@ export class NewTicketState extends MessageState {
         this.nextState.logger = this.logger;
         this.nextState.userService = this.userService;
 
-        // go to the next state.
+        // go to the next state. 
         await this.toNextState(phoneNumber, user, ticket);
       }
     }
