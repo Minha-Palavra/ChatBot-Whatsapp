@@ -60,49 +60,49 @@ export const messages = {
     return 'Certo, precisaremos de algumas informações para gerar o seu contrato.';
   },
   TICKET_OWNER_TYPE_REQUEST: () => {
-    return 'Você é o contratante ou o contratado?';
+    return 'Você é o contratante(comprador) ou o prestador(vendedor)?';
   },
   COUNTERPART_NAME_REQUEST: function (owner: OwnerType) {
-    return `Qual é o nome do ${owner === OwnerType.CUSTOMER ? 'contratado' : 'contratante'}?`;
+    return `Qual é o nome do ${owner === OwnerType.CUSTOMER ? 'prestador(vendedor)' : 'contratante(comprador)'}?`;
   },
   COUNTERPART_NAME_CONFIRMATION_REQUEST: (
     owner: OwnerType,
     counterpartName,
   ) => {
-    return `O nome do ${owner === OwnerType.CUSTOMER ? 'contratado' : 'contratante'}, *${counterpartName}* está correto?`;
+    return `O nome do ${owner === OwnerType.CUSTOMER ? 'prestador(vendedor)' : 'contratante(comprador)'}, *${counterpartName}* está correto?`;
   },
   COUNTERPART_TAXPAYER_NUMBER_REQUEST: (owner: OwnerType) => {
-    return `Qual é o CPF ou CNPJ do ${owner === OwnerType.CUSTOMER ? 'contratado' : 'contratante'}? Exemplo: 123.456.789-10`;
+    return `Qual é o CPF ou CNPJ do ${owner === OwnerType.CUSTOMER ? 'prestador(vendedor)' : 'contratante(comprador)'}? Exemplo: 123.456.789-10`;
   },
   COUNTERPART_TAXPAYER_NUMBER_CONFIRMATION_REQUEST: (
     owner: OwnerType,
     taxpayerNumber: string,
   ) => {
-    return `O ${taxpayerNumber.length === 14 ? 'CPF' : 'CNPJ'} *${taxpayerNumber}* do ${owner === OwnerType.CUSTOMER ? 'contratado' : 'contratante'}, está correto?`;
+    return `O ${taxpayerNumber.length === 14 ? 'CPF' : 'CNPJ'} *${taxpayerNumber}* do ${owner === OwnerType.CUSTOMER ? 'prestador(vendedor)' : 'contratante(comprador)'}, está correto?`;
   },
   COUNTERPART_PHONE_NUMBER_REQUEST: (owner: OwnerType) => {
-    return `Qual é o telefone  com DDD do ${owner === OwnerType.CUSTOMER ? 'contratado' : 'contratante'}?`;
+    return `Qual é o telefone  com DDD do ${owner === OwnerType.CUSTOMER ? 'prestador(vendedor)' : 'contratante(comprador)'}?`;
   },
   COUNTERPART_PHONE_NUMBER_CONFIRMATION_REQUEST: (
     owner: OwnerType,
     phoneNumber: string,
   ) => {
-    return `O telefone *${phoneNumber}* do ${owner === OwnerType.CUSTOMER ? 'contratado' : 'contratante'}, está correto?`;
+    return `O telefone *${phoneNumber}* do ${owner === OwnerType.CUSTOMER ? 'prestador(vendedor)' : 'contratante(comprador)'}, está correto?`;
   },
   COUNTERPART_EMAIL_REQUEST: (owner: OwnerType) => {
-    return `Qual é o e-mail do ${owner === OwnerType.CUSTOMER ? 'contratado' : 'contratante'}?`;
+    return `Qual é o e-mail do ${owner === OwnerType.CUSTOMER ? 'prestador(vendedor)' : 'contratante(comprador)'}?`;
   },
   COUNTERPART_EMAIL_CONFIRMATION_REQUEST: (owner: OwnerType, email: string) => {
-    return `O e-mail *${email}* do ${owner === OwnerType.CUSTOMER ? 'contratado' : 'contratante'}, está correto?`;
+    return `O e-mail *${email}* do ${owner === OwnerType.CUSTOMER ? 'prestador(vendedor)' : 'contratante(comprador)'}, está correto?`;
   },
   COUNTERPART_ADDRESS_REQUEST: (owner: OwnerType) => {
-    return `Qual é o endereço do ${owner === OwnerType.CUSTOMER ? 'contratado' : 'contratante'}? Exemplo: Rua/Número/Cidade/Estado.`;
+    return `Qual é o endereço do ${owner === OwnerType.CUSTOMER ? 'prestador(vendedor)' : 'contratante(comprador)'}? Exemplo: Rua/Número/Cidade/Estado.`;
   },
   COUNTERPART_ADDRESS_CONFIRMATION_REQUEST: (
     owner: OwnerType,
     address: string,
   ) => {
-    return `O endereço *${address}* do ${owner === OwnerType.CUSTOMER ? 'contratado' : 'contratante'}, está correto?`;
+    return `O endereço *${address}* do ${owner === OwnerType.CUSTOMER ? 'prestador(vendedor)' : 'contratante(comprador)'}, está correto?`;
   },
   // TODO:
   SERVICE_CATEGORY_REQUEST: () => 'Qual é a categoria do serviço?',
@@ -113,7 +113,7 @@ export const messages = {
     return `O endereço, ${serviceAddress}, está correto?`;
   },
   SERVICE_DESCRIPTION_REQUEST: () => {
-    return 'Descreva com detalhes o que está sendo oferecido.';
+    return 'Descreva com os maiores detalhes possíveis tudo o que está sendo comprado ou contratado, este é o item mais importante, descreva tudo com clareza.';
   },
   SERVICE_DESCRIPTION_CONFIRMATION_REQUEST: () => {
     return 'A descrição está correta?';
@@ -151,7 +151,7 @@ export const messages = {
   PAYMENT_AMOUNT_REQUEST: () => 'Qual o valor total do pagamento? Exemplo: R$ 10,00',
   PAYMENT_AMOUNT_CONFIRMATION_REQUEST: (servicePaymentAmount: string) =>
     `O valor total ${servicePaymentAmount}, está correto?`,
-  PAYMENT_DUE_DATES_REQUEST: () => 'Quais são as datas de pagamento?  Exemplo: 20/04/24',
+  PAYMENT_DUE_DATES_REQUEST: () => 'Quais as datas de pagamento? Exemplo: 20/04/24 e 20/05/24',
   SERVICE_PAYMENT_DATES_CONFIRMATION_REQUEST: (servicePaymentDates: string) =>
     `As datas de pagamento ${servicePaymentDates}, estão corretas?`,
 
@@ -165,7 +165,7 @@ export const messages = {
     `O número de parcelas é ${servicePaymentMethodInstallmentCount}, está correto?`,
   INSTALLMENT_COUNT_REQUEST: () => `Quantas parcelas?`,
   OTHER_IN_INSTALLMENTS_PAYMENT_METHOD_REQUEST: () =>
-    `Descreva a forma de pagamento parcelado`,
+    `Descreva a forma de pagamento parcelado (ex: entrada de R$ 40,00 mais 2 parcelas de R$ 30,00)`,
   OTHER_IN_INSTALLMENTS_PAYMENT_METHOD_CONFIRMATION_REQUEST: (
     servicePaymentMethodDescription: string,
   ) =>
@@ -239,7 +239,7 @@ export const messages = {
     return `Os detalhes da compra dos materiais estão corretos?`;
   },
   HAS_PAYMENT_FEE_REQUEST: () => {
-    return `Existirá multa prevista por atraso de pagamento?`;
+    return `Item: Existirá multa prevista por atraso de pagamento (Geralmente se aplicam 10% de multa, mais 1% de juros ao mês)`;
   },
   PAYMENT_FEE_REQUEST: () => {
     return `Descreva a multa prevista por atraso de pagamento`;
@@ -248,7 +248,7 @@ export const messages = {
     return `A multa prevista por atraso de pagamento é ${contractHasMoreDescription}, está correta?`;
   },
   HAS_DEADLINE_FEE_REQUEST: () => {
-    return `Existirá multa prevista por atraso na entrega?`;
+    return `Existirá multa por atraso na entrega? (Ideal colocar alguma multa, por menor que seja para que os prazos sejam cumpridos, 1%, 2% ou até mais)`;
   },
   DEADLINE_FEE_REQUEST: () => {
     return `Descreva a multa prevista por atraso na entrega`;
@@ -259,13 +259,13 @@ export const messages = {
     return `A multa prevista por atraso na entrega é ${contractHasDeadlineMoreDescription}, está correta?`;
   },
   SERVICE_DELIVERY_REQUEST: () => {
-    return `Como será registrada a conclusão do serviço ou venda?`;
+    return `Como será registrada a conclusão do serviço ou venda? (Ideal acompanhar a entrega e registrar com fotos/video a finalização)`;
   },
   SERVICE_DELIVERY_CONFIRMATION_REQUEST: () => {
     return `A forma de registro da entrega está correta?`;
   },
   HAS_CANCELLATION_FEE_REQUEST: () => {
-    return `Terá penalidade caso de cancelamento do contrato?`;
+    return `Terá penalidade em caso de cancelamento do contrato? (Geralmente após iniciar o serviço ou travar a venda, se cobram 10% do valor do contrato em caso de cancelamento, mais as custas de tudo o que já foi executado)`;
   },
   CANCELLATION_FEE_REQUEST: () => {
     return `Descreva a penalidade de cancelamento`;
@@ -296,7 +296,7 @@ export const messages = {
   SERVICE_MATERIAL_HOW_MUCH_CONFIRMATION_REQUEST: (
     serviceMaterialHowMuch: any,
   ) => `O valor pré determinado é ${serviceMaterialHowMuch}, está correto?`,
-  WARRANTY_TYPE_REQUEST: () => `Gostaria de incluir garantia?`,
+  WARRANTY_TYPE_REQUEST: () => `Gostaria de incluir garantia? (aconselhamos a dar as mesmas garantias relativas ao setor que está, que variam de 1 mês a até 5 anos, em casos mais longos, pode-se cobrar pela garantia estendida)`,
   SERVICE_WARRANTY_CONFIRMATION_REQUEST: () => `A garantia está correta?`,
   WARRANTY_REQUEST: () => {
     return `Descreva a garantia e prazos de garantia`;
@@ -305,7 +305,7 @@ export const messages = {
     return `A garantia e prazos de garantia estão corretos?`;
   },
   JUDICIAL_RESOLUTION_REQUEST: () => {
-    return `Em caso de desacordo, qual o foro escolhido para a resolução de conflitos? (idealmente, na cidade onde foi firmada o acordo)`;
+    return `Em caso de desacordo, qual o Foro escolhido para a resolução dos conflitos? (idealmente, na cidade/estado onde foi firmada o acordo)`;
   },
   JUDICIAL_RESOLUTION_CONFIRMATION_REQUEST: (judicialResolution: string) => {
     return `O foro escolhido é ${judicialResolution}, está correto?`;
@@ -321,7 +321,7 @@ export const messages = {
   CONTRACT_SIGNATURE_REQUEST: (name: string) =>
     `O ${name} enviou um contrato para vocês para que possam oficializar o acordo. Por favor, revise e assine o contrato.`,
   CONTRACT_HAS_SENT_TO_COUNTERPART: (counterpartName: string) =>
-    `O contrato foi enviado para ${counterpartName}. Por favor, aguarde a assinatura.`,
+    `O contrato foi enviado para ${counterpartName}. Por favor, aguarde a assinatura. Caso a outra parte não tenha recebido o contrato, por favor envie o link https://bit.ly/MinhaPalavra-Contrato`,
   COUNTERPART_SIGNATURE_REQUEST: () => `Deseja assinar o contrato?`,
   CONTRACT_HAS_REJECTED_BY_COUNTERPART_DESCRIPTION_REQUEST: () =>
     `Com qual parte do contrato você não concorda? Descreva`,
