@@ -60,49 +60,49 @@ export const messages = {
     return 'Certo, precisaremos de algumas informações para gerar o seu contrato.';
   },
   TICKET_OWNER_TYPE_REQUEST: () => {
-    return 'Você é o contratante(comprador) ou o prestador(vendedor)?';
+    return 'Você é o contratante(comprador) ou o contratado(vendedor)?';
   },
   COUNTERPART_NAME_REQUEST: function (owner: OwnerType) {
-    return `Qual é o nome do ${owner === OwnerType.CUSTOMER ? 'prestador(vendedor)' : 'contratante(comprador)'}?`;
+    return `Qual é o nome do ${owner === OwnerType.CUSTOMER ? 'contratado(vendedor)' : 'contratante(comprador)'}?`;
   },
   COUNTERPART_NAME_CONFIRMATION_REQUEST: (
     owner: OwnerType,
     counterpartName,
   ) => {
-    return `O nome do ${owner === OwnerType.CUSTOMER ? 'prestador(vendedor)' : 'contratante(comprador)'}, *${counterpartName}* está correto?`;
+    return `O nome do ${owner === OwnerType.CUSTOMER ? 'contratado(vendedor)' : 'contratante(comprador)'}, *${counterpartName}* está correto?`;
   },
   COUNTERPART_TAXPAYER_NUMBER_REQUEST: (owner: OwnerType) => {
-    return `Qual é o CPF ou CNPJ do ${owner === OwnerType.CUSTOMER ? 'prestador(vendedor)' : 'contratante(comprador)'}? Exemplo: 123.456.789-10`;
+    return `Qual é o CPF ou CNPJ do ${owner === OwnerType.CUSTOMER ? 'contratado(vendedor)' : 'contratante(comprador)'}? Exemplo: 123.456.789-10`;
   },
   COUNTERPART_TAXPAYER_NUMBER_CONFIRMATION_REQUEST: (
     owner: OwnerType,
     taxpayerNumber: string,
   ) => {
-    return `O ${taxpayerNumber.length === 14 ? 'CPF' : 'CNPJ'} *${taxpayerNumber}* do ${owner === OwnerType.CUSTOMER ? 'prestador(vendedor)' : 'contratante(comprador)'}, está correto?`;
+    return `O ${taxpayerNumber.length === 14 ? 'CPF' : 'CNPJ'} *${taxpayerNumber}* do ${owner === OwnerType.CUSTOMER ? 'contratado(vendedor)' : 'contratante(comprador)'}, está correto?`;
   },
   COUNTERPART_PHONE_NUMBER_REQUEST: (owner: OwnerType) => {
-    return `Qual é o telefone  com DDD do ${owner === OwnerType.CUSTOMER ? 'prestador(vendedor)' : 'contratante(comprador)'}?`;
+    return `Qual é o telefone  com DDD do ${owner === OwnerType.CUSTOMER ? 'contratado(vendedor)' : 'contratante(comprador)'}?`;
   },
   COUNTERPART_PHONE_NUMBER_CONFIRMATION_REQUEST: (
     owner: OwnerType,
     phoneNumber: string,
   ) => {
-    return `O telefone *${phoneNumber}* do ${owner === OwnerType.CUSTOMER ? 'prestador(vendedor)' : 'contratante(comprador)'}, está correto?`;
+    return `O telefone *${phoneNumber}* do ${owner === OwnerType.CUSTOMER ? 'contratado(vendedor)' : 'contratante(comprador)'}, está correto?`;
   },
   COUNTERPART_EMAIL_REQUEST: (owner: OwnerType) => {
-    return `Qual é o e-mail do ${owner === OwnerType.CUSTOMER ? 'prestador(vendedor)' : 'contratante(comprador)'}?`;
+    return `Qual é o e-mail do ${owner === OwnerType.CUSTOMER ? 'contratado(vendedor)' : 'contratante(comprador)'}?`;
   },
   COUNTERPART_EMAIL_CONFIRMATION_REQUEST: (owner: OwnerType, email: string) => {
-    return `O e-mail *${email}* do ${owner === OwnerType.CUSTOMER ? 'prestador(vendedor)' : 'contratante(comprador)'}, está correto?`;
+    return `O e-mail *${email}* do ${owner === OwnerType.CUSTOMER ? 'contratado(vendedor)' : 'contratante(comprador)'}, está correto?`;
   },
   COUNTERPART_ADDRESS_REQUEST: (owner: OwnerType) => {
-    return `Qual é o endereço do ${owner === OwnerType.CUSTOMER ? 'prestador(vendedor)' : 'contratante(comprador)'}? Exemplo: Rua/Número/Cidade/Estado.`;
+    return `Qual é o endereço do ${owner === OwnerType.CUSTOMER ? 'contratado(vendedor)' : 'contratante(comprador)'}? Exemplo: Rua/Número/Cidade/Estado.`;
   },
   COUNTERPART_ADDRESS_CONFIRMATION_REQUEST: (
     owner: OwnerType,
     address: string,
   ) => {
-    return `O endereço *${address}* do ${owner === OwnerType.CUSTOMER ? 'prestador(vendedor)' : 'contratante(comprador)'}, está correto?`;
+    return `O endereço *${address}* do ${owner === OwnerType.CUSTOMER ? 'contratado(vendedor)' : 'contratante(comprador)'}, está correto?`;
   },
   // TODO:
   SERVICE_CATEGORY_REQUEST: () => 'Qual é a categoria do serviço?',
