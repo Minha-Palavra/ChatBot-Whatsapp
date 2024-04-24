@@ -68,7 +68,7 @@ export class ContractService {
         
         O início da prestação será ${ticket.serviceStartDate} e término ${ticket.serviceEndDate},
         O o serviço será realizado no endereço ${ticket.serviceAddress},
-        O o serviço será realizado em etapas: ${ticket.serviceStepsDescription}, ${ticket.serviceWorkHoursDescription !== null ? `com horários de trabalho ${ticket.serviceWorkHoursDescription}` : ''}
+        ${ticket.serviceWorkHoursDescription !== null ? `com horários de trabalho ${ticket.serviceWorkHoursDescription}` : ''}
     
         O valor total do contrato será ${ticket.paymentAmount}, e a forma de pagamento ${ticket.paymentMethod}, ${ticket.installmentCount !== null ? `será parcelado em ${ticket.installmentCount} vezes` : ''}
         as datas de pagamento para ${ticket.paymentDueDates}.
@@ -90,7 +90,7 @@ export class ContractService {
         *Data do Contrato:* ${dataFormatada}
         Observações: Este contrato não incluirá detalhes sobre endereço do contratante e contratado, nacionalidade, estado civil ou profissão. O contrato será validado pelo apertar do botão "Sim" enviado via WhatsApp número +55 (11) 91238-5500. Formate o contrato usando * para trechos em negrito e ** para trechos em itálico. Não inclua espaços para preenchimento manual da assinatura.    
         `;
-    }else{
+    } else {
       prompt = `
         Crie um contrato para venda utilizando os seguintes dados:
     
@@ -188,8 +188,7 @@ export class ContractService {
       messages: [
         {
           role: 'system',
-          content:
-            'Você é um advogado especialista na crianção de contratos',
+          content: 'Você é um advogado especialista na crianção de contratos',
         },
         { role: 'user', content: prompt },
       ],
