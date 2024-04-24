@@ -6,6 +6,7 @@ import { TicketState } from '../../entities/ticket-state.enum';
 import { formatPhoneNumber } from '../../../shared/utils';
 import { UserEntity } from '../../../user/entities/user.entity';
 import { ServiceHasStepsState } from './service-has-steps.state';
+import { ServiceStartDateState } from './service-start-date.state';
 
 export class ServiceDescriptionState extends MessageState {
   public prefix = 'SERVICE_DESCRIPTION';
@@ -130,7 +131,7 @@ export class ServiceDescriptionState extends MessageState {
       if (selectedOption === `${this.prefix}-NO`) {
         await this.onStateBegin(phoneNumber, user, ticket);
       } else if (selectedOption === `${this.prefix}-YES`) {
-        this.nextState = new ServiceHasStepsState();
+        this.nextState = new ServiceStartDateState();
         this.nextState.whatsAppService = this.whatsAppService;
         this.nextState.logger = this.logger;
         this.nextState.userService = this.userService;
